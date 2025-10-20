@@ -1,13 +1,14 @@
 import { TossError, TossErrorCode } from '@/types/toss'
 
 export class ErrorHandler {
-  static handleTossError(error: any): TossError {
+  static handleTossError(error: unknown): TossError {
     // 토스 API 에러 처리
-    if (error?.failure) {
+    if (error && typeof error === 'object' && 'failure' in error) {
+      const errorObj = error as { failure: { errorCode: string; errorMessage: string } }
       return {
-        code: this.mapTossErrorCode(error.failure.errorCode),
-        message: error.failure.errorMessage,
-        details: error.failure
+        code: this.mapTossErrorCode(errorObj.failure.errorCode),
+        message: errorObj.failure.errorMessage,
+        details: errorObj.failure
       }
     }
 
@@ -21,9 +22,13 @@ export class ErrorHandler {
     }
 
     // 알 수 없는 에러
+    const errorMessage = error && typeof error === 'object' && 'message' in error 
+      ? String(error.message) 
+      : '알 수 없는 오류가 발생했습니다.'
+    
     return {
       code: TossErrorCode.UNKNOWN_ERROR,
-      message: error?.message || '알 수 없는 오류가 발생했습니다.',
+      message: errorMessage,
       details: error
     }
   }

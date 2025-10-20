@@ -7,9 +7,12 @@ export class TossAuthService {
   static async createOrUpdateUser(tossData: TossLoginResult) {
     const { user, token, auth } = tossData
     
+    if (!user || !token) {
+      throw new Error('토스 사용자 정보가 없습니다.')
+    }
+    
     // 토스 userKey를 이메일로 변환 (고유 식별자)
     const email = `${user.userKey}@toss.health-hero.app`
-    const password = `toss_${user.userKey}_${Date.now()}`
 
     try {
       // 1. 기존 사용자 확인

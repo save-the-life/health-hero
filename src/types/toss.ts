@@ -58,7 +58,7 @@ export enum TossErrorCode {
 export interface TossError {
   code: TossErrorCode
   message: string
-  details?: any
+  details?: unknown
 }
 
 // 토스 로그인 결과

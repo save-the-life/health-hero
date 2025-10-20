@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTossAuth } from '@/hooks/useTossAuth'
 import { TossAuthService } from '@/services/tossAuthService'
@@ -11,6 +11,12 @@ export default function TossLoginButton() {
   const { login, isLoading: tossLoading, error: tossError } = useTossAuth()
   const { setUser, setLoading, setError } = useAuthStore()
   const [localError, setLocalError] = useState<string | null>(null)
+  const [isClient, setIsClient] = useState(false)
+
+  // Hydration 에러 방지: 클라이언트에서만 렌더링
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   const handleLogin = async () => {
     console.log('🚀 [TossLogin] 로그인 시작')
@@ -90,7 +96,7 @@ export default function TossLoginButton() {
       )}
 
       {/* 개발 환경 안내 */}
-      {typeof window !== 'undefined' && typeof appLogin === 'undefined' && (
+      {isClient && typeof appLogin === 'undefined' && (
         <div className="bg-yellow-500/10 border border-yellow-500/50 rounded-lg p-3">
           <p className="text-yellow-600 text-xs text-center">
             💡 토스 로그인은 앱인토스 환경에서만 사용할 수 있습니다.<br />
