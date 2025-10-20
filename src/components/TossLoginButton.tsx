@@ -1,0 +1,104 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useTossAuth } from '@/hooks/useTossAuth'
+import { TossAuthService } from '@/services/tossAuthService'
+import { useAuthStore } from '@/store/authStore'
+
+export default function TossLoginButton() {
+  const router = useRouter()
+  const { login, isLoading: tossLoading, error: tossError } = useTossAuth()
+  const { setUser, setLoading, setError } = useAuthStore()
+  const [localError, setLocalError] = useState<string | null>(null)
+
+  const handleLogin = async () => {
+    console.log('🚀 [TossLogin] 로그인 시작')
+    setLocalError(null)
+    setError(null)
+    setLoading(true)
+
+    try {
+      // 1. 토스 로그인
+      console.log('📝 [TossLogin] 토스 로그인 SDK 호출 중...')
+      const tossResult = await login()
+      console.log('✅ [TossLogin] 토스 로그인 성공:', {
+        userKey: tossResult.user?.userKey,
+        name: tossResult.user?.name,
+        referrer: tossResult.auth.referrer,
+        accessToken: tossResult.token?.accessToken.substring(0, 20) + '...'
+      })
+
+      // 2. Supabase 연동
+      console.log('💾 [TossLogin] Supabase에 사용자 정보 저장 중...')
+      const supabaseResult = await TossAuthService.createOrUpdateUser(tossResult)
+      console.log('✅ [TossLogin] Supabase 연동 성공:', {
+        userId: supabaseResult.profile?.id,
+        tossUserKey: supabaseResult.profile?.toss_user_key
+      })
+
+      // 3. 사용자 정보 저장
+      if (supabaseResult.profile) {
+        setUser(supabaseResult.profile)
+        console.log('✅ [TossLogin] Zustand store 업데이트 완료')
+      }
+
+      // 4. 게임 페이지로 이동
+      console.log('🎮 [TossLogin] 게임 페이지로 이동')
+      router.push('/game')
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '로그인에 실패했습니다.'
+      console.error('❌ [TossLogin] 로그인 실패:', {
+        message: errorMessage,
+        error: error,
+        stack: error instanceof Error ? error.stack : undefined
+      })
+      setLocalError(errorMessage)
+      setError(errorMessage)
+    } finally {
+      setLoading(false)
+      console.log('🏁 [TossLogin] 로그인 플로우 종료')
+    }
+  }
+
+  const displayError = tossError || localError
+
+  return (
+    <div className="w-full space-y-4">
+      <button
+        onClick={handleLogin}
+        disabled={tossLoading}
+        className="w-full bg-[#3182F6] hover:bg-[#2C5FCC] text-white font-bold py-4 px-8 rounded-2xl text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+      >
+        {tossLoading ? (
+          <span className="flex items-center justify-center">
+            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            로그인 중...
+          </span>
+        ) : (
+          '토스로 시작하기'
+        )}
+      </button>
+
+      {displayError && (
+        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3">
+          <p className="text-red-500 text-sm text-center">{displayError}</p>
+        </div>
+      )}
+
+      {/* 개발 환경 안내 */}
+      {typeof window !== 'undefined' && typeof appLogin === 'undefined' && (
+        <div className="bg-yellow-500/10 border border-yellow-500/50 rounded-lg p-3">
+          <p className="text-yellow-600 text-xs text-center">
+            💡 토스 로그인은 앱인토스 환경에서만 사용할 수 있습니다.<br />
+            샌드박스 앱 또는 토스앱에서 테스트해주세요.
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
