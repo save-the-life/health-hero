@@ -90,10 +90,18 @@ npm run build
 
 ## 📚 상세 문서
 
+### 필수 문서
 - **토스 로그인**: [README_TOSS_LOGIN.md](README_TOSS_LOGIN.md)
 - **전체 아키텍처**: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- **보안 FAQ**: [docs/SECURITY_FAQ.md](docs/SECURITY_FAQ.md)
+- **환경 변수**: [docs/ENV_SETUP.md](docs/ENV_SETUP.md)
+
+### 기술 문서
 - **Next.js 설정**: [docs/NEXTJS_CONFIG.md](docs/NEXTJS_CONFIG.md)
+- **Hydration 에러**: [docs/HYDRATION_ERROR_FIX.md](docs/HYDRATION_ERROR_FIX.md)
+- **Eruda 디버깅**: [docs/ERUDA_SETUP.md](docs/ERUDA_SETUP.md)
+
+### 참고 문서
+- **보안 FAQ**: [docs/SECURITY_FAQ.md](docs/SECURITY_FAQ.md)
 - **프로젝트 구조**: [docs/PROJECT.md](docs/PROJECT.md)
 
 ---

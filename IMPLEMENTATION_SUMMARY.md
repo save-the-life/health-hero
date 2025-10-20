@@ -32,7 +32,8 @@
 - ✅ `src/app/page.tsx` - 메인 페이지 업데이트
 - ✅ 로딩 상태 표시
 - ✅ 에러 메시지 표시
-- ✅ `src/components/Eruda.tsx` - 모바일 디버깅 도구
+- ✅ Hydration 에러 해결 (useEffect + isClient)
+- ✅ `src/components/ErudaScript.tsx` - 모바일 디버깅 도구 (CDN)
 
 ### 7. 문서화 ✓
 - ✅ `docs/TOSS_LOGIN_SETUP.md` - 설정 가이드
@@ -306,18 +307,32 @@ NEXT_PUBLIC_TOSS_APP_KEY=health-hero
 
 ## 🐛 디버깅 도구
 
-### Eruda (모바일 디버깅)
+### Eruda (모바일 디버깅) - CDN 방식
 - ✅ 샌드박스 앱에서 콘솔 로그 확인
 - ✅ 네트워크 요청 모니터링
 - ✅ localStorage 토큰 확인
 - ✅ 상세 로그인 플로우 추적
+- ✅ 중복 로드 방지 로직 구현
+- ✅ Hydration 에러 해결
 
-설치:
-```bash
-npm install --save-dev eruda
+구현 방식:
+```typescript
+// src/components/ErudaScript.tsx
+'use client'
+
+useEffect(() => {
+  // 중복 체크
+  if ('eruda' in window) return
+  
+  // CDN 로드
+  const script = document.createElement('script')
+  script.src = 'https://cdn.jsdelivr.net/npm/eruda'
+  script.onload = () => window.eruda.init()
+  document.head.appendChild(script)
+}, [])
 ```
 
-사용: 앱 우측 하단 초록색 버튼 클릭
+사용: 앱 우측 하단 톱니바퀴 버튼 클릭
 
 ## 🏆 최종 확인 사항
 

@@ -87,6 +87,11 @@ npm run build
 - [docs/SECURITY_FAQ.md](docs/SECURITY_FAQ.md) - 보안 FAQ
 - [docs/ENV_SETUP.md](docs/ENV_SETUP.md) - 환경 변수 가이드
 
+### Next.js & 디버깅
+- [docs/NEXTJS_CONFIG.md](docs/NEXTJS_CONFIG.md) - Next.js 설정 가이드
+- [docs/HYDRATION_ERROR_FIX.md](docs/HYDRATION_ERROR_FIX.md) - Hydration 에러 해결
+- [docs/ERUDA_SETUP.md](docs/ERUDA_SETUP.md) - Eruda 디버깅 도구 설정
+
 ### 확장 기능
 - [docs/MTLS_GUIDE.md](docs/MTLS_GUIDE.md) - 결제/푸시 기능 추가 시 가이드
 
