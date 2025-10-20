@@ -7,6 +7,8 @@
 3. [Eruda 관련](#eruda-관련)
 4. [TypeScript 에러](#typescript-에러)
 5. [환경 변수](#환경-변수)
+6. [토스 로그인 에러](#토스-로그인-에러)
+7. [Supabase 에러](#supabase-에러)
 
 ---
 
@@ -324,12 +326,67 @@ dist/
 
 ---
 
+## 🔐 토스 로그인 관련
+
+### 1. 약관 동의 화면이 표시되지 않음
+
+**원인**: 앱인토스 콘솔에서 약관 설정 누락
+
+**해결**:
+1. **앱인토스 콘솔** 접속
+   - https://developers-apps-in-toss.toss.im/
+
+2. **토스 로그인 설정**
+   ```
+   프로젝트 선택 → 개발 → 토스 로그인
+   ```
+
+3. **약관 동의 설정** ⭐
+   - 필수 약관:
+     - ✅ 서비스 이용약관
+     - ✅ 개인정보 처리방침
+   - 사용자 정보:
+     - ✅ 이름 (user_name)
+
+4. **저장 후 재테스트**
+   ```powershell
+   npm run build
+   npx @apps-in-toss/cli build
+   # 새 .ait 파일 업로드
+   ```
+
+자세한 내용: [토스 로그인 개발 가이드](https://developers-apps-in-toss.toss.im/login/develop.html)
+
+---
+
+### 2. `appLogin is not defined` 에러
+
+**원인**: 로컬 환경 또는 일반 브라우저에서 실행
+
+**해결**:
+- 샌드박스 앱 또는 토스 앱에서만 테스트 가능
+- `.ait` 파일을 빌드하여 업로드 필요
+
+---
+
+### 3. 인가 코드 발급 실패
+
+**원인**: 토스 로그인 설정 문제
+
+**확인**:
+1. 토스 로그인 활성화 여부
+2. Client ID 발급 여부
+3. 약관 설정 완료 여부
+
+---
+
 ## 📚 관련 문서
 
 - [Next.js 설정](NEXTJS_CONFIG.md)
 - [Hydration 에러 해결](HYDRATION_ERROR_FIX.md)
 - [Eruda 설정](ERUDA_SETUP.md)
 - [환경 변수 설정](ENV_SETUP.md)
+- [토스 로그인 설정](TOSS_LOGIN_SETUP.md)
 
 ---
 
@@ -346,6 +403,199 @@ dist/
 
 ---
 
+## 🔐 토스 로그인 에러
+
+### 1. `appLogin is not defined`
+
+**에러**: 샌드박스에서 `appLogin` 함수가 정의되지 않음
+
+**원인**: `appLogin`을 `window.appLogin`으로 잘못 호출
+
+**해결**:
+```typescript
+// ❌ 잘못된 방법
+const result = await window.appLogin()
+
+// ✅ 올바른 방법
+import { appLogin } from '@apps-in-toss/web-framework'
+const result = await appLogin()
+```
+
+---
+
+### 2. User Info API 404 에러
+
+**에러**: 
+```
+[toss-auth] Toss API response status: 404
+{"errorCode":"50000","reason":"Unknown error"}
+```
+
+**원인 1**: 잘못된 API 엔드포인트 사용
+
+**해결**:
+```typescript
+// ❌ 잘못된 URL
+'https://apps-in-toss-api.toss.im/api-partner/v1/apps-in-toss/user'
+
+// ✅ 올바른 URL
+'https://apps-in-toss-api.toss.im/api-partner/v1/apps-in-toss/user/oauth2/login-me'
+```
+
+**원인 2**: `referrer` 미전달
+
+**해결**: 모든 API 호출 시 `referrer` 포함
+```typescript
+const userResult = await getUserInfo(accessToken, referrer)
+```
+
+**원인 3**: Scope 설정 부족
+
+**해결**: 앱인토스 콘솔에서 최소 `user_name` + `user_ci` scope 설정
+
+---
+
+### 3. TypeScript 타입 에러
+
+**에러**: 
+```
+Type '"FAIL"' has no overlap with '"SUCCESS" | "FAILURE"'
+```
+
+**해결**:
+```typescript
+// src/types/toss.ts
+export interface TossUserInfo {
+  resultType: 'SUCCESS' | 'FAILURE' | 'FAIL'  // ← 'FAIL' 추가
+  // ...
+}
+```
+
+---
+
+## 🗄️ Supabase 에러
+
+### 1. 이메일 검증 에러
+
+**에러**:
+```
+AuthApiError: Email address "529047996@toss.health-hero.app" is invalid
+```
+
+**해결 1**: 유효한 도메인 사용
+```typescript
+// ❌ 잘못된 이메일
+const email = `${userKey}@toss.health-hero.app`
+
+// ✅ 올바른 이메일
+const email = `user${userKey}@health-hero.app`
+```
+
+**해결 2**: Supabase에서 이메일 확인 비활성화
+- **Authentication** → **Providers** → **Email** → **Confirm email** → **OFF**
+
+---
+
+### 2. RLS 정책 위반 에러
+
+**에러**:
+```
+{
+  "code":"42501",
+  "message":"new row violates row-level security policy for table \"user_profiles\""
+}
+```
+
+**원인**: 인증 없이 `user_profiles` 테이블에 직접 삽입 시도
+
+**해결**: Supabase Auth로 사용자 생성 후 프로필 저장
+```typescript
+// 1. Supabase Auth로 사용자 생성
+const { data, error } = await supabase.auth.signUp({
+  email,
+  password
+})
+
+// 2. 프로필 저장 (이제 RLS 통과)
+await supabase.from('user_profiles').upsert({
+  id: data.user.id,
+  // ...
+})
+```
+
+---
+
+### 3. Function Search Path Mutable 경고
+
+**경고**: Supabase Security Advisor
+
+**해결**: `supabase/schema.sql`에서 함수에 `SET search_path = ''` 추가
+```sql
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql
+SET search_path = '';  -- ← 추가
+```
+
+---
+
+### 4. Policy Already Exists 에러
+
+**에러**: `ERROR: 42710: policy "..." already exists`
+
+**해결**: `DROP POLICY IF EXISTS` 추가
+```sql
+DROP POLICY IF EXISTS "Users can view own profile" ON user_profiles;
+CREATE POLICY "Users can view own profile" ON user_profiles
+  FOR SELECT USING (auth.uid() = id);
+```
+
+---
+
+## 🔧 Supabase Edge Function 에러
+
+### 1. Docker Not Running 경고
+
+**경고**: `WARNING: Docker is not running`
+
+**해결**: 무시해도 됩니다!
+- Docker는 로컬 테스트용 (`supabase functions serve`)
+- 실제 배포 (`supabase functions deploy`)는 Docker 불필요
+
+---
+
+### 2. mTLS 인증서 파일 찾을 수 없음
+
+**에러**: `❌ 인증서 파일을 찾을 수 없습니다`
+
+**해결**: 상대 경로 수정
+```powershell
+# supabase/functions/scripts/encode-certs.ps1
+$certPath = "..\..\..\backend\certs\health_hero_public.crt"
+$keyPath = "..\..\..\backend\certs\health_hero_private.key"
+```
+
+---
+
+### 3. Deno 타입 에러
+
+**에러**: `Cannot find namespace 'Deno'`
+
+**해결**: 타입 단언 사용
+```typescript
+const response = await fetch(url, {
+  // ...
+  client: mtlsClient,
+} as any)  // ← 타입 단언
+```
+
+---
+
 **Last Updated**: 2025-01-20  
-**Status**: Living Document
+**Status**: Living Document  
+**토스 로그인**: ✅ 완전 해결
 

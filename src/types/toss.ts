@@ -1,12 +1,12 @@
 // 토스 인증 응답 (appLogin 결과)
 export interface TossAuthResponse {
   authorizationCode: string
-  referrer: 'sandbox' | 'DEFAULT'
+  referrer: 'DEFAULT' | 'SANDBOX'
 }
 
 // 토스 토큰 응답
 export interface TossTokenResponse {
-  resultType: 'SUCCESS' | 'FAILURE'
+  resultType: 'SUCCESS' | 'FAILURE' | 'FAIL'
   success?: {
     tokenType: 'Bearer'
     accessToken: string
@@ -18,11 +18,18 @@ export interface TossTokenResponse {
     errorCode: string
     errorMessage: string
   }
+  error?: {
+    errorType: number
+    errorCode: string
+    reason: string
+    data: Record<string, unknown>
+    title: string | null
+  }
 }
 
 // 토스 사용자 정보 (이름만)
 export interface TossUserInfo {
-  resultType: 'SUCCESS' | 'FAILURE'
+  resultType: 'SUCCESS' | 'FAILURE' | 'FAIL'
   success?: {
     userKey: number
     name: string
@@ -30,6 +37,13 @@ export interface TossUserInfo {
   failure?: {
     errorCode: string
     errorMessage: string
+  }
+  error?: {
+    errorType: number
+    errorCode: string
+    reason: string
+    data: Record<string, unknown>
+    title: string | null
   }
 }
 

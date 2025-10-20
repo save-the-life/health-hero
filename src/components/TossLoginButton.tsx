@@ -6,6 +6,13 @@ import { useTossAuth } from '@/hooks/useTossAuth'
 import { TossAuthService } from '@/services/tossAuthService'
 import { useAuthStore } from '@/store/authStore'
 
+// 앱인토스 환경 확인을 위한 타입 선언
+declare global {
+  interface Window {
+    appLogin?: () => Promise<unknown>
+  }
+}
+
 export default function TossLoginButton() {
   const router = useRouter()
   const { login, isLoading: tossLoading, error: tossError } = useTossAuth()
@@ -96,7 +103,7 @@ export default function TossLoginButton() {
       )}
 
       {/* 개발 환경 안내 */}
-      {isClient && typeof appLogin === 'undefined' && (
+      {isClient && typeof window !== 'undefined' && typeof window.appLogin === 'undefined' && (
         <div className="bg-yellow-500/10 border border-yellow-500/50 rounded-lg p-3">
           <p className="text-yellow-600 text-xs text-center">
             💡 토스 로그인은 앱인토스 환경에서만 사용할 수 있습니다.<br />

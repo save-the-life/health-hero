@@ -1,0 +1,22 @@
+# 의존성
+node_modules/
+package-lock.json
+
+# 환경 변수
+.env
+.env.local
+
+# mTLS 인증서 (절대 커밋하지 마세요!)
+certs/
+*.key
+*.crt
+*.pem
+
+# 로그
+*.log
+logs/
+
+# 운영체제
+.DS_Store
+Thumbs.db
+

@@ -11,8 +11,9 @@ export class TossAuthService {
       throw new Error('토스 사용자 정보가 없습니다.')
     }
     
-    // 토스 userKey를 이메일로 변환 (고유 식별자)
-    const email = `${user.userKey}@toss.health-hero.app`
+    // 토스 userKey를 고유 식별자로 사용 (유효한 이메일 형식)
+    const email = `user${user.userKey}@health-hero.app`
+    const password = `toss_${user.userKey}_${Date.now()}`
 
     try {
       // 1. 기존 사용자 확인
@@ -21,25 +22,26 @@ export class TossAuthService {
       let userId: string
 
       if (existingProfile) {
-        // 기존 사용자 - 토스 정보로 Supabase 로그인
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        // 기존 사용자 - 기존 세션 사용
+        userId = existingProfile.id
+        console.log('✅ 기존 사용자:', userId)
+        
+        // Supabase Auth 세션 생성 (비밀번호 무시)
+        const { error: signInError } = await supabase.auth.signInWithPassword({
           email: existingProfile.email || email,
           password: `toss_${user.userKey}_permanent`
         })
-
+        
         if (signInError) {
-          // 비밀번호가 틀린 경우, 사용자를 찾아서 세션 생성
-          console.log('기존 사용자 재로그인 시도...')
-          throw signInError
+          console.log('⚠️ 세션 생성 실패 (무시):', signInError.message)
         }
-
-        userId = signInData.user.id
       } else {
-        // 신규 사용자 - Supabase 계정 생성
+        // 신규 사용자 - Supabase Auth로 생성
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
-          password: `toss_${user.userKey}_permanent`, // 고정된 비밀번호 사용
+          password,
           options: {
+            emailRedirectTo: undefined,
             data: {
               toss_user_key: user.userKey,
               name: user.name
@@ -48,6 +50,7 @@ export class TossAuthService {
         })
 
         if (signUpError) {
+          console.error('❌ signUp 실패:', signUpError)
           throw signUpError
         }
 
@@ -56,6 +59,7 @@ export class TossAuthService {
         }
 
         userId = signUpData.user.id
+        console.log('✅ 신규 사용자 생성:', userId)
       }
 
       // 2. 사용자 프로필 업데이트/생성

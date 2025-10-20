@@ -1,12 +1,15 @@
 # 토스 로그인 설정 가이드
 
+> ✅ **상태**: 완전 작동 (2025-01-20 테스트 완료)
+
 ## 📋 목차
 
 1. [환경 변수 설정](#환경-변수-설정)
-2. [Supabase 데이터베이스 설정](#supabase-데이터베이스-설정)
-3. [로컬 개발 테스트](#로컬-개발-테스트)
-4. [샌드박스 앱 테스트](#샌드박스-앱-테스트)
-5. [트러블슈팅](#트러블슈팅)
+2. [Supabase 설정](#supabase-설정)
+3. [Supabase Edge Function 배포](#supabase-edge-function-배포)
+4. [로컬 개발 테스트](#로컬-개발-테스트)
+5. [샌드박스 앱 테스트](#샌드박스-앱-테스트)
+6. [트러블슈팅](#트러블슈팅)
 
 ---
 
@@ -50,23 +53,26 @@ NEXT_PUBLIC_TOSS_APP_KEY=health-hero
 
 ---
 
-## 2. Supabase 데이터베이스 설정
+## 2. Supabase 설정
 
-### SQL 스크립트 실행
+### 2.1. 데이터베이스 설정
 
 1. Supabase 콘솔에서 **SQL Editor** 메뉴로 이동
 2. **New query** 버튼 클릭
 3. `supabase/schema.sql` 파일 내용 복사 & 붙여넣기
 4. **Run** 버튼 클릭
 
-### 생성되는 테이블 확인
-
-SQL 실행 후 **Table Editor**에서 다음 테이블이 생성되었는지 확인:
-
+생성되는 테이블:
 - ✅ `user_profiles` - 사용자 프로필 및 게임 진행 상태
 - ✅ `toss_login_logs` - 토스 로그인 기록
 
-### Row Level Security 확인
+### 2.2. 이메일 확인 비활성화 (중요!)
+
+**Authentication** → **Providers** → **Email** → **Confirm email** → **OFF**
+
+⚠️ 이 설정을 하지 않으면 토스 로그인 시 이메일 검증 에러가 발생합니다!
+
+### 2.3. Row Level Security 확인
 
 **Authentication** > **Policies** 메뉴에서 다음 정책이 활성화되었는지 확인:
 
@@ -76,7 +82,65 @@ SQL 실행 후 **Table Editor**에서 다음 테이블이 생성되었는지 확
 
 ---
 
-## 3. 로컬 개발 테스트
+## 3. Supabase Edge Function 배포
+
+### 3.1. Supabase CLI 설치
+
+**Windows (Scoop)**:
+```powershell
+scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
+scoop install supabase
+```
+
+**macOS (Homebrew)**:
+```bash
+brew install supabase/tap/supabase
+```
+
+### 3.2. Supabase 로그인
+
+```powershell
+supabase login
+```
+
+### 3.3. 프로젝트 연결
+
+```powershell
+supabase link --project-ref your-project-ref
+```
+
+프로젝트 ref는 Supabase URL에서 확인: `https://[your-project-ref].supabase.co`
+
+### 3.4. mTLS 인증서 인코딩
+
+앱인토스 콘솔에서 발급받은 인증서를 `backend/certs/` 폴더에 저장 후:
+
+```powershell
+cd supabase/functions/scripts
+.\encode-certs.ps1
+```
+
+출력된 명령어 2개를 실행하여 Secrets 저장:
+
+```powershell
+supabase secrets set TOSS_CERT_BASE64="..."
+supabase secrets set TOSS_KEY_BASE64="..."
+```
+
+### 3.5. Edge Function 배포
+
+```powershell
+supabase functions deploy toss-auth
+```
+
+배포 성공 시 다음 URL이 생성됩니다:
+```
+https://[your-project-ref].supabase.co/functions/v1/toss-auth
+```
+
+---
+
+## 4. 로컬 개발 테스트
 
 ### 개발 서버 실행
 

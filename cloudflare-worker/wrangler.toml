@@ -1,0 +1,8 @@
+name = "health-hero-toss-auth"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# 환경 변수 (Cloudflare Dashboard에서 설정)
+# TOSS_CLIENT_CERT (mTLS 인증서 내용)
+# TOSS_CLIENT_KEY (mTLS 개인키 내용)
+
