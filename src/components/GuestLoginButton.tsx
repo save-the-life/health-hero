@@ -19,6 +19,30 @@ export default function GuestLoginButton() {
 
       console.log("Guest login successful:", data);
 
+      // 게스트 사용자 프로필 생성
+      if (data.user) {
+        const { error: profileError } = await supabase
+          .from('user_profiles')
+          .upsert({
+            id: data.user.id,
+            email: data.user.email,
+            name: '게스트',
+            level: 1,
+            current_exp: 0,
+            total_score: 500, // 최초 회원가입 시 500포인트 지급
+            current_streak: 0,
+            current_stage: 1,
+            current_phase: 1
+          });
+
+        if (profileError) {
+          console.error('프로필 생성 실패:', profileError);
+          // 프로필 생성 실패해도 게임은 진행 가능하도록 함
+        } else {
+          console.log('게스트 프로필 생성 완료 (500포인트 지급)');
+        }
+      }
+
       // 게임 페이지로 이동
       router.push("/game");
     } catch (error) {

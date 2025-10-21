@@ -76,7 +76,7 @@ export class TossAuthService {
         toss_referrer: auth.referrer,
         level: existingProfile?.level || 1,
         current_exp: existingProfile?.current_exp || 0,
-        total_score: existingProfile?.total_score || 0,
+        total_score: existingProfile?.total_score || 500, // 신규 사용자에게 500포인트 지급
         current_streak: existingProfile?.current_streak || 0,
         current_stage: existingProfile?.current_stage || 1,
         current_phase: existingProfile?.current_phase || 1
