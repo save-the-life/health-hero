@@ -2,11 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { useGameStore } from "@/store/gameStore";
 
 export default function GamePage() {
+  const router = useRouter();
   const { user, isAuthenticated, initialize } = useAuthStore();
   const { 
     level, 
@@ -19,6 +21,21 @@ export default function GamePage() {
     loadUserData,
     updateHearts 
   } = useGameStore();
+  
+  // 화면 높이 감지
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+  // 화면 크기 감지
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsSmallScreen(window.innerHeight < 700); // 700px 미만을 작은 화면으로 판단
+    };
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   // 컴포넌트 마운트 시 인증 상태 초기화 및 데이터 로드
   useEffect(() => {
@@ -50,7 +67,10 @@ export default function GamePage() {
   }, [isAuthenticated, user?.id, hearts, updateHearts]);
 
   // 스크롤을 하단에 고정하는 useEffect
+  // 스크롤 위치 조정 (작은 화면에서만)
   useEffect(() => {
+    if (!isSmallScreen) return; // 작은 화면이 아니면 스크롤 로직 실행하지 않음
+    
     const scrollToBottom = () => {
       const scrollContainer = document.querySelector('.overflow-y-auto') as HTMLElement;
       if (scrollContainer) {
@@ -80,7 +100,7 @@ export default function GamePage() {
       window.removeEventListener('resize', scrollToBottom);
       window.removeEventListener('load', scrollToBottom);
     };
-  }, [isLoading]); // 로딩 상태가 변경될 때마다 실행
+  }, [isLoading, isSmallScreen]); // isSmallScreen 의존성 추가
 
   // 레벨에 따른 캐릭터 이미지 경로 반환
   const getCharacterImage = (level: number): string => {
@@ -108,19 +128,58 @@ export default function GamePage() {
     return '/images/items/icon-locked-phase.png';
   };
 
+  // 페이즈 클릭 핸들러
+  const handlePhaseClick = (phaseNumber: number) => {
+    // 현재 페이즈보다 높은 페이즈는 클릭 불가
+    if (phaseNumber > currentPhase) {
+      return;
+    }
+    
+    // 스테이지 맵 페이지로 이동
+    router.push(`/game/phase${phaseNumber}`);
+  };
+
   // 로딩 중이거나 에러가 있으면 표시
   if (isLoading) {
     return (
-      <div className="relative min-h-screen overflow-hidden flex items-center justify-center">
-        <div className="text-white text-xl">로딩 중...</div>
+      <div className="relative min-h-screen overflow-hidden">
+        {/* 배경 이미지 */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/images/backgrounds/background-main.png"
+            alt="헬스 히어로 메인 배경"
+            fill
+            className="object-cover"
+            priority
+          />
+        </div>
+        
+        {/* 로딩 텍스트 */}
+        <div className="relative z-10 flex items-center justify-center min-h-screen">
+          <div className="text-white text-xl font-medium">로딩 중...</div>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="relative min-h-screen overflow-hidden flex items-center justify-center">
-        <div className="text-red-500 text-xl">에러: {error}</div>
+      <div className="relative min-h-screen overflow-hidden">
+        {/* 배경 이미지 */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/images/backgrounds/background-main.png"
+            alt="헬스 히어로 메인 배경"
+            fill
+            className="object-cover"
+            priority
+          />
+        </div>
+        
+        {/* 에러 텍스트 */}
+        <div className="relative z-10 flex items-center justify-center min-h-screen">
+          <div className="text-red-500 text-xl font-medium">에러: {error}</div>
+        </div>
       </div>
     );
   }
@@ -270,13 +329,23 @@ export default function GamePage() {
       </div>
 
       {/* 메인 콘텐츠 */}
-      <div className="relative z-10 w-full h-screen pt-[60px] pb-4 overflow-y-auto">
+      <div className={`relative z-10 w-full h-screen pt-[60px] pb-4 ${
+        isSmallScreen ? 'overflow-y-auto' : 'overflow-hidden'
+      }`}>
 
         {/* 페이즈 블록들 */}
-        <div className="relative w-full" style={{ height: 'calc(100vh + 0px)' }}>
+        <div 
+          className="relative w-full" 
+          style={{ 
+            height: isSmallScreen ? 'calc(100vh + 40px)' : '90vh'
+          }}
+        >
           
           {/* 페이즈 1 - 우측 하단 */}
-          <div className="absolute bottom-[20px] right-[24px] w-[150px] h-[160px] rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10">
+          <div 
+            className="absolute bottom-[20px] right-[24px] w-[150px] h-[160px] rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => handlePhaseClick(1)}
+          >
             <div className="w-full h-full flex flex-col items-center justify-center">
               <Image
                 src={getPhaseImage(1)}
@@ -289,7 +358,12 @@ export default function GamePage() {
           </div>
 
           {/* 페이즈 2 - 좌측 중앙 */}
-          <div className="absolute bottom-[180px] left-[24px] w-[150px] h-[160px] rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10">
+          <div 
+            className={`absolute bottom-[180px] left-[24px] w-[150px] h-[160px] rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${
+              currentPhase >= 2 ? 'cursor-pointer hover:opacity-80 transition-opacity' : 'cursor-not-allowed'
+            }`}
+            onClick={() => handlePhaseClick(2)}
+          >
             <div className="w-full h-full flex flex-col items-center justify-center">
               <Image
                 src={getPhaseImage(2)}
@@ -302,7 +376,12 @@ export default function GamePage() {
           </div>
 
           {/* 페이즈 3 - 우측 상단 */}
-          <div className="absolute bottom-[340px] right-[24px] w-[150px] h-[160px] rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10">
+          <div 
+            className={`absolute bottom-[340px] right-[24px] w-[150px] h-[160px] rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${
+              currentPhase >= 3 ? 'cursor-pointer hover:opacity-80 transition-opacity' : 'cursor-not-allowed'
+            }`}
+            onClick={() => handlePhaseClick(3)}
+          >
             <div className="w-full h-full flex flex-col items-center justify-center">
               <Image
                 src={getPhaseImage(3)}
@@ -315,7 +394,12 @@ export default function GamePage() {
           </div>
 
           {/* 페이즈 4 - 좌측 상단 */}
-          <div className="absolute bottom-[500px] left-[24px] w-[150px] h-[160px] rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10">
+          <div 
+            className={`absolute bottom-[500px] left-[24px] w-[150px] h-[160px] rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${
+              currentPhase >= 4 ? 'cursor-pointer hover:opacity-80 transition-opacity' : 'cursor-not-allowed'
+            }`}
+            onClick={() => handlePhaseClick(4)}
+          >
             <div className="w-full h-full flex flex-col items-center justify-center">
               <Image
                 src={getPhaseImage(4)}

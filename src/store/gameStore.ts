@@ -15,6 +15,7 @@ interface GameState {
   totalScore: number
   currentExp: number
   currentPhase: number
+  currentStage: number
   hearts: UserHearts | null
   
   // 하트 타이머
@@ -44,6 +45,7 @@ export const useGameStore = create<GameState>()(
       totalScore: 0,
       currentExp: 0,
       currentPhase: 1,
+      currentStage: 1,
       hearts: null,
       heartTimer: '5분00초',
       isLoading: false,
@@ -58,7 +60,7 @@ export const useGameStore = create<GameState>()(
           const [profileResult, heartsResult] = await Promise.all([
             supabase
               .from('user_profiles')
-              .select('level, total_score, current_exp, current_phase')
+              .select('level, total_score, current_exp, current_phase, current_stage')
               .eq('id', userId)
               .single(),
             
@@ -76,7 +78,8 @@ export const useGameStore = create<GameState>()(
               level: 1,
               total_score: 500,
               current_exp: 0,
-              current_phase: 1
+              current_phase: 1,
+              current_stage: 1
             }
             
             set({
@@ -84,6 +87,7 @@ export const useGameStore = create<GameState>()(
               totalScore: defaultProfile.total_score,
               currentExp: defaultProfile.current_exp,
               currentPhase: defaultProfile.current_phase,
+              currentStage: defaultProfile.current_stage,
               isLoading: false
             })
             return
@@ -120,6 +124,7 @@ export const useGameStore = create<GameState>()(
             totalScore: profile.total_score || 0,
             currentExp: profile.current_exp || 0,
             currentPhase: profile.current_phase || 1,
+            currentStage: profile.current_stage || 1,
             hearts: hearts,
             heartTimer,
             isLoading: false
@@ -335,6 +340,7 @@ export const useGameStore = create<GameState>()(
         totalScore: state.totalScore,
         currentExp: state.currentExp,
         currentPhase: state.currentPhase,
+        currentStage: state.currentStage,
         hearts: state.hearts
       })
     }
