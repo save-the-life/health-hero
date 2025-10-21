@@ -1,7 +1,7 @@
 // Supabase Edge Function: 토스 API mTLS 프록시
 // Deno.createHttpClient를 사용하여 mTLS 인증서 지원
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { serve } from 'https://deno.land/std@0.168.0/http/ser.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 
 // mTLS 클라이언트 생성 (환경 변수에서 Base64 인코딩된 인증서 읽기)
