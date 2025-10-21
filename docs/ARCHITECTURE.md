@@ -40,6 +40,7 @@
 ```
 
 **특징:**
+
 - ✅ **백엔드 서버 없음**
 - ✅ 클라이언트가 직접 외부 API 호출
 - ✅ Supabase가 데이터베이스 + 인증 + API 제공
@@ -72,6 +73,7 @@ user_profiles 테이블에 저장 (RLS로 보호)
 ```
 
 **포인트:**
+
 - 모든 단계가 클라이언트에서 실행
 - 서버 불필요
 - Client Secret 불필요
@@ -90,13 +92,54 @@ supabase.from('user_profiles').update(...)
 PostgreSQL (Supabase)
 ```
 
+**데이터베이스 스키마 (완료 ✅):**
+
+```sql
+-- 핵심 테이블들
+user_profiles (사용자 프로필)
+├── level, current_exp, total_score
+├── current_streak, current_stage, current_phase
+└── toss_user_key, toss_access_token
+
+quizzes (퀴즈 데이터) ✅
+├── qnum, topic, prompt
+├── choices (JSONB 배열)
+├── answer_index, hint, explanation
+└── difficulty_label, difficulty_level
+
+user_progress (진행 상황) ✅
+├── phase, stage, completed
+├── score, attempts, correct_count
+└── total_questions
+
+user_quiz_records (퀴즈 기록) ✅
+├── quiz_id, phase, stage
+├── is_correct, score_earned
+└── items_used (JSONB 배열)
+
+user_item_settings (아이템 설정) ✅
+├── item_type, show_popup
+└── 팝업 표시 여부 관리
+
+user_hearts (하트 시스템) ✅
+├── current_hearts, last_refill_at
+└── ad_views_today, ad_reset_at
+```
+
 **보안:**
+
 ```sql
 -- 사용자는 자신의 데이터만 수정 가능
 CREATE POLICY "Users can update own profile"
   ON user_profiles
   FOR UPDATE
   USING (auth.uid() = id);
+
+-- 퀴즈는 모든 인증된 사용자가 읽기 가능
+CREATE POLICY "Authenticated users can read quizzes"
+  ON quizzes
+  FOR SELECT
+  USING (auth.role() = 'authenticated');
 ```
 
 ### 3. 광고 (Advertising)
@@ -122,6 +165,7 @@ supabase.from('ad_rewards').insert(...)
 ```
 
 **특징:**
+
 - SDK만으로 광고 표시
 - 서버 검증 불필요 (RLS로 대체)
 - 클라이언트에서 완결
@@ -161,9 +205,26 @@ sequenceDiagram
     C->>C: 정답 확인 (클라이언트)
     C->>C: 점수 계산
     C->>S: user_profiles.update(score)
+    C->>S: user_quiz_records.insert(결과)
+    C->>S: user_progress.update(진행상황)
     S->>S: RLS 정책 확인
     S->>C: 업데이트 성공
     C->>U: 결과 표시
+```
+
+### 퀴즈 데이터 로딩 플로우
+
+```mermaid
+sequenceDiagram
+    participant U as 사용자
+    participant C as 클라이언트
+    participant S as Supabase
+
+    U->>C: 스테이지 선택
+    C->>S: quizzes.select(난이도별)
+    S->>C: 퀴즈 데이터 반환
+    C->>C: 랜덤 선택 (5문제)
+    C->>U: 퀴즈 시작
 ```
 
 ### 광고 보상 플로우
@@ -193,12 +254,14 @@ sequenceDiagram
 ### 1. 토스 로그인 보안
 
 **계층적 보안:**
+
 1. **앱인토스 콘솔 등록** - 등록된 앱만 SDK 사용
 2. **토스앱 내부 실행** - 일반 브라우저에서 호출 불가
 3. **인가 코드 제한** - 10분 유효, 1회용
 4. **토큰 만료** - AccessToken 1시간 후 만료
 
 **결과:**
+
 - Client Secret 불필요
 - mTLS 불필요 (기본 기능)
 - 충분히 안전
@@ -232,6 +295,7 @@ CREATE POLICY "No updates allowed"
 ```
 
 **효과:**
+
 - ✅ 사용자 A는 사용자 B 데이터 접근 불가
 - ✅ 점수 조작 불가
 - ✅ 광고 보상 중복 불가
@@ -242,21 +306,23 @@ CREATE POLICY "No updates allowed"
 ```typescript
 // 클라이언트에서 기본 검증
 const validateAnswer = (answer: string, correct: string) => {
-  return answer === correct
-}
+  return answer === correct;
+};
 
 // Supabase에 저장 (RLS가 추가 보안)
 await supabase
-  .from('user_profiles')
+  .from("user_profiles")
   .update({ score: score + 10 })
-  .eq('id', user.id)
+  .eq("id", user.id);
 ```
 
 **한계:**
+
 - ⚠️ 클라이언트 코드는 조작 가능
 - ⚠️ 중요한 검증은 미래에 서버 필요
 
 **현재 대응:**
+
 - RLS로 최소 보안 유지
 - 게임은 경쟁보다 학습 중심
 - 리더보드는 참고용
@@ -272,10 +338,13 @@ await supabase
 
 가능:
 ✅ 토스 로그인
+✅ 게스트 로그인 (Anonymous Auth)
+✅ 퀴즈 데이터 관리 (200문항)
 ✅ 게임 플레이
-✅ 데이터 저장
+✅ 데이터 저장 (6개 테이블)
+✅ 하트 시스템 (자동 충전)
 ✅ 광고 (하트 충전)
-✅ 리더보드
+✅ RLS 보안 정책
 
 비용: $0/월
 ```
@@ -323,6 +392,7 @@ await supabase
 ## 📊 기술 스택
 
 ### Frontend
+
 ```
 - Framework: Next.js 15.5.5
 - Runtime: React 19
@@ -334,6 +404,7 @@ await supabase
 ```
 
 ### Backend (서버리스)
+
 ```
 - Database: Supabase PostgreSQL
 - Auth: Supabase Auth
@@ -342,12 +413,14 @@ await supabase
 ```
 
 ### External APIs
+
 ```
 - Login: 앱인토스 (토스)
 - Ads: 앱인토스/AdMob
 ```
 
 ### Deployment
+
 ```
 - Frontend: Vercel (Static)
 - Backend: Supabase
@@ -359,21 +432,25 @@ await supabase
 ## 🎯 설계 원칙
 
 ### 1. 서버리스 우선
+
 - 가능한 한 서버 없이 구현
 - 비용 최소화
 - 관리 부담 최소화
 
 ### 2. 점진적 확장
+
 - 필요할 때 서버 추가
 - 기존 코드 유지
 - 단계적 마이그레이션
 
 ### 3. 보안 우선
+
 - RLS로 데이터 보호
 - 클라이언트 검증 + 서버 검증
 - 민감한 데이터는 서버 처리
 
 ### 4. 사용자 경험
+
 - 빠른 로딩
 - 오프라인 지원 (PWA)
 - 반응형 디자인
@@ -390,7 +467,7 @@ await supabase
 
 ---
 
-**Last Updated**: 2024-01-20  
+**Last Updated**: 2025-10-21  
 **Architecture**: Serverless (Supabase + 클라이언트)  
-**Status**: Production Ready ✅
-
+**Status**: Phase 2 완료 ✅ (DB 스키마 & 데이터 임포트)  
+**Next**: Phase 3 (핵심 게임 메커니즘)

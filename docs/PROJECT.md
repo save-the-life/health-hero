@@ -392,19 +392,21 @@ HEARTS_EMPTY_MODAL
 
 **완료 기준**: 개발 서버 실행, 기본 라이브러리 설치 완료
 
-### Phase 2: DB 스키마 & 데이터 임포트
+### Phase 2: DB 스키마 & 데이터 임포트 ✅
 
-- Supabase 프로젝트/환경변수 설정
-- 스키마:
-  - `users(level, current_exp, total_exp, total_score, current_streak, current_stage, current_phase)`
-  - `quizzes(qnum, topic, prompt, choices JSONB, correct_answer_index, hint, explanation, difficulty, points)`
-  - `user_progress(user_id, stage_id, completed, stars, best_score, attempts, first_clear)`
-  - `user_items(user_id, item_type, quantity)`
-  - `user_hearts(user_id, hearts_count, last_refill_at)`
-- CSV → JSON 변환 & 임포트
-- 난이도별 인덱싱 및 랜덤 선택 최적화
+- ✅ Supabase 프로젝트/환경변수 설정 완료
+- ✅ 스키마 구현 완료:
+  - `user_profiles(level, current_exp, total_score, current_streak, current_stage, current_phase)` ✅
+  - `quizzes(qnum, topic, prompt, choices JSONB, answer_index, hint, explanation, difficulty_label, difficulty_level)` ✅
+  - `user_progress(user_id, phase, stage, completed, score, attempts, correct_count)` ✅
+  - `user_quiz_records(user_id, quiz_id, phase, stage, is_correct, score_earned, items_used)` ✅
+  - `user_item_settings(user_id, item_type, show_popup)` ✅
+  - `user_hearts(user_id, current_hearts, last_refill_at, ad_views_today)` ✅
+- ✅ CSV → JSON 변환 & 임포트 완료 (200문항)
+- ✅ RLS 정책 및 보안 설정 완료
+- ✅ 하트 자동 충전 함수 구현 완료
 
-**완료 기준**: 200문항 DB 적재, 난이도별 인덱싱, 퀴즈 선택 로직 구현
+**완료 기준**: ✅ 200문항 DB 적재, 난이도별 인덱싱, 퀴즈 선택 로직 구현
 
 ### Phase 3: 핵심 게임 메커니즘
 
@@ -538,8 +540,8 @@ npm run deploy
 ## 📊 프로젝트 현황
 
 - **프로젝트 시작일**: 2025-10-14
-- **현재 단계**: Phase 1 완료 ✅ + 시작 페이지 UI 완료 ✅
-- **다음 단계**: Phase 2 - DB 스키마 & 데이터 임포트
+- **현재 단계**: Phase 2 완료 ✅ (DB 스키마 & 데이터 임포트)
+- **다음 단계**: Phase 3 - 핵심 게임 메커니즘 구현
 
 ---
 
@@ -690,6 +692,23 @@ MIT License (예정)
 
 ## 📝 변경 이력
 
+### 2025-10-21
+
+- **Phase 2 완료**: DB 스키마 & 데이터 임포트 ✅
+  - Supabase 퀴즈 관련 테이블 6개 생성 완료
+  - 200개 퀴즈 데이터 CSV → JSONB 변환 및 업로드 완료
+  - RLS 정책 및 보안 설정 완료
+  - 하트 자동 충전 함수 구현 완료
+  - 게스트 로그인 기능 추가 (Supabase Anonymous Auth)
+- **데이터베이스 스키마 확장**:
+  - `quizzes` 테이블: 퀴즈 데이터 저장 (JSONB choices 배열)
+  - `user_progress` 테이블: 사용자 진행 상황 추적
+  - `user_quiz_records` 테이블: 퀴즈 결과 기록
+  - `user_item_settings` 테이블: 아이템 팝업 설정
+  - `user_hearts` 테이블: 하트 시스템 관리
+- **보안 강화**: RLS 정책으로 사용자별 데이터 접근 제어
+- **개발 환경 개선**: 게스트 로그인으로 UI 개발 가속화
+
 ### 2025-10-15
 
 - **하트 0 처리 로직(광고 컨티뉴/종료) 섹션 신설** 및 루프/경제/로드맵 반영
@@ -713,4 +732,4 @@ MIT License (예정)
 - 핵심 메커니즘/아이템/레벨&경험치 시스템 확정
 - 명확화 체크리스트 12항목 작성
 
-**Last Updated**: 2025-10-15
+**Last Updated**: 2025-10-21

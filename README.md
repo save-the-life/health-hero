@@ -7,11 +7,13 @@
 헬스 히어로는 재미있는 퀴즈를 통해 의료 상식을 학습할 수 있는 교육용 게임입니다.
 
 **특징:**
-- 🎮 200개의 의료 상식 퀴즈
+
+- 🎮 200개의 의료 상식 퀴즈 ✅
 - 💙 하트 시스템 (광고로 충전 가능)
 - 📊 레벨업 & 경험치 시스템
 - 🏆 리더보드
-- 🔐 토스 로그인 연동
+- 🔐 토스 로그인 연동 ✅
+- 👤 게스트 로그인 지원 ✅
 
 ---
 
@@ -26,6 +28,7 @@
 ```
 
 **특징:**
+
 - ✅ **백엔드 서버 불필요**
 - ✅ 완전한 서버리스 아키텍처
 - ✅ 비용: $0/월 (Free Tier)
@@ -56,9 +59,11 @@ NEXT_PUBLIC_TOSS_APP_KEY=health-hero
 
 ### 2. Supabase 데이터베이스 설정
 
-Supabase SQL Editor에서 `supabase/schema.sql` 실행
+1. **기본 스키마**: `supabase/schema.sql` 실행
+2. **퀴즈 스키마**: `supabase/quiz-schema.sql` 실행
+3. **퀴즈 데이터**: CSV 파일 업로드 또는 스크립트 실행
 
-자세한 설정: [supabase/README.md](supabase/README.md)
+자세한 설정: [supabase/QUIZ_IMPORT_GUIDE.md](supabase/QUIZ_IMPORT_GUIDE.md)
 
 ### 3. 개발 서버 실행
 
@@ -78,24 +83,29 @@ npm run build
 ## 📚 문서
 
 ### 토스 로그인
+
 - [README_TOSS_LOGIN.md](README_TOSS_LOGIN.md) - 토스 로그인 개요
 - [docs/TOSS_LOGIN_SETUP.md](docs/TOSS_LOGIN_SETUP.md) - 설정 가이드
 - [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md) - 구현 요약
 
 ### 보안 & 아키텍처
+
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - 전체 아키텍처
 - [docs/SECURITY_FAQ.md](docs/SECURITY_FAQ.md) - 보안 FAQ
 - [docs/ENV_SETUP.md](docs/ENV_SETUP.md) - 환경 변수 가이드
 
 ### Next.js & 디버깅
+
 - [docs/NEXTJS_CONFIG.md](docs/NEXTJS_CONFIG.md) - Next.js 설정 가이드
 - [docs/HYDRATION_ERROR_FIX.md](docs/HYDRATION_ERROR_FIX.md) - Hydration 에러 해결
 - [docs/ERUDA_SETUP.md](docs/ERUDA_SETUP.md) - Eruda 디버깅 도구 설정
 
 ### 확장 기능
+
 - [docs/MTLS_GUIDE.md](docs/MTLS_GUIDE.md) - 결제/푸시 기능 추가 시 가이드
 
 ### 프로젝트
+
 - [docs/PROJECT.md](docs/PROJECT.md) - 전체 프로젝트 구조 및 계획
 - [docs/Toss.md](docs/Toss.md) - 토스 로그인 상세 가이드
 
@@ -104,6 +114,7 @@ npm run build
 ## 🛠️ 기술 스택
 
 ### Frontend
+
 - **Framework**: Next.js 15.5.5 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS 4
@@ -112,15 +123,18 @@ npm run build
 - **Animation**: Framer Motion
 
 ### Backend (서버리스)
+
 - **Database**: Supabase PostgreSQL
 - **Auth**: Supabase Auth + 토스 로그인
 - **API**: Supabase REST API
 
 ### External APIs
+
 - **Login**: 앱인토스 (토스)
 - **Ads**: 앱인토스/AdMob (계획)
 
 ### Deployment
+
 - **Frontend**: Vercel (Static Export)
 - **Backend**: Supabase
 - **Build**: Granite (앱인토스)
@@ -169,29 +183,40 @@ health-hero/
 
 ## ✨ 주요 기능
 
-### ✅ 구현 완료
+### ✅ 구현 완료 (Phase 2)
+
 - [x] 토스 로그인 (완전 통합)
   - [x] appLogin() SDK 연동
   - [x] AccessToken 발급 (mTLS)
   - [x] 사용자 정보 조회 (login-me API)
   - [x] Supabase 사용자 생성/로그인
+- [x] 게스트 로그인 (Anonymous Auth) ✅
 - [x] Supabase Edge Function (mTLS 프록시)
 - [x] 사용자 프로필 관리
-- [x] Supabase 데이터베이스 연동
+- [x] 퀴즈 데이터베이스 (200문항) ✅
+- [x] 데이터베이스 스키마 (6개 테이블) ✅
 - [x] RLS 보안 정책
+- [x] 하트 자동 충전 함수 ✅
+- [x] CSV → JSONB 변환 스크립트 ✅
 - [x] 메인 페이지 UI
 - [x] 인트로 페이지 UI
 - [x] 게임 페이지 라우팅
 - [x] Eruda 디버깅 도구 (모바일)
 - [x] 샌드박스/토스앱 테스트 완료 ✅
 
-### 🚧 개발 중
-- [ ] 퀴즈 시스템
-- [ ] 하트 시스템
-- [ ] 점수/레벨 시스템
-- [ ] 광고 연동 (하트 충전)
+### 🚧 개발 중 (Phase 3)
 
-### 📅 계획
+- [ ] 핵심 게임 메커니즘
+- [ ] Zustand 스토어 구현
+- [ ] 퀴즈 선택 로직
+- [ ] 하트 시스템 UI
+- [ ] 점수/경험치 계산
+
+### 📅 계획 (Phase 4+)
+
+- [ ] UI/UX 구현
+- [ ] Phaser 씬
+- [ ] 광고 연동 (하트 충전)
 - [ ] 리더보드
 - [ ] 프로필 페이지
 - [ ] PWA 지원
@@ -202,6 +227,7 @@ health-hero/
 ## 🔐 보안
 
 ### 현재 구현
+
 - ✅ Row Level Security (RLS)
 - ✅ Supabase Auth (이메일 확인 비활성화)
 - ✅ 토스 OAuth 2.0
@@ -210,6 +236,7 @@ health-hero/
 - ✅ Client Secret 서버에서만 사용
 
 ### 미래 확장 시
+
 - ⚠️ 결제 기능 → mTLS 필요
 - ⚠️ 푸시 알림 → mTLS 필요
 - ⚠️ 포인트 지급 → mTLS 필요
@@ -221,11 +248,13 @@ health-hero/
 ## 💰 비용
 
 ### 현재 (서버리스)
+
 - Supabase Free Tier: **$0/월**
 - Vercel 호스팅: **$0/월**
 - **총합: $0/월** 🎉
 
 ### 미래 확장 시
+
 - Vercel Pro (서버 기능): $20/월
 - Supabase Pro: $25/월
 
@@ -234,9 +263,9 @@ health-hero/
 ## 📊 개발 상태
 
 - **Phase 1**: 환경 설정 ✅
-- **Phase 2**: 토스 로그인 ✅
-- **Phase 3**: 기본 UI ✅
-- **Phase 4**: 게임 로직 🚧
+- **Phase 2**: DB 스키마 & 데이터 임포트 ✅
+- **Phase 3**: 핵심 게임 메커니즘 🚧
+- **Phase 4**: UI/UX 구현 📅
 - **Phase 5**: Phaser 씬 📅
 - **Phase 6**: 광고 연동 📅
 - **Phase 7**: 배포 📅
@@ -263,9 +292,10 @@ MIT License
 
 ---
 
-**Last Updated**: 2025-01-20  
-**Version**: 0.2.0  
-**Status**: Development 🚧  
+**Last Updated**: 2025-10-21  
+**Version**: 0.3.0  
+**Status**: Phase 2 완료 ✅  
 **Toss Login**: ✅ **완전 작동**  
-**Sandbox Test**: ✅ Passed  
-**Production Ready**: 🚧 In Progress
+**Guest Login**: ✅ **완전 작동**  
+**Quiz Database**: ✅ **200문항 완료**  
+**Next Phase**: Phase 3 (핵심 게임 메커니즘)

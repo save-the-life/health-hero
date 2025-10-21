@@ -1,5 +1,6 @@
 import Image from "next/image";
 import TossLoginButton from "@/components/TossLoginButton";
+import GuestLoginButton from "@/components/GuestLoginButton";
 
 export default function Home() {
   return (
@@ -43,8 +44,9 @@ export default function Home() {
         </div>
 
         {/* 로그인 버튼 */}
-        <div className="w-full max-w-sm px-4 pb-8">
+        <div className="w-full max-w-sm px-4 pb-8 space-y-3">
           <TossLoginButton />
+          <GuestLoginButton />
         </div>
       </div>
     </div>
