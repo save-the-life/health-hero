@@ -2,5 +2,7 @@
   "/_not-found/page": "app/_not-found/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
   "/game/page": "app/game/page.js",
-  "/game/phase1/page": "app/game/phase1/page.js"
+  "/game/phase1/page": "app/game/phase1/page.js",
+  "/game/quiz/page": "app/game/quiz/page.js",
+  "/page": "app/page.js"
 }

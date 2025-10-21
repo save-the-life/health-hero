@@ -76,8 +76,8 @@ export default function Phase2Page() {
       return;
     }
     
-    // TODO: 퀴즈 페이지로 이동
-    console.log(`페이즈 2 스테이지 ${stageNumber} 클릭`);
+    // 퀴즈 페이지로 이동 (쿼리 파라미터로 페이즈와 스테이지 정보 전달)
+    router.push(`/game/quiz?phase=2&stage=${stageNumber}`);
   };
 
   // 로딩 중이거나 에러가 있으면 표시

@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import { supabase } from '@/lib/supabase'
 
 interface UserHearts {
+  user_id: string
   current_hearts: number
   last_refill_at: string
   ad_views_today: number
@@ -97,6 +98,7 @@ export const useGameStore = create<GameState>()(
             console.warn('하트 데이터 로드 실패, 기본값 사용:', heartsResult.error.message)
             // 하트 데이터가 없으면 기본값 사용
             const defaultHearts = {
+              user_id: userId,
               current_hearts: 5,
               last_refill_at: new Date().toISOString(),
               ad_views_today: 0,

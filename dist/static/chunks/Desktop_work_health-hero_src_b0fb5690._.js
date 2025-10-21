@@ -592,12 +592,12 @@ function GamePage() {
                         priority: true
                     }, void 0, false, {
                         fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                        lineNumber: 148,
+                        lineNumber: 149,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                    lineNumber: 147,
+                    lineNumber: 148,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -607,18 +607,18 @@ function GamePage() {
                         children: "로딩 중..."
                     }, void 0, false, {
                         fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                        lineNumber: 159,
+                        lineNumber: 160,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                    lineNumber: 158,
+                    lineNumber: 159,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-            lineNumber: 145,
+            lineNumber: 146,
             columnNumber: 7
         }, this);
     }
@@ -636,12 +636,12 @@ function GamePage() {
                         priority: true
                     }, void 0, false, {
                         fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                        lineNumber: 170,
+                        lineNumber: 171,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                    lineNumber: 169,
+                    lineNumber: 170,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -654,18 +654,18 @@ function GamePage() {
                         ]
                     }, void 0, true, {
                         fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                        lineNumber: 181,
+                        lineNumber: 182,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                    lineNumber: 180,
+                    lineNumber: 181,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-            lineNumber: 167,
+            lineNumber: 168,
             columnNumber: 7
         }, this);
     }
@@ -680,7 +680,7 @@ function GamePage() {
                         children: "로그인이 필요합니다"
                     }, void 0, false, {
                         fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                        lineNumber: 191,
+                        lineNumber: 192,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -690,23 +690,23 @@ function GamePage() {
                             children: "홈으로 돌아가기"
                         }, void 0, false, {
                             fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                            lineNumber: 193,
+                            lineNumber: 194,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                        lineNumber: 192,
+                        lineNumber: 193,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                lineNumber: 190,
+                lineNumber: 191,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-            lineNumber: 189,
+            lineNumber: 190,
             columnNumber: 7
         }, this);
     }
@@ -723,12 +723,12 @@ function GamePage() {
                     priority: true
                 }, void 0, false, {
                     fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                    lineNumber: 205,
+                    lineNumber: 206,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                lineNumber: 204,
+                lineNumber: 205,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -749,7 +749,7 @@ function GamePage() {
                                         className: "relative z-10"
                                     }, void 0, false, {
                                         fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                                        lineNumber: 221,
+                                        lineNumber: 222,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -760,7 +760,7 @@ function GamePage() {
                                         className: "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20"
                                     }, void 0, false, {
                                         fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                                        lineNumber: 229,
+                                        lineNumber: 230,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -777,7 +777,7 @@ function GamePage() {
                                         }
                                     }, void 0, false, {
                                         fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                                        lineNumber: 237,
+                                        lineNumber: 238,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -788,18 +788,18 @@ function GamePage() {
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                                        lineNumber: 246,
+                                        lineNumber: 247,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                                lineNumber: 219,
+                                lineNumber: 220,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                            lineNumber: 218,
+                            lineNumber: 219,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -815,7 +815,7 @@ function GamePage() {
                                         className: "relative z-10"
                                     }, void 0, false, {
                                         fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                                        lineNumber: 256,
+                                        lineNumber: 257,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -823,7 +823,7 @@ function GamePage() {
                                         children: (hearts === null || hearts === void 0 ? void 0 : hearts.current_hearts) || 5
                                     }, void 0, false, {
                                         fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                                        lineNumber: 264,
+                                        lineNumber: 265,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -834,7 +834,7 @@ function GamePage() {
                                         className: "absolute bottom-0 right-0 z-20"
                                     }, void 0, false, {
                                         fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                                        lineNumber: 268,
+                                        lineNumber: 269,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -851,7 +851,7 @@ function GamePage() {
                                         }
                                     }, void 0, false, {
                                         fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                                        lineNumber: 276,
+                                        lineNumber: 277,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -859,18 +859,18 @@ function GamePage() {
                                         children: heartTimer
                                     }, void 0, false, {
                                         fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                                        lineNumber: 285,
+                                        lineNumber: 286,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                                lineNumber: 254,
+                                lineNumber: 255,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                            lineNumber: 253,
+                            lineNumber: 254,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -886,7 +886,7 @@ function GamePage() {
                                         className: "relative z-10"
                                     }, void 0, false, {
                                         fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                                        lineNumber: 295,
+                                        lineNumber: 296,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -903,7 +903,7 @@ function GamePage() {
                                         }
                                     }, void 0, false, {
                                         fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                                        lineNumber: 303,
+                                        lineNumber: 304,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -911,18 +911,18 @@ function GamePage() {
                                         children: totalScore.toLocaleString()
                                     }, void 0, false, {
                                         fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                                        lineNumber: 312,
+                                        lineNumber: 313,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                                lineNumber: 293,
+                                lineNumber: 294,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                            lineNumber: 292,
+                            lineNumber: 293,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -935,23 +935,23 @@ function GamePage() {
                                 className: "cursor-pointer hover:opacity-80 transition-opacity"
                             }, void 0, false, {
                                 fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                                lineNumber: 320,
+                                lineNumber: 321,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                            lineNumber: 319,
+                            lineNumber: 320,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                    lineNumber: 216,
+                    lineNumber: 217,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                lineNumber: 215,
+                lineNumber: 216,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -975,17 +975,17 @@ function GamePage() {
                                     className: "mb-2"
                                 }, void 0, false, {
                                     fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                                    lineNumber: 350,
+                                    lineNumber: 351,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                                lineNumber: 349,
+                                lineNumber: 350,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                            lineNumber: 345,
+                            lineNumber: 346,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1001,17 +1001,17 @@ function GamePage() {
                                     className: "mb-2"
                                 }, void 0, false, {
                                     fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                                    lineNumber: 368,
+                                    lineNumber: 369,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                                lineNumber: 367,
+                                lineNumber: 368,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                            lineNumber: 361,
+                            lineNumber: 362,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1027,17 +1027,17 @@ function GamePage() {
                                     className: "mb-2"
                                 }, void 0, false, {
                                     fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                                    lineNumber: 386,
+                                    lineNumber: 387,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                                lineNumber: 385,
+                                lineNumber: 386,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                            lineNumber: 379,
+                            lineNumber: 380,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1053,17 +1053,17 @@ function GamePage() {
                                     className: "mb-2"
                                 }, void 0, false, {
                                     fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                                    lineNumber: 404,
+                                    lineNumber: 405,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                                lineNumber: 403,
+                                lineNumber: 404,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                            lineNumber: 397,
+                            lineNumber: 398,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1076,12 +1076,12 @@ function GamePage() {
                                 className: "opacity-80"
                             }, void 0, false, {
                                 fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                                lineNumber: 417,
+                                lineNumber: 418,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                            lineNumber: 416,
+                            lineNumber: 417,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1094,12 +1094,12 @@ function GamePage() {
                                 className: "opacity-80"
                             }, void 0, false, {
                                 fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                                lineNumber: 428,
+                                lineNumber: 429,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                            lineNumber: 427,
+                            lineNumber: 428,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$work$2f$health$2d$hero$2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1112,29 +1112,29 @@ function GamePage() {
                                 className: "opacity-80"
                             }, void 0, false, {
                                 fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                                lineNumber: 439,
+                                lineNumber: 440,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                            lineNumber: 438,
+                            lineNumber: 439,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                    lineNumber: 337,
+                    lineNumber: 338,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-                lineNumber: 332,
+                lineNumber: 333,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/Desktop/work/health-hero/src/app/game/page.tsx",
-        lineNumber: 202,
+        lineNumber: 203,
         columnNumber: 5
     }, this);
 }

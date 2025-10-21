@@ -192,6 +192,7 @@ const useGameStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$Desktop
                     console.warn('하트 데이터 로드 실패, 기본값 사용:', heartsResult.error.message);
                     // 하트 데이터가 없으면 기본값 사용
                     const defaultHearts = {
+                        user_id: userId,
                         current_hearts: 5,
                         last_refill_at: new Date().toISOString(),
                         ad_views_today: 0,
@@ -606,8 +607,8 @@ function Phase1Page() {
         if (isStageLocked(stageNumber)) {
             return;
         }
-        // TODO: 퀴즈 페이지로 이동
-        console.log("페이즈 1 스테이지 ".concat(stageNumber, " 클릭"));
+        // 퀴즈 페이지로 이동 (쿼리 파라미터로 페이즈와 스테이지 정보 전달)
+        router.push("/game/quiz?phase=1&stage=".concat(stageNumber));
     };
     // 로딩 중이거나 에러가 있으면 표시
     if (isLoading) {
