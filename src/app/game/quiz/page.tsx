@@ -151,15 +151,12 @@ export default function QuizPage() {
       console.log("데이터베이스 정답 인덱스:", currentQuestion.answer_index);
       console.log(
         "데이터베이스 정답:",
-        currentQuestion.choices[currentQuestion.answer_index - 1]
+        currentQuestion.choices[currentQuestion.answer_index]
       );
-      console.log(
-        "정답 여부:",
-        choiceIndex === currentQuestion.answer_index - 1
-      );
+      console.log("정답 여부:", choiceIndex === currentQuestion.answer_index);
       console.log("========================");
 
-      const correct = choiceIndex === currentQuestion.answer_index - 1;
+      const correct = choiceIndex === currentQuestion.answer_index;
       setIsCorrect(correct);
 
       // 사용자 답안 저장
@@ -262,7 +259,7 @@ export default function QuizPage() {
       // 정답 개수 계산
       const correctCount = userAnswers.filter((answer, index) => {
         const question = stageQuestions[index];
-        return question && answer === question.answer_index - 1;
+        return question && answer === question.answer_index;
       }).length;
 
       // 보너스 점수/경험치 계산
@@ -692,18 +689,14 @@ export default function QuizPage() {
                     isCorrect
                       ? currentQuestion.explanation
                       : `${
-                          currentQuestion.choices[
-                            currentQuestion.answer_index - 1
-                          ]
+                          currentQuestion.choices[currentQuestion.answer_index]
                         }. ${currentQuestion.explanation}`
                   )}`}
                 >
                   {isCorrect
                     ? currentQuestion.explanation
                     : `${
-                        currentQuestion.choices[
-                          currentQuestion.answer_index - 1
-                        ]
+                        currentQuestion.choices[currentQuestion.answer_index]
                       }. ${currentQuestion.explanation}`}
                 </p>
 

@@ -1,63 +1,78 @@
 -- ============================================
--- RLS 정책 수정 - anon 역할 허용
+-- RLS 정책 확인 및 수정 스크립트 (2025-01-27)
+-- quiz_submission_logs 테이블 RLS 정책 문제 해결
 -- ============================================
 
--- 1. 기존 정책 삭제
-DROP POLICY IF EXISTS "Users can view own hearts" ON user_hearts;
-DROP POLICY IF EXISTS "Users can update own hearts" ON user_hearts;
-DROP POLICY IF EXISTS "Users can insert own hearts" ON user_hearts;
+-- 1. 현재 RLS 정책 확인
+-- ============================================
+SELECT 
+    schemaname,
+    tablename,
+    policyname,
+    permissive,
+    roles,
+    cmd,
+    qual,
+    with_check
+FROM pg_policies 
+WHERE tablename IN ('quiz_submission_logs', 'user_quiz_records');
 
-DROP POLICY IF EXISTS "Users can view own profile" ON user_profiles;
-DROP POLICY IF EXISTS "Users can update own profile" ON user_profiles;
-DROP POLICY IF EXISTS "Users can insert own profile" ON user_profiles;
+-- 2. 테이블별 RLS 활성화 상태 확인
+-- ============================================
+SELECT 
+    schemaname,
+    tablename,
+    rowsecurity as rls_enabled
+FROM pg_tables 
+WHERE tablename IN ('quiz_submission_logs', 'user_quiz_records');
 
--- 2. 새로운 정책 생성 (anon 역할 포함)
--- user_hearts 정책
-CREATE POLICY "Users can view own hearts" ON user_hearts
-  FOR SELECT USING (
-    auth.uid() = user_id OR 
-    auth.role() = 'anon' OR 
-    auth.role() = 'authenticated'
-  );
+-- 3. quiz_submission_logs 테이블 RLS 정책 수정
+-- ============================================
+-- 기존 정책 삭제 (있다면)
+DROP POLICY IF EXISTS "quiz_submission_logs_insert_policy" ON quiz_submission_logs;
+DROP POLICY IF EXISTS "quiz_submission_logs_select_policy" ON quiz_submission_logs;
 
-CREATE POLICY "Users can update own hearts" ON user_hearts
-  FOR UPDATE USING (
-    auth.uid() = user_id OR 
-    auth.role() = 'anon' OR 
-    auth.role() = 'authenticated'
-  );
+-- 새로운 INSERT 정책 생성 (인증된 사용자는 자신의 레코드만 삽입 가능)
+CREATE POLICY "quiz_submission_logs_insert_policy" ON quiz_submission_logs
+    FOR INSERT 
+    TO authenticated 
+    WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can insert own hearts" ON user_hearts
-  FOR INSERT WITH CHECK (
-    auth.uid() = user_id OR 
-    auth.role() = 'anon' OR 
-    auth.role() = 'authenticated'
-  );
+-- 새로운 SELECT 정책 생성 (인증된 사용자는 자신의 레코드만 조회 가능)
+CREATE POLICY "quiz_submission_logs_select_policy" ON quiz_submission_logs
+    FOR SELECT 
+    TO authenticated 
+    USING (auth.uid() = user_id);
 
--- user_profiles 정책
-CREATE POLICY "Users can view own profile" ON user_profiles
-  FOR SELECT USING (
-    auth.uid() = id OR 
-    auth.role() = 'anon' OR 
-    auth.role() = 'authenticated'
-  );
+-- 4. user_quiz_records 테이블 RLS 정책도 확인 및 수정
+-- ============================================
+-- 기존 정책 삭제 (있다면)
+DROP POLICY IF EXISTS "user_quiz_records_insert_policy" ON user_quiz_records;
+DROP POLICY IF EXISTS "user_quiz_records_select_policy" ON user_quiz_records;
 
-CREATE POLICY "Users can update own profile" ON user_profiles
-  FOR UPDATE USING (
-    auth.uid() = id OR 
-    auth.role() = 'anon' OR 
-    auth.role() = 'authenticated'
-  );
+-- 새로운 INSERT 정책 생성
+CREATE POLICY "user_quiz_records_insert_policy" ON user_quiz_records
+    FOR INSERT 
+    TO authenticated 
+    WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can insert own profile" ON user_profiles
-  FOR INSERT WITH CHECK (
-    auth.uid() = id OR 
-    auth.role() = 'anon' OR 
-    auth.role() = 'authenticated'
-  );
+-- 새로운 SELECT 정책 생성
+CREATE POLICY "user_quiz_records_select_policy" ON user_quiz_records
+    FOR SELECT 
+    TO authenticated 
+    USING (auth.uid() = user_id);
 
--- 3. 테스트 쿼리
--- anon 역할로 실행해서 데이터가 보이는지 확인
-SELECT COUNT(*) as quizzes_count FROM quizzes;
-SELECT COUNT(*) as user_hearts_count FROM user_hearts;
-SELECT COUNT(*) as user_profiles_count FROM user_profiles;
+-- 5. 정책 적용 확인
+-- ============================================
+SELECT 
+    schemaname,
+    tablename,
+    policyname,
+    permissive,
+    roles,
+    cmd,
+    qual,
+    with_check
+FROM pg_policies 
+WHERE tablename IN ('quiz_submission_logs', 'user_quiz_records')
+ORDER BY tablename, policyname;

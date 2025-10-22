@@ -184,6 +184,18 @@ export class QuizService {
     timeTaken?: number
   ): Promise<boolean> {
     try {
+      // 먼저 quiz_id가 존재하는지 확인
+      const { data: quizExists, error: checkError } = await supabase
+        .from('quizzes')
+        .select('id')
+        .eq('id', questionId)
+        .single();
+
+      if (checkError || !quizExists) {
+        console.warn(`퀴즈 ID ${questionId}가 존재하지 않습니다. 기록을 건너뜁니다.`);
+        return true; // 퀴즈가 존재하지 않아도 게임 진행은 계속
+      }
+
       // 퀴즈 기록 저장 (중복 방지를 위해)
       const { error: recordError } = await supabase
         .from('user_quiz_records')
@@ -199,6 +211,11 @@ export class QuizService {
 
       if (recordError) {
         console.error('퀴즈 기록 저장 실패:', recordError);
+        // 외래키 제약조건 오류인 경우 경고만 출력하고 계속 진행
+        if (recordError.code === '23503') {
+          console.warn('퀴즈 데이터 동기화 문제로 기록 저장을 건너뜁니다.');
+          return true;
+        }
         return false;
       }
 
@@ -215,6 +232,14 @@ export class QuizService {
 
       if (logError) {
         console.warn('퀴즈 제출 로그 저장 실패:', logError);
+        // 외래키 제약조건 오류인 경우에도 계속 진행
+        if (logError.code === '23503') {
+          console.warn('퀴즈 데이터 동기화 문제로 제출 로그 저장을 건너뜁니다.');
+        }
+        // RLS 정책 위반 오류인 경우에도 계속 진행
+        if (logError.code === '42501') {
+          console.warn('RLS 정책 위반으로 제출 로그 저장을 건너뜁니다.');
+        }
         // 로그 실패는 치명적이지 않으므로 계속 진행
       }
 
