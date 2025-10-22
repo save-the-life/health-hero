@@ -1,0 +1,57 @@
+/* 폭죽 애니메이션 스타일 */
+@keyframes firework-explosion {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2) rotate(180deg);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(0.2) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes firework-center {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  20% {
+    transform: scale(2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+
+@keyframes firework-sparkle {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 1;
+  }
+  30% {
+    transform: scale(1) rotate(120deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(0.1) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.firework-particle {
+  animation: firework-explosion 2.5s ease-out forwards;
+}
+
+.firework-center {
+  animation: firework-center 2.5s ease-out forwards;
+}
+
+.firework-sparkle {
+  animation: firework-sparkle 2s ease-out forwards;
+}

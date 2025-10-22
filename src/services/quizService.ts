@@ -6,6 +6,7 @@ export interface QuizQuestion {
   topic: string;
   prompt: string;
   choices: string[];
+  answer_index: number;
   hint: string;
   explanation: string;
   difficulty_label: string;
@@ -18,7 +19,43 @@ export interface QuizAnswer {
 }
 
 export class QuizService {
-  // 특정 페이즈와 스테이지의 퀴즈 문제 가져오기 (정답 정보 제외)
+  // 스테이지별 난이도 매핑
+  private static getDifficultyByStage(stage: number): string {
+    if (stage <= 2) return '쉬움';
+    if (stage <= 4) return '보통';
+    return '어려움';
+  }
+
+  // 특정 페이즈와 스테이지의 랜덤 퀴즈 문제 5개 가져오기
+  static async getStageQuestions(phase: number, stage: number): Promise<QuizQuestion[]> {
+    try {
+      const difficulty = this.getDifficultyByStage(stage);
+      
+      // 먼저 해당 난이도의 모든 문제를 가져온 후 클라이언트에서 랜덤 선택
+      const { data, error } = await supabase
+        .from('quizzes')
+        .select('id, qnum, topic, prompt, choices, answer_index, hint, explanation, difficulty_label, difficulty_level')
+        .eq('difficulty_label', difficulty);
+
+      if (error) {
+        console.error('스테이지 퀴즈 문제 가져오기 실패:', error);
+        return [];
+      }
+
+      if (!data || data.length === 0) {
+        return [];
+      }
+
+      // 클라이언트에서 랜덤 셔플링하여 5개 선택
+      const shuffled = [...data].sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, 5);
+    } catch (error) {
+      console.error('스테이지 퀴즈 문제 가져오기 중 오류:', error);
+      return [];
+    }
+  }
+
+  // 특정 페이즈와 스테이지의 퀴즈 문제 가져오기 (정답 정보 제외) - 기존 메서드 유지
   static async getQuizQuestion(phase: number, stage: number): Promise<QuizQuestion | null> {
     try {
       // qnum을 phase와 stage로 계산 (예: phase 1, stage 1 = qnum 1)
@@ -26,7 +63,7 @@ export class QuizService {
       
       const { data, error } = await supabase
         .from('quizzes')
-        .select('id, qnum, topic, prompt, choices, hint, explanation, difficulty_label, difficulty_level')
+        .select('id, qnum, topic, prompt, choices, answer_index, hint, explanation, difficulty_label, difficulty_level')
         .eq('qnum', qnum)
         .single();
 
@@ -50,7 +87,7 @@ export class QuizService {
       
       const { data, error } = await supabase
         .from('quizzes')
-        .select('id, qnum, topic, prompt, choices, hint, explanation, difficulty_label, difficulty_level')
+        .select('id, qnum, topic, prompt, choices, answer_index, hint, explanation, difficulty_label, difficulty_level')
         .gte('qnum', startQnum)
         .lte('qnum', endQnum)
         .order('qnum', { ascending: true });
@@ -72,7 +109,7 @@ export class QuizService {
     try {
       const { data, error } = await supabase
         .from('quizzes')
-        .select('id, qnum, topic, prompt, choices, hint, explanation, difficulty_label, difficulty_level')
+        .select('id, qnum, topic, prompt, choices, answer_index, hint, explanation, difficulty_label, difficulty_level')
         .order('qnum', { ascending: true });
 
       if (error) {

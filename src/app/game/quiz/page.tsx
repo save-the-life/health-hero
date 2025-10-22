@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { useGameStore } from "@/store/gameStore";
 import GameHeader from "@/components/GameHeader";
@@ -13,54 +13,130 @@ export default function QuizPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isAuthenticated, initialize } = useAuthStore();
-  const { 
-    level, 
-    totalScore, 
-    currentPhase,
-    currentStage,
-    hearts, 
-    heartTimer, 
-    isLoading, 
+  const {
+    level,
+    totalScore,
+    hearts,
+    isLoading,
     error,
     loadUserData,
-    updateHearts 
+    updateHearts,
+    consumeHeart,
   } = useGameStore();
 
   // URL 파라미터에서 현재 퀴즈 정보 가져오기
-  const quizPhase = parseInt(searchParams.get('phase') || '1');
-  const quizStage = parseInt(searchParams.get('stage') || '1');
+  const quizPhase = parseInt(searchParams.get("phase") || "1");
+  const quizStage = parseInt(searchParams.get("stage") || "1");
 
   // 퀴즈 데이터 상태
-  const [currentQuestion, setCurrentQuestion] = useState<QuizQuestion | null>(null);
+  const [stageQuestions, setStageQuestions] = useState<QuizQuestion[]>([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [quizLoading, setQuizLoading] = useState(true);
   const [quizError, setQuizError] = useState<string | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [showResult, setShowResult] = useState(false);
+  const [isCorrect, setIsCorrect] = useState(false);
+
+  // 중복 실행 방지를 위한 ref
+  const heartDeductedRef = useRef(false);
+
+  // 현재 문제 가져오기
+  const currentQuestion = stageQuestions[currentQuestionIndex] || null;
 
   // 텍스트 길이에 따른 동적 폰트 크기 계산
-  const getDynamicFontSize = (text: string, maxWidth: number = 245): string => {
+  const getDynamicFontSize = (text: string): string => {
     const textLength = text.length;
-    
+
     // 텍스트 길이에 따른 폰트 크기 결정
     if (textLength <= 20) {
-      return 'text-2xl'; // 24px
+      return "text-2xl"; // 24px
     } else if (textLength <= 30) {
-      return 'text-xl'; // 20px
+      return "text-xl"; // 20px
     } else if (textLength <= 40) {
-      return 'text-lg'; // 18px
+      return "text-lg"; // 18px
     } else if (textLength <= 50) {
-      return 'text-base'; // 16px
+      return "text-base"; // 16px
     } else if (textLength <= 60) {
-      return 'text-sm'; // 14px
+      return "text-sm"; // 14px
     } else {
-      return 'text-xs'; // 12px
+      return "text-xs"; // 12px
     }
   };
 
   // 선택지 클릭 핸들러
-  const handleChoiceClick = (choiceIndex: number) => {
+  const handleChoiceClick = async (choiceIndex: number) => {
     setSelectedAnswer(choiceIndex);
-    // TODO: 답안 제출 로직 구현
-    console.log('선택된 답안:', choiceIndex);
+
+    if (currentQuestion) {
+      console.log("=== 퀴즈 디버깅 정보 ===");
+      console.log("문제 번호:", currentQuestion.qnum);
+      console.log("문제:", currentQuestion.prompt);
+      console.log("선택지들:", currentQuestion.choices);
+      console.log("선택한 인덱스:", choiceIndex);
+      console.log("선택한 답안:", currentQuestion.choices[choiceIndex]);
+      console.log("데이터베이스 정답 인덱스:", currentQuestion.answer_index);
+      console.log(
+        "데이터베이스 정답:",
+        currentQuestion.choices[currentQuestion.answer_index - 1]
+      );
+      console.log(
+        "정답 여부:",
+        choiceIndex === currentQuestion.answer_index - 1
+      );
+      console.log("========================");
+
+      const correct = choiceIndex === currentQuestion.answer_index - 1;
+      setIsCorrect(correct);
+
+      // 오답인 경우 하트 차감
+      if (!correct && user?.id) {
+        console.log("오답! 하트 차감");
+        // 하트 차감 로직 (하트가 0보다 클 때만 차감)
+        if (hearts && hearts.current_hearts > 0) {
+          try {
+            const success = await consumeHeart(1);
+            if (success) {
+              console.log(
+                `하트 차감 성공: ${hearts.current_hearts} → ${
+                  hearts.current_hearts - 1
+                }`
+              );
+            } else {
+              console.log("하트 차감 실패");
+            }
+          } catch (error) {
+            console.error("하트 차감 중 오류:", error);
+          }
+        } else {
+          console.log("하트가 없어서 차감할 수 없습니다");
+          // 하트가 0일 때 게임 종료 또는 다른 처리
+          // TODO: 하트가 0일 때의 처리 로직 (게임 종료, 광고 시청 유도 등)
+        }
+      }
+
+      // 결과 표시
+      setShowResult(true);
+    }
+  };
+
+  // 아이템 클릭 핸들러
+  const handleItemClick = (itemType: string) => {
+    console.log("아이템 클릭:", itemType);
+    // TODO: 아이템 사용 로직 구현
+  };
+
+  // 다음 문제로 넘어가는 핸들러
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex < stageQuestions.length - 1) {
+      // 다음 문제로 이동
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+      setShowResult(false);
+      setSelectedAnswer(null);
+    } else {
+      // 모든 문제 완료 - 스테이지 결과 페이지로 이동
+      console.log("스테이지 완료!");
+      // TODO: 스테이지 결과 페이지로 이동
+    }
   };
 
   // 컴포넌트 마운트 시 인증 상태 초기화 및 데이터 로드
@@ -78,20 +154,25 @@ export default function QuizPage() {
   useEffect(() => {
     const loadQuizData = async () => {
       if (!isAuthenticated) return;
-      
+
       setQuizLoading(true);
       setQuizError(null);
-      
+      heartDeductedRef.current = false; // 새로운 스테이지 진입 시 플래그 리셋
+
       try {
-        const question = await QuizService.getQuizQuestion(quizPhase, quizStage);
-        if (question) {
-          setCurrentQuestion(question);
+        const questions = await QuizService.getStageQuestions(
+          quizPhase,
+          quizStage
+        );
+        if (questions && questions.length > 0) {
+          setStageQuestions(questions);
+          setCurrentQuestionIndex(0);
         } else {
-          setQuizError('퀴즈 문제를 찾을 수 없습니다.');
+          setQuizError("퀴즈 문제를 찾을 수 없습니다.");
         }
       } catch (error) {
-        console.error('퀴즈 데이터 로드 실패:', error);
-        setQuizError('퀴즈 데이터를 불러오는데 실패했습니다.');
+        console.error("퀴즈 데이터 로드 실패:", error);
+        setQuizError("퀴즈 데이터를 불러오는데 실패했습니다.");
       } finally {
         setQuizLoading(false);
       }
@@ -100,10 +181,65 @@ export default function QuizPage() {
     loadQuizData();
   }, [isAuthenticated, quizPhase, quizStage]);
 
+  // 스테이지 진입 시 하트 차감 (별도 useEffect로 분리)
+  useEffect(() => {
+    const deductHeartOnStageEntry = async () => {
+      if (!isAuthenticated || !user?.id || !hearts) return;
+
+      // 이미 하트가 차감되었는지 확인 (중복 차감 방지)
+      if (heartDeductedRef.current) {
+        console.log("이미 하트가 차감되었습니다. 중복 실행 방지");
+        return;
+      }
+
+      if (hearts.current_hearts <= 0) {
+        console.log("하트가 없어서 스테이지에 진입할 수 없습니다");
+        setQuizError("하트가 부족합니다. 하트를 충전해주세요.");
+        return;
+      }
+
+      try {
+        console.log("스테이지 진입! 하트 차감");
+        heartDeductedRef.current = true; // 차감 시작 표시
+
+        const success = await consumeHeart(1);
+        if (success) {
+          console.log(
+            `스테이지 진입 하트 차감 성공: ${hearts.current_hearts} → ${
+              hearts.current_hearts - 1
+            }`
+          );
+        } else {
+          console.log("스테이지 진입 하트 차감 실패");
+          heartDeductedRef.current = false; // 실패 시 플래그 리셋
+        }
+      } catch (error) {
+        console.error("스테이지 진입 하트 차감 중 오류:", error);
+        heartDeductedRef.current = false; // 에러 시 플래그 리셋
+      }
+    };
+
+    // 퀴즈 데이터가 로드된 후에만 하트 차감 실행
+    if (
+      stageQuestions.length > 0 &&
+      !quizLoading &&
+      !heartDeductedRef.current
+    ) {
+      deductHeartOnStageEntry();
+    }
+  }, [
+    isAuthenticated,
+    user?.id,
+    hearts,
+    stageQuestions.length,
+    quizLoading,
+    consumeHeart,
+  ]);
+
   // 인증되지 않은 경우 리다이렉트
   useEffect(() => {
     if (!isAuthenticated && !isLoading) {
-      router.push('/');
+      router.push("/");
     }
   }, [isAuthenticated, isLoading, router]);
 
@@ -113,13 +249,12 @@ export default function QuizPage() {
 
     const interval = setInterval(() => {
       if (hearts && hearts.current_hearts < 5) {
-        updateHearts(user.id);
+        updateHearts();
       }
     }, 30000); // 30초마다 실행
 
     return () => clearInterval(interval);
   }, [isAuthenticated, user?.id, hearts, updateHearts]);
-
 
   // 로딩 중
   if (isLoading) {
@@ -135,7 +270,7 @@ export default function QuizPage() {
             priority
           />
         </div>
-        
+
         {/* 로딩 텍스트 */}
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <div className="text-white text-xl font-medium">로딩 중...</div>
@@ -158,7 +293,7 @@ export default function QuizPage() {
             priority
           />
         </div>
-        
+
         {/* 에러 텍스트 */}
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <div className="text-red-500 text-xl font-medium">에러: {error}</div>
@@ -192,7 +327,13 @@ export default function QuizPage() {
       {/* 배경 이미지 */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/images/backgrounds/background-quiz.png"
+          src={
+            showResult
+              ? isCorrect
+                ? "/images/backgrounds/background-answer.png"
+                : "/images/backgrounds/background-wrong.png"
+              : "/images/backgrounds/background-quiz.png"
+          }
           alt="퀴즈 배경"
           fill
           className="object-cover"
@@ -214,7 +355,7 @@ export default function QuizPage() {
             height={24}
             className="object-cover"
           />
-          
+
           {/* 프로그래스바 내부 */}
           <div className="absolute top-1 left-1">
             <Image
@@ -224,22 +365,26 @@ export default function QuizPage() {
               height={16}
               className="object-cover"
             />
-            
-            {/* 진행률 표시 (현재 스테이지에 따라) */}
-            <div 
+
+            {/* 진행률 표시 (현재 문제 진행 상황에 따라) */}
+            <div
               className="absolute top-0 left-0 h-4 rounded-lg"
               style={{
-                width: `${(quizStage / 5) * 300}px`,
-                background: 'linear-gradient(to bottom, #9DF544, #63D42A)',
-                border: '1px solid rgba(47, 153, 21, 0.8)',
-                boxShadow: 'inset -2px 0px 2px 0px #65D925, inset 2px 0px 2px 0px #67D721'
+                width: `${
+                  ((currentQuestionIndex + 1) / stageQuestions.length) * 300
+                }px`,
+                background: "linear-gradient(to bottom, #9DF544, #63D42A)",
+                border: "1px solid rgba(47, 153, 21, 0.8)",
+                boxShadow:
+                  "inset -2px 0px 2px 0px #65D925, inset 2px 0px 2px 0px #67D721",
               }}
             />
-            
+
             {/* 스테이지 정보 텍스트 */}
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
               <span className="text-white font-bold text-sm">
-                STAGE {quizPhase}-{quizStage}
+                STAGE {quizPhase}-{quizStage} ({currentQuestionIndex + 1}/
+                {stageQuestions.length})
               </span>
             </div>
           </div>
@@ -251,7 +396,9 @@ export default function QuizPage() {
         {/* 퀴즈 로딩 중 */}
         {quizLoading && (
           <div className="flex justify-center items-center min-h-[400px]">
-            <div className="text-white text-xl font-medium">퀴즈 로딩 중...</div>
+            <div className="text-white text-xl font-medium">
+              퀴즈 로딩 중...
+            </div>
           </div>
         )}
 
@@ -263,7 +410,7 @@ export default function QuizPage() {
         )}
 
         {/* 퀴즈 문제 표시 */}
-        {!quizLoading && !quizError && currentQuestion && (
+        {!quizLoading && !quizError && currentQuestion && !showResult && (
           <div className="flex flex-col items-center">
             {/* 칠판 */}
             <div className="relative mb-6">
@@ -274,22 +421,30 @@ export default function QuizPage() {
                 height={282}
                 className="object-cover"
               />
-              
+
               {/* 문제 및 토픽 텍스트 컨테이너 */}
               <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
                 {/* 토픽 텍스트 */}
-                <p className={`text-white text-center font-normal leading-relaxed w-[245px] mb-2 ${getDynamicFontSize(`[${currentQuestion.topic}]`)}`}>
+                <p
+                  className={`text-white text-center font-normal leading-relaxed w-[245px] mb-2 ${getDynamicFontSize(
+                    `[${currentQuestion.topic}]`
+                  )}`}
+                >
                   [{currentQuestion.topic}]
                 </p>
                 {/* 문제 텍스트 */}
-                <p className={`text-white text-center font-normal leading-relaxed w-[245px] ${getDynamicFontSize(currentQuestion.prompt)}`}>
+                <p
+                  className={`text-white text-center font-normal leading-relaxed w-[245px] ${getDynamicFontSize(
+                    currentQuestion.prompt
+                  )}`}
+                >
                   {currentQuestion.prompt}
                 </p>
               </div>
             </div>
 
             {/* 선택지 버튼들 */}
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 mb-[80px]">
               {currentQuestion.choices.map((choice, index) => (
                 <QuizChoiceButton
                   key={index}
@@ -302,7 +457,254 @@ export default function QuizPage() {
             </div>
           </div>
         )}
+
+        {/* 결과 페이지 표시 */}
+        {!quizLoading && !quizError && currentQuestion && showResult && (
+          <div className="flex flex-col items-center">
+            {/* 칠판 */}
+            <div className="relative mb-6">
+              <Image
+                src="/images/items/blackboard.png"
+                alt="칠판"
+                width={342}
+                height={282}
+                className="object-cover"
+              />
+
+              {/* 결과 텍스트 컨테이너 */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
+                {/* 정답/오답 텍스트 */}
+                <p
+                  className={`text-white text-center font-normal leading-relaxed w-[245px] mb-2 ${getDynamicFontSize(
+                    isCorrect ? "정답입니다!" : "아쉽네요! 정답은,"
+                  )}`}
+                >
+                  {isCorrect ? "정답입니다!" : "아쉽네요! 정답은,"}
+                </p>
+
+                {/* 정답 및 설명 텍스트 */}
+                <p
+                  className={`text-white text-center font-normal leading-relaxed w-[245px] mb-4 ${getDynamicFontSize(
+                    isCorrect
+                      ? currentQuestion.explanation
+                      : `${
+                          currentQuestion.choices[
+                            currentQuestion.answer_index - 1
+                          ]
+                        }. ${currentQuestion.explanation}`
+                  )}`}
+                >
+                  {isCorrect
+                    ? currentQuestion.explanation
+                    : `${
+                        currentQuestion.choices[
+                          currentQuestion.answer_index - 1
+                        ]
+                      }. ${currentQuestion.explanation}`}
+                </p>
+
+                {/* 다음 문제 버튼 */}
+                <button
+                  className="font-medium h-[56px] w-[160px] rounded-[10px] relative cursor-pointer hover:opacity-80 transition-opacity"
+                  style={{
+                    background:
+                      "linear-gradient(180deg, #50B0FF 0%, #50B0FF 50%, #008DFF 50%, #008DFF 100%)",
+                    border: "2px solid #76C1FF",
+                    outline: "2px solid #000000",
+                    boxShadow:
+                      "0px 4px 4px 0px rgba(0, 0, 0, 0.25), inset 0px 3px 0px 0px rgba(0, 0, 0, 0.1)",
+                    color: "#FFFFFF",
+                    fontSize: "16px",
+                    fontWeight: "400",
+                    WebkitTextStroke: "1px #000000",
+                  }}
+                  onClick={handleNextQuestion}
+                >
+                  {/* 버튼 포인트 이미지 */}
+                  <Image
+                    src="/images/items/button-point-blue.png"
+                    alt="button-point-blue"
+                    width={8.47}
+                    height={6.3}
+                    style={{
+                      position: "absolute",
+                      top: "3px",
+                      left: "3px",
+                      pointerEvents: "none",
+                    }}
+                  />
+
+                  {/* 버튼 텍스트 */}
+                  <span
+                    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                    style={{
+                      pointerEvents: "none",
+                      textAlign: "center",
+                      lineHeight: "1.2",
+                      width: "100%",
+                      paddingLeft: "8px",
+                      paddingRight: "8px",
+                    }}
+                  >
+                    {currentQuestionIndex < stageQuestions.length - 1
+                      ? "다음 문제 &gt;"
+                      : "결과 보기 &gt;"}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* 캐릭터 이미지 */}
+            <div className="relative mb-4">
+              <Image
+                src={`/images/characters/level-${level || 1}.png`}
+                alt="캐릭터"
+                width={390}
+                height={390}
+                className="object-cover"
+              />
+            </div>
+
+            {/* 선택한 답안 버튼 (표시용) */}
+            <div className="relative">
+              <button
+                className="font-medium h-[56px] w-[300px] rounded-[10px] relative cursor-default"
+                style={{
+                  background: isCorrect
+                    ? "linear-gradient(180deg, #00C951 0%, #00C951 50%, #00A041 50%, #00A041 100%)"
+                    : "linear-gradient(180deg, #FF2F32 0%, #FF2F32 50%, #CC2528 50%, #CC2528 100%)",
+                  border: isCorrect ? "2px solid #4DDD7A" : "2px solid #FF6D70",
+                  outline: "2px solid #000000",
+                  boxShadow:
+                    "0px 4px 4px 0px rgba(0, 0, 0, 0.25), inset 0px 3px 0px 0px rgba(0, 0, 0, 0.1)",
+                  color: "#FFFFFF",
+                  fontSize: "16px",
+                  fontWeight: "400",
+                  WebkitTextStroke: "1px #000000",
+                }}
+              >
+                {/* 버튼 포인트 이미지 */}
+                <Image
+                  src={
+                    isCorrect
+                      ? "/images/items/button-point-blue.png"
+                      : "/images/items/button-point-blue.png"
+                  }
+                  alt="button-point"
+                  width={8.47}
+                  height={6.3}
+                  style={{
+                    position: "absolute",
+                    top: "3px",
+                    left: "3px",
+                    pointerEvents: "none",
+                  }}
+                />
+
+                {/* 선택한 답안 텍스트 */}
+                <span
+                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                  style={{
+                    pointerEvents: "none",
+                    textAlign: "center",
+                    lineHeight: "1.2",
+                    width: "100%",
+                    paddingLeft: "8px",
+                    paddingRight: "8px",
+                  }}
+                >
+                  {selectedAnswer !== null
+                    ? currentQuestion.choices[selectedAnswer]
+                    : ""}
+                </span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* 하단 아이템 바 */}
+      {!showResult && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-4 mb-10">
+          <div className="flex gap-5">
+            {/* 오답 삭제 아이템 */}
+            <button
+              onClick={() => handleItemClick("remove-wrong")}
+              className="w-[60px] h-[60px] flex items-center justify-center"
+              disabled={!totalScore || totalScore < 50}
+            >
+              <Image
+                src={
+                  totalScore && totalScore >= 50
+                    ? "/images/items/item-remove-wrong-able.png"
+                    : "/images/items/item-remove-wrong-disable.png"
+                }
+                alt="오답 삭제 아이템"
+                width={60}
+                height={60}
+                className="object-cover"
+              />
+            </button>
+
+            {/* 힌트 아이템 */}
+            <button
+              onClick={() => handleItemClick("hint")}
+              className="w-[60px] h-[60px] flex items-center justify-center"
+              disabled={!totalScore || totalScore < 80}
+            >
+              <Image
+                src={
+                  totalScore && totalScore >= 80
+                    ? "/images/items/item-hint-able.png"
+                    : "/images/items/item-hint-disable.png"
+                }
+                alt="힌트 아이템"
+                width={60}
+                height={60}
+                className="object-cover"
+              />
+            </button>
+
+            {/* 점수 2배 아이템 */}
+            <button
+              onClick={() => handleItemClick("double-score")}
+              className="w-[60px] h-[60px] flex items-center justify-center"
+              disabled={!totalScore || totalScore < 100}
+            >
+              <Image
+                src={
+                  totalScore && totalScore >= 100
+                    ? "/images/items/item-double-able.png"
+                    : "/images/items/item-double-disable.png"
+                }
+                alt="점수 2배 아이템"
+                width={60}
+                height={60}
+                className="object-cover"
+              />
+            </button>
+
+            {/* 자동 정답 아이템 */}
+            <button
+              onClick={() => handleItemClick("auto-answer")}
+              className="w-[60px] h-[60px] flex items-center justify-center"
+              disabled={!totalScore || totalScore < 200}
+            >
+              <Image
+                src={
+                  totalScore && totalScore >= 200
+                    ? "/images/items/item-auto-answer-able.png"
+                    : "/images/items/item-auto-answer-disable.png"
+                }
+                alt="자동 정답 아이템"
+                width={60}
+                height={60}
+                className="object-cover"
+              />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

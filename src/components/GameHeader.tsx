@@ -1,43 +1,68 @@
-'use client'
+"use client";
 
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import { useGameStore } from "@/store/gameStore";
 
 export default function GameHeader() {
-  const { 
-    level, 
-    totalScore, 
-    hearts, 
-    heartTimer 
+  const {
+    level,
+    totalScore,
+    hearts,
+    heartTimer,
+    updateHearts,
+    calculateHeartTimer,
   } = useGameStore();
+
+  const [currentTimer, setCurrentTimer] = useState(heartTimer);
+
+  // 실시간 하트 타이머 업데이트
+  useEffect(() => {
+    if (!hearts || hearts.current_hearts >= 5) {
+      setCurrentTimer("충전 완료");
+      return;
+    }
+
+    const updateTimer = () => {
+      const timer = calculateHeartTimer(
+        hearts.last_refill_at,
+        hearts.current_hearts
+      );
+      setCurrentTimer(timer);
+
+      // 타이머가 0이 되면 하트 업데이트 시도
+      if (timer === "충전 완료") {
+        updateHearts();
+      }
+    };
+
+    // 즉시 업데이트
+    updateTimer();
+
+    // 1초마다 업데이트
+    const interval = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(interval);
+  }, [hearts, calculateHeartTimer, updateHearts]);
 
   // 레벨에 따른 캐릭터 이미지 경로 반환
   const getCharacterImage = (level: number): string => {
-    if (level >= 20) return '/images/characters/level-20.png';
-    if (level >= 15) return '/images/characters/level-15.png';
-    if (level >= 10) return '/images/characters/level-10.png';
-    if (level >= 5) return '/images/characters/level-5.png';
-    return '/images/characters/level-1.png';
+    if (level >= 20) return "/images/characters/level-20.png";
+    if (level >= 15) return "/images/characters/level-15.png";
+    if (level >= 10) return "/images/characters/level-10.png";
+    if (level >= 5) return "/images/characters/level-5.png";
+    return "/images/characters/level-1.png";
   };
 
   // 하트 타이머 텍스트 반환
   const getHeartTimerText = (): string => {
     if (!hearts) return "로딩 중...";
-    if (hearts.current_hearts >= 5) return "충전 완료";
-    
-    if (heartTimer && typeof heartTimer === 'number') {
-      const minutes = Math.floor(heartTimer / 60);
-      const seconds = heartTimer % 60;
-      return `${minutes}분${seconds}초`;
-    }
-    
-    return "충전 중...";
+    return currentTimer;
   };
 
   return (
     <div className="fixed top-6 left-0 right-0 z-30 bg-transparent">
       <div className="flex items-center justify-between px-6 py-3 h-[60px]">
-        
         {/* 캐릭터 & 레벨 */}
         <div className="flex items-center gap-5">
           <div className="relative">
@@ -64,7 +89,12 @@ export default function GameHeader() {
               width={70}
               height={24}
               className="absolute top-1/2 left-6 transform -translate-y-1/2 z-0"
-              style={{ width: '70px', height: '24px', minWidth: '70px', minHeight: '24px' }}
+              style={{
+                width: "70px",
+                height: "24px",
+                minWidth: "70px",
+                minHeight: "24px",
+              }}
             />
             {/* 레벨 텍스트 */}
             <span className="absolute top-1/2 left-6 transform -translate-y-1/2 z-10 text-[10px] font-bold text-[#8B4513] whitespace-nowrap flex items-center justify-center w-[70px] ml-1">
@@ -103,7 +133,12 @@ export default function GameHeader() {
               width={70}
               height={24}
               className="absolute top-1/2 left-6 transform -translate-y-1/2 z-0"
-              style={{ width: '70px', height: '24px', minWidth: '70px', minHeight: '24px' }}
+              style={{
+                width: "70px",
+                height: "24px",
+                minWidth: "70px",
+                minHeight: "24px",
+              }}
             />
             {/* 타이머 텍스트 */}
             <span className="absolute top-1/2 left-6 transform -translate-y-1/2 z-10 text-[10px] font-bold text-[#8B4513] whitespace-nowrap flex items-center justify-center w-[70px] ml-1">
@@ -130,7 +165,12 @@ export default function GameHeader() {
               width={70}
               height={24}
               className="absolute top-1/2 left-6 transform -translate-y-1/2 z-0"
-              style={{ width: '70px', height: '24px', minWidth: '70px', minHeight: '24px' }}
+              style={{
+                width: "70px",
+                height: "24px",
+                minWidth: "70px",
+                minHeight: "24px",
+              }}
             />
             {/* 점수 텍스트 */}
             <span className="absolute top-1/2 left-6 transform -translate-y-1/2 z-10 text-[10px] font-bold text-[#8B4513] whitespace-nowrap flex items-center justify-center w-[70px] ml-1">

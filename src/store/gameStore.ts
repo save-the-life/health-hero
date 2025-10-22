@@ -36,6 +36,7 @@ interface GameState {
   updateExp: (exp: number) => void
   updateLevel: (level: number) => void
   setError: (error: string | null) => void
+  calculateHeartTimer: (lastRefillAt: string, currentHearts: number) => string
 }
 
 export const useGameStore = create<GameState>()(
@@ -201,12 +202,17 @@ export const useGameStore = create<GameState>()(
             const result = data[0]
             
             if (result.success) {
+              const updatedHearts = {
+                ...hearts,
+                current_hearts: result.current_hearts
+              }
+              const heartTimer = get().calculateHeartTimer(hearts.last_refill_at, result.current_hearts)
+              
               set({
-                hearts: {
-                  ...hearts,
-                  current_hearts: result.current_hearts
-                }
+                hearts: updatedHearts,
+                heartTimer
               })
+              
               return true
             }
           }
@@ -323,14 +329,14 @@ export const useGameStore = create<GameState>()(
         const now = new Date()
         const lastRefill = new Date(lastRefillAt)
         const diffMs = now.getTime() - lastRefill.getTime()
-        const diffMinutes = Math.floor(diffMs / (1000 * 60))
+        const diffSeconds = Math.floor(diffMs / 1000)
         
-        // 5분마다 하트 충전
-        const nextRefillInMinutes = 5 - (diffMinutes % 5)
+        // 5분(300초)마다 하트 충전
+        const secondsUntilNextRefill = 300 - (diffSeconds % 300)
         
         // 다음 충전까지 남은 시간을 분:초 형식으로 표시
-        const minutes = Math.floor(nextRefillInMinutes)
-        const seconds = 60 - (Math.floor(diffMs / 1000) % 60)
+        const minutes = Math.floor(secondsUntilNextRefill / 60)
+        const seconds = secondsUntilNextRefill % 60
         
         return `${minutes}분${seconds.toString().padStart(2, '0')}초`
       }
