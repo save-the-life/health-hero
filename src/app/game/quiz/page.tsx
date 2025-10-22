@@ -462,7 +462,7 @@ export default function QuizPage() {
         {!quizLoading && !quizError && currentQuestion && showResult && (
           <div className="flex flex-col items-center">
             {/* 칠판 */}
-            <div className="relative mb-6">
+            <div className="relative mb-2">
               <Image
                 src="/images/items/blackboard.png"
                 alt="칠판"
@@ -569,7 +569,7 @@ export default function QuizPage() {
             </div>
 
             {/* 캐릭터 이미지 */}
-            <div className="relative mb-4">
+            <div className="relative -mb-8">
               <Image
                 src={`/images/characters/level-${level || 1}.png`}
                 alt="캐릭터"
