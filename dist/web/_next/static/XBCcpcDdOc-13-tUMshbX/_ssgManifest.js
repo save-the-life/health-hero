@@ -1,1 +1,0 @@
-self.__SSG_MANIFEST=new Set(["\u002Fgame\u002F[phase]","\u002Fgame\u002F[phase]\u002F[stage]","\u002Fgame\u002F[phase]\u002F[stage]\u002Fresult"]);self.__SSG_MANIFEST_CB&&self.__SSG_MANIFEST_CB()
