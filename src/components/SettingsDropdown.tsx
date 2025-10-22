@@ -7,6 +7,7 @@ interface SettingsDropdownProps {
   isOpen: boolean;
   onClose: () => void;
   onShowExitModal: () => void;
+  onShowItemInfoModal: () => void;
   pageType?: "main" | "quiz"; // 페이지 타입 추가
 }
 
@@ -14,9 +15,9 @@ export default function SettingsDropdown({
   isOpen,
   onClose,
   onShowExitModal,
+  onShowItemInfoModal,
   pageType = "quiz", // 기본값은 quiz
 }: SettingsDropdownProps) {
-  const [showItemInfoModal, setShowItemInfoModal] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
   // 닫기 애니메이션 처리
@@ -44,8 +45,10 @@ export default function SettingsDropdown({
   };
 
   const handleItemInfoClick = () => {
-    setShowItemInfoModal(true);
     handleClose();
+    setTimeout(() => {
+      onShowItemInfoModal();
+    }, 500);
   };
 
   const handleExitClick = () => {
@@ -55,10 +58,6 @@ export default function SettingsDropdown({
     setTimeout(() => {
       onShowExitModal();
     }, 500); // 애니메이션 지속 시간과 동일
-  };
-
-  const handleCloseItemInfoModal = () => {
-    setShowItemInfoModal(false);
   };
 
 
@@ -151,33 +150,6 @@ export default function SettingsDropdown({
           )}
         </div>
       </div>
-
-      {/* 아이템 정보 모달 */}
-      {showItemInfoModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* 배경 블러 오버레이 */}
-          <div className="absolute inset-0 backdrop-blur-md" />
-
-          {/* 모달 컨테이너 */}
-          <div className="relative z-10">
-            <Image
-              src="/images/ui/popup-success.png"
-              alt="아이템 정보"
-              width={324}
-              height={440}
-              className="object-cover"
-            />
-
-            {/* 닫기 버튼 */}
-            <button
-              onClick={handleCloseItemInfoModal}
-              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center hover:opacity-80 transition-opacity"
-            >
-              <span className="text-white text-xl font-bold">×</span>
-            </button>
-          </div>
-        </div>
-      )}
     </>
   );
 }

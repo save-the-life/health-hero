@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useGameStore } from "@/store/gameStore";
 import SettingsDropdown from "./SettingsDropdown";
+import ItemInfoModal from "./ItemInfoModal";
 
 interface GameHeaderProps {
   pageType?: "main" | "quiz"; // 페이지 타입 추가
@@ -24,6 +25,7 @@ export default function GameHeader({ pageType = "quiz" }: GameHeaderProps) {
   const [currentTimer, setCurrentTimer] = useState(heartTimer);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
+  const [showItemInfoModal, setShowItemInfoModal] = useState(false);
 
   // 실시간 하트 타이머 업데이트
   useEffect(() => {
@@ -225,6 +227,7 @@ export default function GameHeader({ pageType = "quiz" }: GameHeaderProps) {
         isOpen={showSettingsMenu}
         onClose={() => setShowSettingsMenu(false)}
         onShowExitModal={() => setShowExitModal(true)}
+        onShowItemInfoModal={() => setShowItemInfoModal(true)}
         pageType={pageType}
       />
 
@@ -335,6 +338,12 @@ export default function GameHeader({ pageType = "quiz" }: GameHeaderProps) {
           </div>
         </div>
       )}
+
+      {/* 아이템 설명 모달 */}
+      <ItemInfoModal
+        isOpen={showItemInfoModal}
+        onClose={() => setShowItemInfoModal(false)}
+      />
     </div>
   );
 }
