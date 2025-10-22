@@ -3,8 +3,13 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useGameStore } from "@/store/gameStore";
+import SettingsDropdown from "./SettingsDropdown";
 
-export default function GameHeader() {
+interface GameHeaderProps {
+  pageType?: "main" | "quiz"; // 페이지 타입 추가
+}
+
+export default function GameHeader({ pageType = "quiz" }: GameHeaderProps) {
   const {
     level,
     totalScore,
@@ -15,6 +20,7 @@ export default function GameHeader() {
   } = useGameStore();
 
   const [currentTimer, setCurrentTimer] = useState(heartTimer);
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
 
   // 실시간 하트 타이머 업데이트
   useEffect(() => {
@@ -47,11 +53,23 @@ export default function GameHeader() {
 
   // 레벨에 따른 캐릭터 이미지 경로 반환
   const getCharacterImage = (level: number): string => {
-    if (level >= 20) return "/images/characters/level-20.png";
-    if (level >= 15) return "/images/characters/level-15.png";
-    if (level >= 10) return "/images/characters/level-10.png";
-    if (level >= 5) return "/images/characters/level-5.png";
-    return "/images/characters/level-1.png";
+    // 레벨 범위별로 명시적 매핑
+    let imagePath: string;
+    if (level >= 20) {
+      imagePath = "/images/characters/level-20.png";
+    } else if (level >= 15) {
+      imagePath = "/images/characters/level-15.png";
+    } else if (level >= 10) {
+      imagePath = "/images/characters/level-10.png";
+    } else if (level >= 5) {
+      imagePath = "/images/characters/level-5.png";
+    } else {
+      // 1-4 레벨은 모두 level-1.png 사용
+      imagePath = "/images/characters/level-1.png";
+    }
+
+    // 캐시 문제 해결을 위한 쿼리 파라미터 추가
+    return `${imagePath}?v=${level}`;
   };
 
   // 하트 타이머 텍스트 반환
@@ -76,6 +94,7 @@ export default function GameHeader() {
             />
             {/* 캐릭터 이미지 */}
             <Image
+              key={`character-${level}`}
               src={getCharacterImage(level)}
               alt="캐릭터"
               width={30}
@@ -180,16 +199,30 @@ export default function GameHeader() {
         </div>
 
         {/* 설정 버튼 */}
-        <div className="flex items-center">
-          <Image
-            src="/images/items/button-setting.png"
-            alt="설정"
-            width={24}
-            height={24}
-            className="cursor-pointer hover:opacity-80 transition-opacity"
-          />
-        </div>
+        {!showSettingsMenu && (
+          <div className="flex items-center">
+            <button
+              onClick={() => setShowSettingsMenu(!showSettingsMenu)}
+              className="hover:opacity-80 transition-opacity"
+            >
+              <Image
+                src="/images/items/button-setting.png"
+                alt="설정"
+                width={24}
+                height={24}
+                className="cursor-pointer"
+              />
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* 설정 드롭다운 메뉴 */}
+      <SettingsDropdown
+        isOpen={showSettingsMenu}
+        onClose={() => setShowSettingsMenu(false)}
+        pageType={pageType}
+      />
     </div>
   );
 }

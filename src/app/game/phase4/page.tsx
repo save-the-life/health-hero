@@ -10,8 +10,15 @@ import StageButton from "@/components/StageButton";
 export default function Phase4Page() {
   const router = useRouter();
   const { user, isAuthenticated, initialize } = useAuthStore();
-  const { hearts, isLoading, error, currentStage, loadUserData, updateHearts } =
-    useGameStore();
+  const {
+    hearts,
+    isLoading,
+    error,
+    currentStage,
+    currentPhase,
+    loadUserData,
+    updateHearts,
+  } = useGameStore();
 
   // 화면 높이 감지
   const [isSmallScreen, setIsSmallScreen] = useState(false);
@@ -59,8 +66,18 @@ export default function Phase4Page() {
 
   // 스테이지 잠금 상태 확인
   const isStageLocked = (stageNumber: number) => {
-    // 현재 스테이지보다 높은 스테이지는 잠금
-    return stageNumber > currentStage;
+    // 현재 페이즈가 4보다 낮으면 모든 스테이지 잠금
+    if (currentPhase < 4) {
+      return true;
+    }
+
+    // 현재 페이즈가 4이고, 현재 스테이지보다 높은 스테이지는 잠금
+    if (currentPhase === 4) {
+      return stageNumber > currentStage;
+    }
+
+    // 현재 페이즈가 4보다 높으면 모든 스테이지 열림
+    return false;
   };
 
   // 스테이지 클릭 핸들러

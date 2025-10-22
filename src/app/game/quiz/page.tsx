@@ -34,6 +34,27 @@ export default function QuizPage() {
   const quizPhase = parseInt(searchParams.get("phase") || "1");
   const quizStage = parseInt(searchParams.get("stage") || "1");
 
+  // 레벨에 따른 캐릭터 이미지 경로 반환
+  const getCharacterImage = (level: number): string => {
+    // 레벨 범위별로 명시적 매핑
+    let imagePath: string;
+    if (level >= 20) {
+      imagePath = "/images/characters/level-20.png";
+    } else if (level >= 15) {
+      imagePath = "/images/characters/level-15.png";
+    } else if (level >= 10) {
+      imagePath = "/images/characters/level-10.png";
+    } else if (level >= 5) {
+      imagePath = "/images/characters/level-5.png";
+    } else {
+      // 1-4 레벨은 모두 level-1.png 사용
+      imagePath = "/images/characters/level-1.png";
+    }
+
+    // 캐시 문제 해결을 위한 쿼리 파라미터 추가
+    return `${imagePath}?v=${level}`;
+  };
+
   // 퀴즈 데이터 상태
   const [stageQuestions, setStageQuestions] = useState<QuizQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -156,6 +177,23 @@ export default function QuizPage() {
         console.log(`정답! +${score}점, +${exp}경험치 (${difficulty})`);
       }
 
+      // 퀴즈 기록 저장 (중복 방지용)
+      if (user?.id) {
+        try {
+          await QuizService.submitQuizAnswer(
+            user.id,
+            currentQuestion.id,
+            choiceIndex,
+            correct,
+            correct ? score : 0,
+            quizPhase,
+            quizStage
+          );
+        } catch (error) {
+          console.error("퀴즈 기록 저장 실패:", error);
+        }
+      }
+
       // 오답인 경우 하트 차감
       if (!correct && user?.id) {
         console.log("오답! 하트 차감");
@@ -265,7 +303,8 @@ export default function QuizPage() {
           if (success) {
             console.log("스테이지 완료 데이터 저장 성공");
 
-            // 레벨업 체크
+            // 레벨업 체크는 addScoreAndExp에서 이미 처리됨
+            // 여기서는 UI 표시용으로만 체크
             const levelUpCheck = checkLevelUp(stageExp + bonusExp);
             if (levelUpCheck.leveledUp) {
               const levelInfo = getLevelInfo(levelUpCheck.newLevel);
@@ -322,7 +361,8 @@ export default function QuizPage() {
       try {
         const questions = await QuizService.getStageQuestions(
           quizPhase,
-          quizStage
+          quizStage,
+          user?.id
         );
         if (questions && questions.length > 0) {
           setStageQuestions(questions);
@@ -506,7 +546,7 @@ export default function QuizPage() {
       </div>
 
       {/* 상단 헤더 */}
-      <GameHeader />
+      <GameHeader pageType="quiz" />
 
       {/* 스테이지 진행 프로그래스바 */}
       <div className="fixed top-[84px] left-0 right-0 z-10 flex justify-center">
@@ -735,7 +775,7 @@ export default function QuizPage() {
             {/* 캐릭터 이미지 */}
             <div className="relative -mb-8">
               <Image
-                src={`/images/characters/level-${level || 1}.png`}
+                src={getCharacterImage(level || 1)}
                 alt="캐릭터"
                 width={390}
                 height={390}

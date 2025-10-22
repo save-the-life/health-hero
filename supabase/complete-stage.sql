@@ -69,8 +69,8 @@ BEGIN
       
       UPDATE public.user_profiles
       SET 
-        current_stage = GREATEST(current_stage, v_new_stage),
-        current_phase = GREATEST(current_phase, v_new_phase),
+        current_stage = v_new_stage,
+        current_phase = v_new_phase,
         updated_at = NOW()
       WHERE id = p_user_id;
     END IF;
