@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -10,15 +10,9 @@ import StageButton from "@/components/StageButton";
 export default function Phase2Page() {
   const router = useRouter();
   const { user, isAuthenticated, initialize } = useAuthStore();
-  const { 
-    hearts, 
-    isLoading, 
-    error,
-    currentStage,
-    loadUserData,
-    updateHearts 
-  } = useGameStore();
-  
+  const { hearts, isLoading, error, currentStage, loadUserData, updateHearts } =
+    useGameStore();
+
   // 화면 높이 감지
   const [isSmallScreen, setIsSmallScreen] = useState(false);
 
@@ -27,11 +21,11 @@ export default function Phase2Page() {
     const checkScreenSize = () => {
       setIsSmallScreen(window.innerHeight < 700); // 700px 미만을 작은 화면으로 판단
     };
-    
+
     checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-    
-    return () => window.removeEventListener('resize', checkScreenSize);
+    window.addEventListener("resize", checkScreenSize);
+
+    return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
   // 컴포넌트 마운트 시 인증 상태 초기화 및 데이터 로드
@@ -75,7 +69,7 @@ export default function Phase2Page() {
     if (isStageLocked(stageNumber)) {
       return;
     }
-    
+
     // 퀴즈 페이지로 이동 (쿼리 파라미터로 페이즈와 스테이지 정보 전달)
     router.push(`/game/quiz?phase=2&stage=${stageNumber}`);
   };
@@ -94,7 +88,7 @@ export default function Phase2Page() {
             priority
           />
         </div>
-        
+
         {/* 로딩 텍스트 */}
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <div className="text-white text-xl font-medium">로딩 중...</div>
@@ -116,7 +110,7 @@ export default function Phase2Page() {
             priority
           />
         </div>
-        
+
         {/* 에러 텍스트 */}
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <div className="text-red-500 text-xl font-medium">에러: {error}</div>
@@ -148,11 +142,10 @@ export default function Phase2Page() {
 
       {/* 메인 콘텐츠 */}
       <div className="relative z-10 w-full h-screen">
-        
         {/* 뒤로가기 버튼 */}
         <div className="absolute top-4 left-4 z-20">
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push("/game")}
             className="flex items-center gap-2 text-white hover:opacity-80 transition-opacity  px-3 py-2 rounded-lg"
           >
             <Image
@@ -166,7 +159,6 @@ export default function Phase2Page() {
 
         {/* 스테이지 버튼들 - 화면 크기에 따른 조건부 배치 */}
         <div className="absolute inset-0 flex flex-col justify-center items-center mb-5">
-          
           {isSmallScreen ? (
             // 작은 화면용 배치
             <>
@@ -178,7 +170,7 @@ export default function Phase2Page() {
                   onClick={() => handleStageClick(1)}
                 />
               </div>
-              
+
               {/* 스테이지 2 - 스테이지 1 위 */}
               <div className="absolute bottom-[180px] left-5/9 transform -translate-x-1/2">
                 <StageButton
@@ -187,7 +179,7 @@ export default function Phase2Page() {
                   onClick={() => handleStageClick(2)}
                 />
               </div>
-              
+
               {/* 스테이지 3 - 스테이지 2 위 */}
               <div className="absolute bottom-[300px] left-4/10 transform -translate-x-1/2">
                 <StageButton
@@ -196,7 +188,7 @@ export default function Phase2Page() {
                   onClick={() => handleStageClick(3)}
                 />
               </div>
-              
+
               {/* 스테이지 4 - 스테이지 3 위 */}
               <div className="absolute bottom-[400px] left-5/9 transform -translate-x-1/2">
                 <StageButton
@@ -205,7 +197,7 @@ export default function Phase2Page() {
                   onClick={() => handleStageClick(4)}
                 />
               </div>
-              
+
               {/* 스테이지 5 - 스테이지 4 위 */}
               <div className="absolute bottom-[520px] left-1/2 transform -translate-x-1/2">
                 <StageButton
@@ -226,7 +218,7 @@ export default function Phase2Page() {
                   onClick={() => handleStageClick(1)}
                 />
               </div>
-              
+
               {/* 스테이지 2 - 스테이지 1 위 */}
               <div className="absolute bottom-[200px] left-5/9 transform -translate-x-1/2">
                 <StageButton
@@ -235,7 +227,7 @@ export default function Phase2Page() {
                   onClick={() => handleStageClick(2)}
                 />
               </div>
-              
+
               {/* 스테이지 3 - 스테이지 2 위 */}
               <div className="absolute bottom-[340px] left-4/10 transform -translate-x-1/2">
                 <StageButton
@@ -244,7 +236,7 @@ export default function Phase2Page() {
                   onClick={() => handleStageClick(3)}
                 />
               </div>
-              
+
               {/* 스테이지 4 - 스테이지 3 위 */}
               <div className="absolute bottom-[440px] left-6/9 transform -translate-x-1/2">
                 <StageButton
@@ -253,7 +245,7 @@ export default function Phase2Page() {
                   onClick={() => handleStageClick(4)}
                 />
               </div>
-              
+
               {/* 스테이지 5 - 스테이지 4 위 */}
               <div className="absolute bottom-[580px] left-1/2 transform -translate-x-1/2">
                 <StageButton

@@ -35,6 +35,10 @@ interface GameState {
   updateScore: (score: number) => void
   updateExp: (exp: number) => void
   updateLevel: (level: number) => void
+  addScoreAndExp: (score: number, exp: number) => Promise<boolean>
+  completeStage: (phase: number, stage: number, correctCount: number, score: number, exp: number) => Promise<boolean>
+  checkLevelUp: (currentExp: number) => { leveledUp: boolean; newLevel: number; expToNext: number }
+  getLevelInfo: (level: number) => { totalExpRequired: number; expToNext: number; title: string }
   setError: (error: string | null) => void
   calculateHeartTimer: (lastRefillAt: string, currentHearts: number) => string
 }
@@ -312,6 +316,192 @@ export const useGameStore = create<GameState>()(
       // 레벨 업데이트
       updateLevel: (level: number) => {
         set({ level })
+      },
+
+      // 점수와 경험치 추가
+      addScoreAndExp: async (score: number, exp: number) => {
+        const hearts = get().hearts
+        if (!hearts) return false
+
+        try {
+          const { data, error } = await supabase
+            .rpc('update_user_progress', { 
+              p_user_id: hearts.user_id, 
+              p_score_to_add: score,
+              p_exp_to_add: exp
+            })
+
+          if (error) {
+            console.error('점수/경험치 업데이트 실패:', error)
+            return false
+          }
+
+          if (data && data.length > 0) {
+            const result = data[0]
+            
+            if (result.success) {
+              // 레벨업 체크
+              const { leveledUp, newLevel } = get().checkLevelUp(result.current_exp)
+              
+              set({
+                totalScore: result.current_score,
+                currentExp: result.current_exp,
+                level: result.current_level
+              })
+
+              // 레벨업 시 하트 회복 (최대치 초과 불가)
+              if (leveledUp && newLevel > get().level) {
+                console.log(`레벨업! Lv.${get().level} → Lv.${newLevel}`)
+                
+                // 하트가 5개 미만일 때만 +1 회복
+                if (hearts.current_hearts < 5) {
+                  try {
+                    const { data: heartData, error: heartError } = await supabase
+                      .rpc('refill_heart', { p_user_id: hearts.user_id })
+                    
+                    if (!heartError && heartData && heartData.length > 0) {
+                      const heartResult = heartData[0]
+                      if (heartResult.success) {
+                        set({
+                          hearts: {
+                            ...hearts,
+                            current_hearts: Math.min(5, hearts.current_hearts + 1)
+                          }
+                        })
+                        console.log(`레벨업 보상: 하트 +1 (현재 ${Math.min(5, hearts.current_hearts + 1)}개)`)
+                      }
+                    }
+                  } catch (heartError) {
+                    console.error('레벨업 하트 회복 실패:', heartError)
+                  }
+                }
+              }
+
+              return true
+            }
+          }
+          
+          return false
+        } catch (error) {
+          console.error('점수/경험치 업데이트 실패:', error)
+          return false
+        }
+      },
+
+      // 스테이지 완료 처리
+      completeStage: async (phase: number, stage: number, correctCount: number, score: number, exp: number) => {
+        const hearts = get().hearts
+        if (!hearts) return false
+
+        try {
+          // 먼저 점수/경험치 추가
+          const scoreExpSuccess = await get().addScoreAndExp(score, exp)
+          if (!scoreExpSuccess) return false
+
+          // 스테이지 완료 처리
+          const { data, error } = await supabase
+            .rpc('complete_stage', { 
+              p_user_id: hearts.user_id,
+              p_phase: phase,
+              p_stage: stage,
+              p_correct_count: correctCount,
+              p_score_earned: score,
+              p_exp_earned: exp
+            })
+
+          if (error) {
+            console.error('스테이지 완료 처리 실패:', error)
+            return false
+          }
+
+          if (data && data.length > 0) {
+            const result = data[0]
+            console.log('스테이지 완료 결과:', result)
+            return result.success
+          }
+          
+          return false
+        } catch (error) {
+          console.error('스테이지 완료 처리 실패:', error)
+          return false
+        }
+      },
+
+      // 레벨업 체크 함수
+      checkLevelUp: (currentExp: number) => {
+        const currentLevel = get().level;
+        let newLevel = currentLevel;
+        let totalExpForCurrentLevel = 0;
+        let totalExpForNextLevel = 0;
+
+        // 현재 레벨까지 필요한 총 경험치 계산
+        for (let i = 1; i <= currentLevel; i++) {
+          totalExpForCurrentLevel += Math.round(120 * Math.pow(1.15, i - 1));
+        }
+
+        // 다음 레벨까지 필요한 총 경험치 계산
+        for (let i = 1; i <= currentLevel + 1; i++) {
+          totalExpForNextLevel += Math.round(120 * Math.pow(1.15, i - 1));
+        }
+
+        // 레벨업 가능한지 확인
+        if (currentExp >= totalExpForNextLevel) {
+          // 최대 레벨(20)까지 확인
+          for (let level = currentLevel + 1; level <= 20; level++) {
+            let totalExpForLevel = 0;
+            for (let i = 1; i <= level; i++) {
+              totalExpForLevel += Math.round(120 * Math.pow(1.15, i - 1));
+            }
+            
+            if (currentExp >= totalExpForLevel) {
+              newLevel = level;
+            } else {
+              break;
+            }
+          }
+        }
+
+        const leveledUp = newLevel > currentLevel;
+        const expToNext = leveledUp ? 
+          (() => {
+            let totalExpForNext = 0;
+            for (let i = 1; i <= newLevel + 1; i++) {
+              totalExpForNext += Math.round(120 * Math.pow(1.15, i - 1));
+            }
+            return totalExpForNext - currentExp;
+          })() : 
+          totalExpForNextLevel - currentExp;
+
+        return { leveledUp, newLevel, expToNext };
+      },
+
+      // 레벨 정보 가져오기 함수
+      getLevelInfo: (level: number) => {
+        let totalExpRequired = 0;
+        for (let i = 1; i <= level; i++) {
+          totalExpRequired += Math.round(120 * Math.pow(1.15, i - 1));
+        }
+
+        let expToNext = 0;
+        if (level < 20) {
+          let totalExpForNext = 0;
+          for (let i = 1; i <= level + 1; i++) {
+            totalExpForNext += Math.round(120 * Math.pow(1.15, i - 1));
+          }
+          expToNext = totalExpForNext - totalExpRequired;
+        }
+
+        const titles = {
+          1: "의대 새내기",
+          5: "인턴",
+          10: "레지던트",
+          15: "전문의",
+          20: "헬스 히어로"
+        };
+
+        const title = titles[level as keyof typeof titles] || `레벨 ${level}`;
+
+        return { totalExpRequired, expToNext, title };
       },
 
       // 에러 설정

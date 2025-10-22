@@ -116,7 +116,7 @@ export default function GameHeader() {
             />
             {/* 하트 내부 숫자 */}
             <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 text-white text-base font-normal">
-              {hearts?.current_hearts || 5}
+              {hearts?.current_hearts ?? 0}
             </span>
             {/* 광고 버튼 */}
             <Image

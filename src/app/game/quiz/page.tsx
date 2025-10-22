@@ -8,6 +8,8 @@ import { useGameStore } from "@/store/gameStore";
 import GameHeader from "@/components/GameHeader";
 import { QuizService, QuizQuestion } from "@/services/quizService";
 import QuizChoiceButton from "@/components/QuizChoiceButton";
+import StageResultModal from "@/components/StageResultModal";
+import HeartShortageModal from "@/components/HeartShortageModal";
 
 export default function QuizPage() {
   const router = useRouter();
@@ -22,6 +24,10 @@ export default function QuizPage() {
     loadUserData,
     updateHearts,
     consumeHeart,
+    addScoreAndExp,
+    completeStage,
+    checkLevelUp,
+    getLevelInfo,
   } = useGameStore();
 
   // URL 파라미터에서 현재 퀴즈 정보 가져오기
@@ -37,11 +43,58 @@ export default function QuizPage() {
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
 
+  // 사용자 답안 추적 및 점수/경험치 계산
+  const [userAnswers, setUserAnswers] = useState<(number | null)[]>([]);
+  const [stageScore, setStageScore] = useState(0);
+  const [stageExp, setStageExp] = useState(0);
+
+  // 레벨업 관련 상태
+  const [levelUpInfo, setLevelUpInfo] = useState<{
+    leveledUp: boolean;
+    newLevel: number;
+    expToNext: number;
+    title: string;
+  } | null>(null);
+
+  // 스테이지 결과 모달 상태
+  const [showStageResultModal, setShowStageResultModal] = useState(false);
+  const [stageResultData, setStageResultData] = useState<{
+    isSuccess: boolean;
+    correctCount: number;
+    earnedExp: number;
+    earnedScore: number;
+  } | null>(null);
+
+  // 하트 부족 모달 상태
+  const [showHeartShortageModal, setShowHeartShortageModal] = useState(false);
+
   // 중복 실행 방지를 위한 ref
   const heartDeductedRef = useRef(false);
 
   // 현재 문제 가져오기
   const currentQuestion = stageQuestions[currentQuestionIndex] || null;
+
+  // 난이도별 점수/경험치 계산 함수
+  const getDifficultyByStage = (stage: number): "쉬움" | "보통" | "어려움" => {
+    if (stage <= 2) return "쉬움";
+    if (stage <= 4) return "보통";
+    return "어려움";
+  };
+
+  const calculateScoreAndExp = (
+    difficulty: "쉬움" | "보통" | "어려움",
+    isCorrect: boolean
+  ) => {
+    if (!isCorrect) return { score: 0, exp: 0 };
+
+    const scoreMap = { 쉬움: 10, 보통: 30, 어려움: 50 };
+    const expMap = { 쉬움: 12, 보통: 18, 어려움: 26 };
+
+    return {
+      score: scoreMap[difficulty],
+      exp: expMap[difficulty],
+    };
+  };
 
   // 텍스트 길이에 따른 동적 폰트 크기 계산
   const getDynamicFontSize = (text: string): string => {
@@ -88,6 +141,21 @@ export default function QuizPage() {
       const correct = choiceIndex === currentQuestion.answer_index - 1;
       setIsCorrect(correct);
 
+      // 사용자 답안 저장
+      const newAnswers = [...userAnswers];
+      newAnswers[currentQuestionIndex] = choiceIndex;
+      setUserAnswers(newAnswers);
+
+      // 점수/경험치 계산
+      const difficulty = getDifficultyByStage(quizStage);
+      const { score, exp } = calculateScoreAndExp(difficulty, correct);
+
+      if (correct) {
+        setStageScore((prev) => prev + score);
+        setStageExp((prev) => prev + exp);
+        console.log(`정답! +${score}점, +${exp}경험치 (${difficulty})`);
+      }
+
       // 오답인 경우 하트 차감
       if (!correct && user?.id) {
         console.log("오답! 하트 차감");
@@ -101,6 +169,12 @@ export default function QuizPage() {
                   hearts.current_hearts - 1
                 }`
               );
+
+              // 하트 차감 후 하트가 0이 되었는지 체크
+              if (hearts.current_hearts - 1 <= 0) {
+                console.log("하트가 0이 되었습니다. 하트 부족 모달 표시");
+                setShowHeartShortageModal(true);
+              }
             } else {
               console.log("하트 차감 실패");
             }
@@ -109,8 +183,8 @@ export default function QuizPage() {
           }
         } else {
           console.log("하트가 없어서 차감할 수 없습니다");
-          // 하트가 0일 때 게임 종료 또는 다른 처리
-          // TODO: 하트가 0일 때의 처리 로직 (게임 종료, 광고 시청 유도 등)
+          // 하트가 0일 때 하트 부족 모달 표시
+          setShowHeartShortageModal(true);
         }
       }
 
@@ -125,17 +199,103 @@ export default function QuizPage() {
     // TODO: 아이템 사용 로직 구현
   };
 
+  // 스테이지 결과 모달 닫기 핸들러
+  const handleCloseStageResultModal = () => {
+    setShowStageResultModal(false);
+    setStageResultData(null);
+  };
+
+  // 하트 부족 모달 닫기 핸들러
+  const handleCloseHeartShortageModal = () => {
+    setShowHeartShortageModal(false);
+  };
+
   // 다음 문제로 넘어가는 핸들러
-  const handleNextQuestion = () => {
+  const handleNextQuestion = async () => {
     if (currentQuestionIndex < stageQuestions.length - 1) {
       // 다음 문제로 이동
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setShowResult(false);
       setSelectedAnswer(null);
     } else {
-      // 모든 문제 완료 - 스테이지 결과 페이지로 이동
+      // 모든 문제 완료 - 스테이지 결과 계산
       console.log("스테이지 완료!");
-      // TODO: 스테이지 결과 페이지로 이동
+
+      // 정답 개수 계산
+      const correctCount = userAnswers.filter((answer, index) => {
+        const question = stageQuestions[index];
+        return question && answer === question.answer_index - 1;
+      }).length;
+
+      // 보너스 점수/경험치 계산
+      let bonusScore = 0;
+      let bonusExp = 0;
+
+      if (correctCount === 5) {
+        bonusScore = 50;
+        bonusExp = 100;
+      } else if (correctCount === 4) {
+        bonusScore = 30;
+        bonusExp = 60;
+      } else if (correctCount === 3) {
+        bonusExp = 25;
+      }
+
+      const totalScore = stageScore + bonusScore;
+      const totalExp = stageExp + bonusExp;
+
+      console.log(`스테이지 결과: ${correctCount}/5 정답`);
+      console.log(
+        `기본 점수: ${stageScore}, 보너스: ${bonusScore}, 총합: ${totalScore}`
+      );
+      console.log(
+        `기본 경험치: ${stageExp}, 보너스: ${bonusExp}, 총합: ${totalExp}`
+      );
+
+      // 데이터베이스에 스테이지 완료 처리
+      if (user?.id) {
+        try {
+          const success = await completeStage(
+            quizPhase,
+            quizStage,
+            correctCount,
+            totalScore,
+            totalExp
+          );
+          if (success) {
+            console.log("스테이지 완료 데이터 저장 성공");
+
+            // 레벨업 체크
+            const levelUpCheck = checkLevelUp(stageExp + bonusExp);
+            if (levelUpCheck.leveledUp) {
+              const levelInfo = getLevelInfo(levelUpCheck.newLevel);
+              setLevelUpInfo({
+                leveledUp: true,
+                newLevel: levelUpCheck.newLevel,
+                expToNext: levelUpCheck.expToNext,
+                title: levelInfo.title,
+              });
+              console.log(
+                `레벨업! Lv.${level} → Lv.${levelUpCheck.newLevel} (${levelInfo.title})`
+              );
+            }
+
+            // 스테이지 결과 모달 표시
+            const isSuccess = correctCount >= 3;
+            setStageResultData({
+              isSuccess,
+              correctCount,
+              earnedExp: totalExp,
+              earnedScore: totalScore,
+            });
+            setShowStageResultModal(true);
+          } else {
+            console.log("스테이지 완료 데이터 저장 실패");
+          }
+        } catch (error) {
+          console.error("스테이지 완료 처리 중 오류:", error);
+        }
+      }
     }
   };
 
@@ -167,6 +327,10 @@ export default function QuizPage() {
         if (questions && questions.length > 0) {
           setStageQuestions(questions);
           setCurrentQuestionIndex(0);
+          // 사용자 답안 배열 초기화
+          setUserAnswers(new Array(questions.length).fill(null));
+          setStageScore(0);
+          setStageExp(0);
         } else {
           setQuizError("퀴즈 문제를 찾을 수 없습니다.");
         }
@@ -194,7 +358,7 @@ export default function QuizPage() {
 
       if (hearts.current_hearts <= 0) {
         console.log("하트가 없어서 스테이지에 진입할 수 없습니다");
-        setQuizError("하트가 부족합니다. 하트를 충전해주세요.");
+        setShowHeartShortageModal(true);
         return;
       }
 
@@ -719,6 +883,27 @@ export default function QuizPage() {
           </div>
         </div>
       )}
+
+      {/* 스테이지 결과 모달 */}
+      {stageResultData && (
+        <StageResultModal
+          isOpen={showStageResultModal}
+          isSuccess={stageResultData.isSuccess}
+          correctCount={stageResultData.correctCount}
+          totalQuestions={stageQuestions.length}
+          earnedExp={stageResultData.earnedExp}
+          earnedScore={stageResultData.earnedScore}
+          currentPhase={quizPhase}
+          onClose={handleCloseStageResultModal}
+        />
+      )}
+
+      {/* 하트 부족 모달 */}
+      <HeartShortageModal
+        isOpen={showHeartShortageModal}
+        currentPhase={quizPhase}
+        onClose={handleCloseHeartShortageModal}
+      />
     </div>
   );
 }
