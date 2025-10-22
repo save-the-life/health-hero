@@ -6,16 +6,17 @@ import { useState, useEffect } from "react";
 interface SettingsDropdownProps {
   isOpen: boolean;
   onClose: () => void;
+  onShowExitModal: () => void;
   pageType?: "main" | "quiz"; // 페이지 타입 추가
 }
 
 export default function SettingsDropdown({
   isOpen,
   onClose,
+  onShowExitModal,
   pageType = "quiz", // 기본값은 quiz
 }: SettingsDropdownProps) {
   const [showItemInfoModal, setShowItemInfoModal] = useState(false);
-  const [showExitModal, setShowExitModal] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
   // 닫기 애니메이션 처리
@@ -48,17 +49,18 @@ export default function SettingsDropdown({
   };
 
   const handleExitClick = () => {
-    setShowExitModal(true);
+    // 설정 메뉴를 닫고 나가기 모달 표시
     handleClose();
+    // 설정 메뉴 닫기 애니메이션 완료 후 나가기 모달 표시
+    setTimeout(() => {
+      onShowExitModal();
+    }, 500); // 애니메이션 지속 시간과 동일
   };
 
   const handleCloseItemInfoModal = () => {
     setShowItemInfoModal(false);
   };
 
-  const handleCloseExitModal = () => {
-    setShowExitModal(false);
-  };
 
   return (
     <>
@@ -169,33 +171,6 @@ export default function SettingsDropdown({
             {/* 닫기 버튼 */}
             <button
               onClick={handleCloseItemInfoModal}
-              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center hover:opacity-80 transition-opacity"
-            >
-              <span className="text-white text-xl font-bold">×</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* 나가기 확인 모달 */}
-      {showExitModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* 배경 블러 오버레이 */}
-          <div className="absolute inset-0 backdrop-blur-md" />
-
-          {/* 모달 컨테이너 */}
-          <div className="relative z-10">
-            <Image
-              src="/images/ui/popup-failed.png"
-              alt="나가기 확인"
-              width={324}
-              height={440}
-              className="object-cover"
-            />
-
-            {/* 닫기 버튼 */}
-            <button
-              onClick={handleCloseExitModal}
               className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center hover:opacity-80 transition-opacity"
             >
               <span className="text-white text-xl font-bold">×</span>

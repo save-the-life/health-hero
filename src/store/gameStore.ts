@@ -57,8 +57,26 @@ export const useGameStore = create<GameState>()(
       isLoading: false,
       error: null,
 
-      // 사용자 데이터 로드
+      // 사용자 데이터 로드 (캐싱 적용)
       loadUserData: async (userId: string) => {
+        const state = get()
+        
+        // 이미 로딩 중이면 중복 호출 방지
+        if (state.isLoading) {
+          console.log('이미 로딩 중입니다. 중복 호출 방지')
+          return
+        }
+        
+        // 데이터가 이미 있고 최근에 로드되었다면 스킵 (5분 캐시)
+        const lastLoadTime = localStorage.getItem(`userData_${userId}_lastLoad`)
+        if (lastLoadTime && state.level > 1) {
+          const timeDiff = Date.now() - parseInt(lastLoadTime)
+          if (timeDiff < 5 * 60 * 1000) { // 5분
+            console.log('캐시된 데이터 사용. 서버 호출 스킵')
+            return
+          }
+        }
+        
         set({ isLoading: true, error: null })
         
         try {
@@ -136,6 +154,9 @@ export const useGameStore = create<GameState>()(
             heartTimer,
             isLoading: false
           })
+          
+          // 로드 완료 시간 저장
+          localStorage.setItem(`userData_${userId}_lastLoad`, Date.now().toString())
 
         } catch (error) {
           console.error('사용자 데이터 로드 실패:', error)

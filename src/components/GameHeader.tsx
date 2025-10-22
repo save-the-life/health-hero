@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useGameStore } from "@/store/gameStore";
 import SettingsDropdown from "./SettingsDropdown";
@@ -10,6 +11,7 @@ interface GameHeaderProps {
 }
 
 export default function GameHeader({ pageType = "quiz" }: GameHeaderProps) {
+  const router = useRouter();
   const {
     level,
     totalScore,
@@ -21,6 +23,7 @@ export default function GameHeader({ pageType = "quiz" }: GameHeaderProps) {
 
   const [currentTimer, setCurrentTimer] = useState(heartTimer);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
 
   // 실시간 하트 타이머 업데이트
   useEffect(() => {
@@ -221,8 +224,117 @@ export default function GameHeader({ pageType = "quiz" }: GameHeaderProps) {
       <SettingsDropdown
         isOpen={showSettingsMenu}
         onClose={() => setShowSettingsMenu(false)}
+        onShowExitModal={() => setShowExitModal(true)}
         pageType={pageType}
       />
+
+      {/* 나가기 확인 모달 */}
+      {showExitModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* 배경 블러 오버레이 */}
+          <div className="absolute inset-0 backdrop-blur-md" />
+
+          {/* 모달 컨테이너 */}
+          <div className="relative z-10">
+            <Image
+              src="/images/ui/popup-failed.png"
+              alt="나가기 확인"
+              width={324}
+              height={440}
+              className="object-cover"
+            />
+
+            {/* 종료할까요? 텍스트 - 상단으로부터 38px */}
+            <div className="absolute top-[38px] left-1/2 transform -translate-x-1/2">
+              <h2 className="text-black text-[32px] font-normal whitespace-nowrap">
+                종료할까요?
+              </h2>
+            </div>
+
+            {/* 하트 아이콘과 -1 텍스트 - 종료할까요? 텍스트로부터 80px 아래 */}
+            <div className="absolute top-[150px] left-1/2 transform -translate-x-1/2">
+              <div className="relative">
+                <Image
+                  src="/images/items/icon-heart.png"
+                  alt="하트"
+                  width={100}
+                  height={100}
+                  className="relative z-10"
+                />
+                <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 text-white text-2xl font-bold">
+                  -1
+                </span>
+              </div>
+            </div>
+
+            {/* 경고 메시지 - 하트 아이콘 바로 아래 */}
+            <div className="absolute top-[250px] left-1/2 transform -translate-x-1/2">
+              <p className="text-black text-[18px] font-normal whitespace-nowrap">
+                지금 나가면 하트를 잃게 돼요!
+              </p>
+            </div>
+
+            {/* 나가기 버튼 - 하단 */}
+            <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2">
+              <button
+                onClick={() => {
+                  setShowExitModal(false);
+                  // 현재 페이즈로 이동 (router.push 사용으로 더 빠른 네비게이션)
+                  const currentPhase = useGameStore.getState().currentPhase;
+                  router.push(`/game/phase${currentPhase}`);
+                }}
+                className="font-medium h-[56px] w-[160px] rounded-[10px] relative cursor-pointer hover:opacity-80 transition-opacity"
+                style={{
+                  background:
+                    "linear-gradient(180deg, #50B0FF 0%, #50B0FF 50%, #008DFF 50%, #008DFF 100%)",
+                  border: "2px solid #76C1FF",
+                  outline: "2px solid #000000",
+                  boxShadow:
+                    "0px 4px 4px 0px rgba(0, 0, 0, 0.25), inset 0px 3px 0px 0px rgba(0, 0, 0, 0.1)",
+                  color: "#FFFFFF",
+                  fontSize: "16px",
+                  fontWeight: "400",
+                  WebkitTextStroke: "1px #000000",
+                }}
+              >
+                {/* 버튼 포인트 이미지 */}
+                <Image
+                  src="/images/items/button-point-blue.png"
+                  alt="button-point-blue"
+                  width={8.47}
+                  height={6.3}
+                  style={{
+                    position: "absolute",
+                    top: "3px",
+                    left: "3px",
+                    pointerEvents: "none",
+                  }}
+                />
+
+                {/* 버튼 텍스트 */}
+                <div
+                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center gap-1 whitespace-nowrap"
+                  style={{
+                    pointerEvents: "none",
+                  }}
+                >
+                  <span
+                    style={{
+                      color: "#FFFFFF",
+                      fontSize: "16px",
+                      fontWeight: "400",
+                      WebkitTextStroke: "1px #000000",
+                      lineHeight: "1.2",
+                    }}
+                  >
+                    나가기
+                  </span>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
