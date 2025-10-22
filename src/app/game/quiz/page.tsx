@@ -534,22 +534,36 @@ export default function QuizPage() {
                     }}
                   />
 
-                  {/* 버튼 텍스트 */}
-                  <span
-                    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                  {/* 버튼 텍스트 및 아이콘 */}
+                  <div
+                    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center gap-1 whitespace-nowrap"
                     style={{
                       pointerEvents: "none",
-                      textAlign: "center",
-                      lineHeight: "1.2",
-                      width: "100%",
-                      paddingLeft: "8px",
-                      paddingRight: "8px",
                     }}
                   >
-                    {currentQuestionIndex < stageQuestions.length - 1
-                      ? "다음 문제 &gt;"
-                      : "결과 보기 &gt;"}
-                  </span>
+                    <span
+                      style={{
+                        color: "#FFFFFF",
+                        fontSize: "16px",
+                        fontWeight: "400",
+                        WebkitTextStroke: "1px #000000",
+                        lineHeight: "1.2",
+                      }}
+                    >
+                      {currentQuestionIndex < stageQuestions.length - 1
+                        ? "다음 문제"
+                        : "결과 보기"}
+                    </span>
+                    <Image
+                      src="/images/items/icon-next.png"
+                      alt="다음"
+                      width={24}
+                      height={24}
+                      style={{
+                        pointerEvents: "none",
+                      }}
+                    />
+                  </div>
                 </button>
               </div>
             </div>
