@@ -161,7 +161,7 @@ export default function StageResultModal({
             >
               {/* 점수 아이콘 */}
               <Image
-                src="/images/items/icon-star.png"
+                src="/images/items/Icon-star.png"
                 alt="점수"
                 width={40}
                 height={40}

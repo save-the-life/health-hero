@@ -180,7 +180,7 @@ export default function HeartShortageModal({
               {/* 별 아이콘과 텍스트 */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center gap-1">
                 <Image
-                  src="/images/items/icon-star.png"
+                  src="/images/items/Icon-star.png"
                   alt="별"
                   width={20}
                   height={20}
