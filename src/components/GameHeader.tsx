@@ -6,12 +6,15 @@ import { useEffect, useState } from "react";
 import { useGameStore } from "@/store/gameStore";
 import SettingsDropdown from "./SettingsDropdown";
 import ItemInfoModal from "./ItemInfoModal";
+import ItemUseModal from "./ItemUseModal";
 
 interface GameHeaderProps {
   pageType?: "main" | "quiz"; // 페이지 타입 추가
+  onItemUse?: (itemId: string) => void; // 아이템 사용 콜백 추가
+  onShowItemUseModal?: (showModal: (itemId: string) => void) => void; // 아이템 사용 모달 표시 콜백 추가
 }
 
-export default function GameHeader({ pageType = "quiz" }: GameHeaderProps) {
+export default function GameHeader({ pageType = "quiz", onItemUse, onShowItemUseModal }: GameHeaderProps) {
   const router = useRouter();
   const {
     level,
@@ -26,8 +29,27 @@ export default function GameHeader({ pageType = "quiz" }: GameHeaderProps) {
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showItemInfoModal, setShowItemInfoModal] = useState(false);
+  const [showItemUseModal, setShowItemUseModal] = useState(false);
+  const [selectedItemId, setSelectedItemId] = useState<string>("");
 
-  // 실시간 하트 타이머 업데이트
+  // 아이템 사용 핸들러
+  const handleItemUse = (itemId: string) => {
+    console.log(`${itemId}이 사용되었습니다.`);
+    onItemUse?.(itemId);
+  };
+
+  // 아이템 사용 모달 표시 함수
+  const showItemUseModalForItem = (itemId: string) => {
+    setSelectedItemId(itemId);
+    setShowItemUseModal(true);
+  };
+
+  // 외부에서 아이템 사용 모달을 표시할 수 있도록 콜백 설정
+  useEffect(() => {
+    if (onShowItemUseModal) {
+      onShowItemUseModal(showItemUseModalForItem);
+    }
+  }, [onShowItemUseModal]);
   useEffect(() => {
     if (!hearts || hearts.current_hearts >= 5) {
       setCurrentTimer("충전 완료");
@@ -343,6 +365,14 @@ export default function GameHeader({ pageType = "quiz" }: GameHeaderProps) {
       <ItemInfoModal
         isOpen={showItemInfoModal}
         onClose={() => setShowItemInfoModal(false)}
+      />
+
+      {/* 아이템 사용 모달 */}
+      <ItemUseModal
+        isOpen={showItemUseModal}
+        onClose={() => setShowItemUseModal(false)}
+        itemId={selectedItemId}
+        onUseItem={handleItemUse}
       />
     </div>
   );

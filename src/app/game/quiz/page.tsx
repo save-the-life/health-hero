@@ -10,6 +10,8 @@ import { QuizService, QuizQuestion } from "@/services/quizService";
 import QuizChoiceButton from "@/components/QuizChoiceButton";
 import StageResultModal from "@/components/StageResultModal";
 import HeartShortageModal from "@/components/HeartShortageModal";
+import ItemUseModal from "@/components/ItemUseModal";
+import HintModal from "@/components/HintModal";
 
 export default function QuizPage() {
   const router = useRouter();
@@ -24,6 +26,7 @@ export default function QuizPage() {
     loadUserData,
     updateHearts,
     consumeHeart,
+    updateScore,
     addScoreAndExp,
     completeStage,
     checkLevelUp,
@@ -66,6 +69,7 @@ export default function QuizPage() {
 
   // 사용자 답안 추적 및 점수/경험치 계산
   const [userAnswers, setUserAnswers] = useState<(number | null)[]>([]);
+  const [userItemsUsed, setUserItemsUsed] = useState<(string | null)[]>([]);
   const [stageScore, setStageScore] = useState(0);
   const [stageExp, setStageExp] = useState(0);
 
@@ -89,6 +93,15 @@ export default function QuizPage() {
   // 하트 부족 모달 상태
   const [showHeartShortageModal, setShowHeartShortageModal] = useState(false);
 
+  // 아이템 사용 모달 상태
+  const [showItemUseModal, setShowItemUseModal] = useState<string | null>(null);
+
+  // 아이템 사용 관련 상태
+  const [usedItem, setUsedItem] = useState<string | null>(null);
+  const [showHintModal, setShowHintModal] = useState(false);
+  const [doubleScoreActive, setDoubleScoreActive] = useState(false);
+  const [removedChoices, setRemovedChoices] = useState<number[]>([]);
+
   // 중복 실행 방지를 위한 ref
   const heartDeductedRef = useRef(false);
 
@@ -111,10 +124,15 @@ export default function QuizPage() {
     const scoreMap = { 쉬움: 10, 보통: 30, 어려움: 50 };
     const expMap = { 쉬움: 12, 보통: 18, 어려움: 26 };
 
-    return {
-      score: scoreMap[difficulty],
-      exp: expMap[difficulty],
-    };
+    let score = scoreMap[difficulty];
+    const exp = expMap[difficulty];
+
+    // 점수 2배 아이템 효과 적용
+    if (doubleScoreActive) {
+      score *= 2;
+    }
+
+    return { score, exp };
   };
 
   // 텍스트 길이에 따른 동적 폰트 크기 계산
@@ -149,11 +167,13 @@ export default function QuizPage() {
       console.log("선택한 인덱스:", choiceIndex);
       console.log("선택한 답안:", currentQuestion.choices[choiceIndex]);
       console.log("데이터베이스 정답 인덱스:", currentQuestion.answer_index);
+      console.log("데이터베이스 정답 인덱스 타입:", typeof currentQuestion.answer_index);
       console.log(
         "데이터베이스 정답:",
         currentQuestion.choices[currentQuestion.answer_index]
       );
       console.log("정답 여부:", choiceIndex === currentQuestion.answer_index);
+      console.log("정답 인덱스 범위 확인:", currentQuestion.answer_index >= 0 && currentQuestion.answer_index <= 3);
       console.log("========================");
 
       const correct = choiceIndex === currentQuestion.answer_index;
@@ -228,10 +248,106 @@ export default function QuizPage() {
     }
   };
 
+  // 아이템 사용 핸들러
+  const handleItemUse = async (itemId: string) => {
+    if (usedItem) return; // 이미 아이템을 사용했으면 무시
+
+    const itemCosts = {
+      "remove-wrong": 50,
+      "hint": 80,
+      "double-score": 100,
+      "auto-answer": 200,
+    };
+
+    const cost = itemCosts[itemId as keyof typeof itemCosts];
+    
+    // 점수 부족 체크
+    if (!totalScore || totalScore < cost) {
+      console.log("점수가 부족합니다.");
+      return;
+    }
+
+    // 점수 차감
+    const newScore = totalScore - cost;
+    updateScore(newScore);
+
+    // 아이템별 기능 실행
+    switch (itemId) {
+      case "remove-wrong":
+        handleRemoveWrongAnswer();
+        break;
+      case "hint":
+        handleShowHint();
+        break;
+      case "double-score":
+        handleDoubleScore();
+        break;
+      case "auto-answer":
+        handleAutoAnswer();
+        break;
+    }
+
+    // 아이템 사용 상태 설정
+    setUsedItem(itemId);
+    console.log(`${itemId}이 사용되었습니다. (${cost}점 차감)`);
+  };
+
+  // 아이템 사용 모달 닫기 핸들러
+  const handleCloseItemUseModal = () => {
+    setShowItemUseModal(null);
+  };
+
+  // 오답 제거 아이템 핸들러
+  const handleRemoveWrongAnswer = () => {
+    if (!currentQuestion) return;
+    
+    const correctAnswerIndex = currentQuestion.answer_index;
+    const wrongAnswers = currentQuestion.choices
+      .map((_, index) => index)
+      .filter(index => index !== correctAnswerIndex);
+    
+    // 이미 제거된 선택지 제외
+    const availableWrongAnswers = wrongAnswers.filter(index => !removedChoices.includes(index));
+    
+    if (availableWrongAnswers.length > 0) {
+      const randomIndex = Math.floor(Math.random() * availableWrongAnswers.length);
+      const toRemove = availableWrongAnswers[randomIndex];
+      setRemovedChoices(prev => [...prev, toRemove]);
+    }
+  };
+
+  // 힌트 아이템 핸들러
+  const handleShowHint = () => {
+    setShowHintModal(true);
+  };
+
+  // 점수 2배 아이템 핸들러
+  const handleDoubleScore = () => {
+    setDoubleScoreActive(true);
+  };
+
+  // 자동 정답 아이템 핸들러
+  const handleAutoAnswer = () => {
+    if (!currentQuestion) return;
+    
+    const correctAnswerIndex = currentQuestion.answer_index;
+    setSelectedAnswer(correctAnswerIndex);
+    setIsCorrect(true);
+    setShowResult(true);
+  };
+
   // 아이템 클릭 핸들러
   const handleItemClick = (itemType: string) => {
-    console.log("아이템 클릭:", itemType);
-    // TODO: 아이템 사용 로직 구현
+    // 체크박스가 체크되어 있으면 바로 사용, 아니면 모달 표시
+    const skipPopup = localStorage.getItem(`item_skip_popup_${itemType}`) === 'true';
+    
+    if (skipPopup) {
+      // 바로 아이템 사용
+      handleItemUse(itemType);
+    } else {
+      // 모달 표시
+      setShowItemUseModal(itemType);
+    }
   };
 
   // 스테이지 결과 모달 닫기 핸들러
@@ -252,9 +368,23 @@ export default function QuizPage() {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setShowResult(false);
       setSelectedAnswer(null);
+      
+      // 아이템 상태 초기화
+      setUsedItem(null);
+      setShowHintModal(false);
+      setDoubleScoreActive(false);
+      setRemovedChoices([]);
+      
+      // 아이템 사용 정보 초기화
+      setUserItemsUsed(prev => [...prev, usedItem]);
     } else {
       // 모든 문제 완료 - 스테이지 결과 계산
       console.log("스테이지 완료!");
+
+      // 마지막 문제의 아이템 사용 정보 저장
+      if (usedItem) {
+        setUserItemsUsed(prev => [...prev, usedItem]);
+      }
 
       // 정답 개수 계산
       const correctCount = userAnswers.filter((answer, index) => {
@@ -286,6 +416,27 @@ export default function QuizPage() {
       console.log(
         `기본 경험치: ${stageExp}, 보너스: ${bonusExp}, 총합: ${totalExp}`
       );
+
+      // 아이템 사용 정보 로그
+      console.log("아이템 사용 내역:");
+      userItemsUsed.forEach((item, index) => {
+        if (item) {
+          const questionNum = index + 1;
+          const itemNames = {
+            "remove-wrong": "오답 제거",
+            "hint": "힌트",
+            "double-score": "점수 2배",
+            "auto-answer": "자동 정답"
+          };
+          const itemName = itemNames[item as keyof typeof itemNames] || item;
+          
+          if (item === "double-score") {
+            console.log(`  문제 ${questionNum}: ${itemName} 사용 (점수 2배 획득!)`);
+          } else {
+            console.log(`  문제 ${questionNum}: ${itemName} 사용`);
+          }
+        }
+      });
 
       // 데이터베이스에 스테이지 완료 처리
       if (user?.id) {
@@ -646,15 +797,18 @@ export default function QuizPage() {
 
             {/* 선택지 버튼들 */}
             <div className="flex flex-col gap-4 mb-[80px]">
-              {currentQuestion.choices.map((choice, index) => (
-                <QuizChoiceButton
-                  key={index}
-                  choice={choice}
-                  index={index}
-                  isSelected={selectedAnswer === index}
-                  onClick={() => handleChoiceClick(index)}
-                />
-              ))}
+              {currentQuestion.choices
+                .map((choice, index) => ({ choice, index }))
+                .filter(({ index }) => !removedChoices.includes(index))
+                .map(({ choice, index }) => (
+                  <QuizChoiceButton
+                    key={index}
+                    choice={choice}
+                    index={index}
+                    isSelected={selectedAnswer === index}
+                    onClick={() => handleChoiceClick(index)}
+                  />
+                ))}
             </div>
           </div>
         )}
@@ -841,12 +995,14 @@ export default function QuizPage() {
             {/* 오답 삭제 아이템 */}
             <button
               onClick={() => handleItemClick("remove-wrong")}
-              className="w-[60px] h-[60px] flex items-center justify-center"
-              disabled={!totalScore || totalScore < 50}
+              className={`w-[60px] h-[60px] flex items-center justify-center ${
+                usedItem && usedItem !== "remove-wrong" ? "opacity-50" : ""
+              }`}
+              disabled={!totalScore || totalScore < 50 || (usedItem ? usedItem !== "remove-wrong" : false)}
             >
               <Image
                 src={
-                  totalScore && totalScore >= 50
+                  totalScore && totalScore >= 50 && (!usedItem || usedItem === "remove-wrong")
                     ? "/images/items/item-remove-wrong-able.png"
                     : "/images/items/item-remove-wrong-disable.png"
                 }
@@ -860,12 +1016,14 @@ export default function QuizPage() {
             {/* 힌트 아이템 */}
             <button
               onClick={() => handleItemClick("hint")}
-              className="w-[60px] h-[60px] flex items-center justify-center"
-              disabled={!totalScore || totalScore < 80}
+              className={`w-[60px] h-[60px] flex items-center justify-center ${
+                usedItem && usedItem !== "hint" ? "opacity-50" : ""
+              }`}
+              disabled={!totalScore || totalScore < 80 || (usedItem ? usedItem !== "hint" : false)}
             >
               <Image
                 src={
-                  totalScore && totalScore >= 80
+                  totalScore && totalScore >= 80 && (!usedItem || usedItem === "hint")
                     ? "/images/items/item-hint-able.png"
                     : "/images/items/item-hint-disable.png"
                 }
@@ -879,12 +1037,16 @@ export default function QuizPage() {
             {/* 점수 2배 아이템 */}
             <button
               onClick={() => handleItemClick("double-score")}
-              className="w-[60px] h-[60px] flex items-center justify-center"
-              disabled={!totalScore || totalScore < 100}
+              className={`w-[60px] h-[60px] flex items-center justify-center ${
+                usedItem && usedItem !== "double-score" ? "opacity-50" : ""
+              } ${
+                usedItem === "double-score" ? "animate-pulse" : ""
+              }`}
+              disabled={!totalScore || totalScore < 100 || (usedItem ? usedItem !== "double-score" : false)}
             >
               <Image
                 src={
-                  totalScore && totalScore >= 100
+                  totalScore && totalScore >= 100 && (!usedItem || usedItem === "double-score")
                     ? "/images/items/item-double-able.png"
                     : "/images/items/item-double-disable.png"
                 }
@@ -898,12 +1060,14 @@ export default function QuizPage() {
             {/* 자동 정답 아이템 */}
             <button
               onClick={() => handleItemClick("auto-answer")}
-              className="w-[60px] h-[60px] flex items-center justify-center"
-              disabled={!totalScore || totalScore < 200}
+              className={`w-[60px] h-[60px] flex items-center justify-center ${
+                usedItem && usedItem !== "auto-answer" ? "opacity-50" : ""
+              }`}
+              disabled={!totalScore || totalScore < 200 || (usedItem ? usedItem !== "auto-answer" : false)}
             >
               <Image
                 src={
-                  totalScore && totalScore >= 200
+                  totalScore && totalScore >= 200 && (!usedItem || usedItem === "auto-answer")
                     ? "/images/items/item-auto-answer-able.png"
                     : "/images/items/item-auto-answer-disable.png"
                 }
@@ -937,6 +1101,25 @@ export default function QuizPage() {
         currentPhase={quizPhase}
         onClose={handleCloseHeartShortageModal}
       />
+
+      {/* 아이템 사용 모달 */}
+      {showItemUseModal && (
+        <ItemUseModal
+          isOpen={true}
+          onClose={handleCloseItemUseModal}
+          itemId={showItemUseModal}
+          onUseItem={handleItemUse}
+        />
+      )}
+
+      {/* 힌트 모달 */}
+      {currentQuestion && (
+        <HintModal
+          isOpen={showHintModal}
+          onClose={() => setShowHintModal(false)}
+          hint={currentQuestion.hint || "힌트가 없습니다."}
+        />
+      )}
     </div>
   );
 }
