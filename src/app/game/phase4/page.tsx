@@ -50,6 +50,19 @@ export default function Phase4Page() {
     }
   }, [isAuthenticated, user?.id, loadUserData]);
 
+  // 페이지 포커스 시 사용자 데이터 새로고침 (스테이지 완료 후 돌아올 때)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && isAuthenticated && user?.id) {
+        loadUserData(user.id);
+        console.log("페이즈 페이지 가시성 변경 - 사용자 데이터 새로고침");
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [isAuthenticated, user?.id, loadUserData]);
+
   // 하트 타이머 업데이트 (30초마다)
   useEffect(() => {
     if (!isAuthenticated || !user?.id || !hearts) return;

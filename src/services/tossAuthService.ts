@@ -26,14 +26,21 @@ export class TossAuthService {
         userId = existingProfile.id
         console.log('✅ 기존 사용자:', userId)
         
-        // Supabase Auth 세션 생성 (비밀번호 무시)
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: existingProfile.email || email,
-          password: `toss_${user.userKey}_permanent`
-        })
-        
-        if (signInError) {
-          console.log('⚠️ 세션 생성 실패 (무시):', signInError.message)
+        // Supabase Auth 세션 생성 시도 (실패해도 계속 진행)
+        try {
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: existingProfile.email || email,
+            password: `toss_${user.userKey}_permanent`
+          })
+          
+          if (signInError) {
+            console.log('⚠️ 세션 생성 실패 (무시):', signInError.message)
+            // 세션 생성 실패해도 사용자 정보는 업데이트하고 계속 진행
+          } else {
+            console.log('✅ Supabase 세션 생성 성공')
+          }
+        } catch (sessionError) {
+          console.log('⚠️ 세션 생성 중 오류 (무시):', sessionError)
         }
       } else {
         // 신규 사용자 - Supabase Auth로 생성
@@ -104,6 +111,9 @@ export class TossAuthService {
           referrer: auth.referrer,
           user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null
         })
+
+      // 4. 토스 로그인 완료 로그
+      console.log('✅ 토스 로그인 및 사용자 프로필 생성 완료')
 
       return {
         userId,

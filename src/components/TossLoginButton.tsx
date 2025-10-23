@@ -54,6 +54,12 @@ export default function TossLoginButton() {
       if (supabaseResult.profile) {
         setUser(supabaseResult.profile)
         console.log('✅ [TossLogin] Zustand store 업데이트 완료')
+        
+        // 추가: 인증 상태 강제 업데이트 (세션 생성 실패 대비)
+        console.log('🔧 [TossLogin] 인증 상태 강제 업데이트')
+        setTimeout(() => {
+          setUser(supabaseResult.profile) // 다시 한 번 설정하여 확실히 업데이트
+        }, 100)
       }
 
       // 4. 게임 페이지로 이동

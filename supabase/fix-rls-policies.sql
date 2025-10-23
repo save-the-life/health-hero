@@ -1,78 +1,86 @@
--- ============================================
--- RLS 정책 확인 및 수정 스크립트 (2025-01-27)
--- quiz_submission_logs 테이블 RLS 정책 문제 해결
--- ============================================
+-- RLS 정책 수정 쿼리
+-- 익명 사용자 접근을 제거하고 인증된 사용자만 접근하도록 수정
 
--- 1. 현재 RLS 정책 확인
--- ============================================
-SELECT 
-    schemaname,
-    tablename,
-    policyname,
-    permissive,
-    roles,
-    cmd,
-    qual,
-    with_check
-FROM pg_policies 
-WHERE tablename IN ('quiz_submission_logs', 'user_quiz_records');
+-- 1. user_profiles 테이블 정책 수정
+DROP POLICY IF EXISTS "Users can view own profile" ON user_profiles;
+CREATE POLICY "Users can view own profile" ON user_profiles
+  FOR SELECT USING (auth.uid() = id);
 
--- 2. 테이블별 RLS 활성화 상태 확인
--- ============================================
-SELECT 
-    schemaname,
-    tablename,
-    rowsecurity as rls_enabled
-FROM pg_tables 
-WHERE tablename IN ('quiz_submission_logs', 'user_quiz_records');
+DROP POLICY IF EXISTS "Users can update own profile" ON user_profiles;
+CREATE POLICY "Users can update own profile" ON user_profiles
+  FOR UPDATE USING (auth.uid() = id);
 
--- 3. quiz_submission_logs 테이블 RLS 정책 수정
--- ============================================
--- 기존 정책 삭제 (있다면)
-DROP POLICY IF EXISTS "quiz_submission_logs_insert_policy" ON quiz_submission_logs;
-DROP POLICY IF EXISTS "quiz_submission_logs_select_policy" ON quiz_submission_logs;
+DROP POLICY IF EXISTS "Users can insert own profile" ON user_profiles;
+CREATE POLICY "Users can insert own profile" ON user_profiles
+  FOR INSERT WITH CHECK (auth.uid() = id);
 
--- 새로운 INSERT 정책 생성 (인증된 사용자는 자신의 레코드만 삽입 가능)
-CREATE POLICY "quiz_submission_logs_insert_policy" ON quiz_submission_logs
-    FOR INSERT 
-    TO authenticated 
-    WITH CHECK (auth.uid() = user_id);
+-- 2. user_hearts 테이블 정책 수정
+DROP POLICY IF EXISTS "Users can view own hearts" ON user_hearts;
+CREATE POLICY "Users can view own hearts" ON user_hearts
+  FOR SELECT USING (auth.uid() = user_id);
 
--- 새로운 SELECT 정책 생성 (인증된 사용자는 자신의 레코드만 조회 가능)
-CREATE POLICY "quiz_submission_logs_select_policy" ON quiz_submission_logs
-    FOR SELECT 
-    TO authenticated 
-    USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own hearts" ON user_hearts;
+CREATE POLICY "Users can update own hearts" ON user_hearts
+  FOR UPDATE USING (auth.uid() = user_id);
 
--- 4. user_quiz_records 테이블 RLS 정책도 확인 및 수정
--- ============================================
--- 기존 정책 삭제 (있다면)
-DROP POLICY IF EXISTS "user_quiz_records_insert_policy" ON user_quiz_records;
-DROP POLICY IF EXISTS "user_quiz_records_select_policy" ON user_quiz_records;
+DROP POLICY IF EXISTS "Users can insert own hearts" ON user_hearts;
+CREATE POLICY "Users can insert own hearts" ON user_hearts
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
 
--- 새로운 INSERT 정책 생성
-CREATE POLICY "user_quiz_records_insert_policy" ON user_quiz_records
-    FOR INSERT 
-    TO authenticated 
-    WITH CHECK (auth.uid() = user_id);
+-- 3. quizzes 테이블 정책 수정 (인증된 사용자만 접근)
+DROP POLICY IF EXISTS "Users can read quiz questions only" ON quizzes;
+CREATE POLICY "Users can read quiz questions only" ON quizzes
+  FOR SELECT USING (auth.role() = 'authenticated');
 
--- 새로운 SELECT 정책 생성
-CREATE POLICY "user_quiz_records_select_policy" ON user_quiz_records
-    FOR SELECT 
-    TO authenticated 
-    USING (auth.uid() = user_id);
+-- 4. user_quiz_records 테이블 정책 수정
+DROP POLICY IF EXISTS "Users can view own quiz records" ON user_quiz_records;
+CREATE POLICY "Users can view own quiz records" ON user_quiz_records
+  FOR SELECT USING (auth.uid() = user_id);
 
--- 5. 정책 적용 확인
--- ============================================
-SELECT 
-    schemaname,
-    tablename,
-    policyname,
-    permissive,
-    roles,
-    cmd,
-    qual,
-    with_check
-FROM pg_policies 
-WHERE tablename IN ('quiz_submission_logs', 'user_quiz_records')
-ORDER BY tablename, policyname;
+DROP POLICY IF EXISTS "Users can insert own quiz records" ON user_quiz_records;
+CREATE POLICY "Users can insert own quiz records" ON user_quiz_records
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- 5. user_progress 테이블 정책 수정
+DROP POLICY IF EXISTS "Users can view own progress" ON user_progress;
+CREATE POLICY "Users can view own progress" ON user_progress
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update own progress" ON user_progress;
+CREATE POLICY "Users can update own progress" ON user_progress
+  FOR UPDATE USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own progress" ON user_progress;
+CREATE POLICY "Users can insert own progress" ON user_progress
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- 6. toss_login_logs 테이블 정책 수정 (로그는 인증된 사용자만)
+DROP POLICY IF EXISTS "Users can view own login logs" ON toss_login_logs;
+CREATE POLICY "Users can view own login logs" ON toss_login_logs
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own login logs" ON toss_login_logs;
+CREATE POLICY "Users can insert own login logs" ON toss_login_logs
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- 7. user_item_settings 테이블 정책 수정
+DROP POLICY IF EXISTS "Users can view own item settings" ON user_item_settings;
+CREATE POLICY "Users can view own item settings" ON user_item_settings
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update own item settings" ON user_item_settings;
+CREATE POLICY "Users can update own item settings" ON user_item_settings
+  FOR UPDATE USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own item settings" ON user_item_settings;
+CREATE POLICY "Users can insert own item settings" ON user_item_settings
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- 8. quiz_submission_logs 테이블 정책 수정
+DROP POLICY IF EXISTS "Users can view own submission logs" ON quiz_submission_logs;
+CREATE POLICY "Users can view own submission logs" ON quiz_submission_logs
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own submission logs" ON quiz_submission_logs;
+CREATE POLICY "Users can insert own submission logs" ON quiz_submission_logs
+  FOR INSERT WITH CHECK (auth.uid() = user_id);

@@ -57,6 +57,14 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true })
         
         try {
+          // 먼저 로컬 스토리지에서 사용자 정보 확인 (토스 로그인 후 즉시 반영)
+          const currentState = get()
+          if (currentState.user && currentState.isAuthenticated) {
+            console.log('🔧 로컬 스토리지에서 인증 상태 확인됨:', currentState.user.id)
+            set({ isLoading: false })
+            return
+          }
+          
           // Supabase 세션 확인
           const { data: { session } } = await supabase.auth.getSession()
           
@@ -75,7 +83,17 @@ export const useAuthStore = create<AuthState>()(
               set({ user: profile, isAuthenticated: true })
             }
           } else {
-            set({ isAuthenticated: false, user: null })
+            // 세션이 없어도 로컬 스토리지에 사용자 정보가 있으면 인증 상태 유지
+            const persistedState = JSON.parse(localStorage.getItem('auth-storage') || '{}')
+            if (persistedState.state?.user && persistedState.state?.isAuthenticated) {
+              console.log('🔧 로컬 스토리지에서 사용자 정보 복원:', persistedState.state.user.id)
+              set({ 
+                user: persistedState.state.user, 
+                isAuthenticated: true 
+              })
+            } else {
+              set({ isAuthenticated: false, user: null })
+            }
           }
         } catch (error) {
           console.error('인증 상태 초기화 실패:', error)

@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/authStore";
+import { useGameStore } from "@/store/gameStore";
 
 interface StageResultModalProps {
   isOpen: boolean;
@@ -25,11 +27,30 @@ export default function StageResultModal({
   onClose,
 }: StageResultModalProps) {
   const router = useRouter();
+  const { user } = useAuthStore();
+  const { loadUserData } = useGameStore();
 
   if (!isOpen) return null;
 
-  const handleRewardClick = () => {
+  const handleRewardClick = async () => {
     onClose();
+    
+    // 사용자 데이터를 다시 로드하여 최신 진행 상황 반영
+    if (user?.id) {
+      try {
+        // 앱인토스 환경을 고려한 타임아웃 설정
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('데이터 로드 타임아웃')), 10000)
+        );
+        
+        await Promise.race([loadUserData(user.id), timeoutPromise]);
+        console.log("스테이지 완료 후 사용자 데이터 새로고침 완료");
+      } catch (error) {
+        console.error("사용자 데이터 새로고침 실패:", error);
+        // 실패해도 페이지 이동은 계속 진행
+      }
+    }
+    
     // 현재 페이즈에 따라 해당 페이즈 페이지로 이동
     router.push(`/game/phase${currentPhase}`);
   };

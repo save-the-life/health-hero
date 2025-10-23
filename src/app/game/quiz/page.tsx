@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { useGameStore } from "@/store/gameStore";
 import GameHeader from "@/components/GameHeader";
@@ -13,7 +13,7 @@ import HeartShortageModal from "@/components/HeartShortageModal";
 import ItemUseModal from "@/components/ItemUseModal";
 import HintModal from "@/components/HintModal";
 
-export default function QuizPage() {
+function QuizPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isAuthenticated, initialize } = useAuthStore();
@@ -1121,5 +1121,15 @@ export default function QuizPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function QuizPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-400 to-blue-600">
+      <div className="text-white text-xl">로딩 중...</div>
+    </div>}>
+      <QuizPageContent />
+    </Suspense>
   );
 }

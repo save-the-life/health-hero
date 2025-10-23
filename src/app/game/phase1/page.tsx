@@ -43,6 +43,28 @@ export default function Phase1Page() {
     }
   }, [isAuthenticated, user?.id, loadUserData]);
 
+  // 페이지 포커스 시 사용자 데이터 새로고침 (스테이지 완료 후 돌아올 때)
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (!document.hidden && isAuthenticated && user?.id) {
+        try {
+          // 앱인토스 환경을 고려한 타임아웃 설정
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('데이터 로드 타임아웃')), 8000)
+          );
+          
+          await Promise.race([loadUserData(user.id), timeoutPromise]);
+          console.log("페이즈 페이지 가시성 변경 - 사용자 데이터 새로고침 완료");
+        } catch (error) {
+          console.error("페이즈 페이지 데이터 새로고침 실패:", error);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [isAuthenticated, user?.id, loadUserData]);
+
   // 하트 타이머 업데이트 (30초마다)
   useEffect(() => {
     if (!isAuthenticated || !user?.id || !hearts) return;
@@ -60,14 +82,28 @@ export default function Phase1Page() {
   // 스테이지 잠금 상태 확인
   const isStageLocked = (stageNumber: number) => {
     // 현재 스테이지보다 높은 스테이지는 잠금
-    return stageNumber > currentStage;
+    const locked = stageNumber > currentStage;
+    console.log(`스테이지 ${stageNumber} 잠금 상태 확인: currentStage=${currentStage}, locked=${locked}`);
+    return locked;
   };
 
   // 스테이지 클릭 핸들러
-  const handleStageClick = (stageNumber: number) => {
+  const handleStageClick = async (stageNumber: number) => {
     // 잠금된 스테이지는 클릭 불가
     if (isStageLocked(stageNumber)) {
+      console.log(`스테이지 ${stageNumber} 클릭 시도 - 잠금 상태로 인해 차단됨`);
       return;
+    }
+
+    // 앱인토스 환경에서 추가 데이터 새로고침
+    if (user?.id) {
+      try {
+        console.log("스테이지 클릭 전 데이터 새로고침 시도");
+        await loadUserData(user.id);
+        console.log("스테이지 클릭 전 데이터 새로고침 완료");
+      } catch (error) {
+        console.error("스테이지 클릭 전 데이터 새로고침 실패:", error);
+      }
     }
 
     // 퀴즈 페이지로 이동 (쿼리 파라미터로 페이즈와 스테이지 정보 전달)

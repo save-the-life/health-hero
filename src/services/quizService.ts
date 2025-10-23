@@ -30,25 +30,13 @@ export class QuizService {
   static async getStageQuestions(phase: number, stage: number, userId?: string): Promise<QuizQuestion[]> {
     try {
       const difficulty = this.getDifficultyByStage(stage);
+      console.log(`스테이지 ${stage} (${difficulty}) 문제 로드 시작 - 사용자: ${userId}`);
       
       // 먼저 해당 난이도의 모든 문제를 가져온 후 클라이언트에서 랜덤 선택
-      let query = supabase
+      const query = supabase
         .from('quizzes')
         .select('id, qnum, topic, prompt, choices, answer_index, hint, explanation, difficulty_label, difficulty_level')
         .eq('difficulty_label', difficulty);
-
-      // 사용자가 이미 푼 문제 제외 (중복 방지)
-      if (userId) {
-        const { data: solvedQuestions } = await supabase
-          .from('user_quiz_records')
-          .select('quiz_id')
-          .eq('user_id', userId);
-
-        if (solvedQuestions && solvedQuestions.length > 0) {
-          const solvedIds = solvedQuestions.map(record => record.quiz_id);
-          query = query.not('id', 'in', `(${solvedIds.join(',')})`);
-        }
-      }
 
       const { data, error } = await query;
 
@@ -57,13 +45,40 @@ export class QuizService {
         return [];
       }
 
+      console.log(`난이도 ${difficulty} 문제 총 ${data?.length || 0}개 발견`);
+
       if (!data || data.length === 0) {
-        console.warn(`난이도 ${difficulty}에 해당하는 문제가 없거나 모든 문제를 이미 풀었습니다.`);
+        console.warn(`난이도 ${difficulty}에 해당하는 문제가 없습니다.`);
         return [];
       }
 
+      // 사용자가 이미 푼 문제 제외 (중복 방지) - 선택적 적용
+      let availableQuestions = data;
+      if (userId) {
+        try {
+          const { data: solvedQuestions } = await supabase
+            .from('user_quiz_records')
+            .select('quiz_id')
+            .eq('user_id', userId);
+
+          if (solvedQuestions && solvedQuestions.length > 0) {
+            const solvedIds = solvedQuestions.map(record => record.quiz_id);
+            availableQuestions = data.filter(question => !solvedIds.includes(question.id));
+            console.log(`사용자가 이미 푼 문제 ${solvedIds.length}개 제외, 남은 문제 ${availableQuestions.length}개`);
+          }
+        } catch (solvedError) {
+          console.warn('푼 문제 조회 실패, 모든 문제 사용:', solvedError);
+          availableQuestions = data;
+        }
+      }
+
+      if (availableQuestions.length === 0) {
+        console.warn(`모든 문제를 이미 풀었습니다. 기본 문제 사용.`);
+        availableQuestions = data; // 모든 문제를 다시 사용
+      }
+
       // 클라이언트에서 랜덤 셔플링하여 5개 선택
-      const shuffled = [...data].sort(() => Math.random() - 0.5);
+      const shuffled = [...availableQuestions].sort(() => Math.random() - 0.5);
       const selectedQuestions = shuffled.slice(0, 5);
 
       console.log(`스테이지 ${stage} (${difficulty}) 문제 ${selectedQuestions.length}개 선택됨`);

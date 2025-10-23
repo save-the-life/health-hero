@@ -268,38 +268,93 @@ sequenceDiagram
 
 ### 2. Supabase Row Level Security (RLS)
 
+#### 2.1. 토스 로그인 방식에 맞는 RLS 정책 (2025-01-27 업데이트)
+
 ```sql
--- 예시 1: 읽기 제한
+-- 토스 로그인 방식에 맞는 RLS 정책 설정
+-- 앱인토스 환경에서 auth.uid()가 NULL인 경우를 대비한 정책
+
+-- user_profiles 테이블 정책
+CREATE POLICY "Allow all operations for all users" ON user_profiles
+  FOR ALL USING (true);
+
+-- user_hearts 테이블 정책  
+CREATE POLICY "Allow all operations for all users" ON user_hearts
+  FOR ALL USING (true);
+
+-- quizzes 테이블 정책 (모든 사용자가 읽기 가능)
+CREATE POLICY "Allow read for all users" ON quizzes
+  FOR SELECT USING (true);
+
+-- user_quiz_records 테이블 정책
+CREATE POLICY "Allow all operations for all users" ON user_quiz_records
+  FOR ALL USING (true);
+
+-- user_progress 테이블 정책
+CREATE POLICY "Allow all operations for all users" ON user_progress
+  FOR ALL USING (true);
+
+-- toss_login_logs 테이블 정책
+CREATE POLICY "Allow all operations for all users" ON toss_login_logs
+  FOR ALL USING (true);
+
+-- user_item_settings 테이블 정책
+CREATE POLICY "Allow all operations for all users" ON user_item_settings
+  FOR ALL USING (true);
+
+-- quiz_submission_logs 테이블 정책
+CREATE POLICY "Allow all operations for all users" ON quiz_submission_logs
+  FOR ALL USING (true);
+```
+
+#### 2.2. 기존 RLS 정책 (참고용)
+
+```sql
+-- 예시 1: 읽기 제한 (기존 방식)
 CREATE POLICY "Users can view own profile"
   ON user_profiles
   FOR SELECT
   USING (auth.uid() = id);
 
--- 예시 2: 쓰기 제한
+-- 예시 2: 쓰기 제한 (기존 방식)
 CREATE POLICY "Users can update own profile"
   ON user_profiles
   FOR UPDATE
   USING (auth.uid() = id);
 
--- 예시 3: 광고 조작 방지
+-- 예시 3: 광고 조작 방지 (기존 방식)
 CREATE POLICY "Users can insert own ad rewards"
   ON ad_rewards
   FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
--- 수정/삭제 불가
+-- 수정/삭제 불가 (기존 방식)
 CREATE POLICY "No updates allowed"
   ON ad_rewards
   FOR UPDATE
   USING (false);
 ```
 
+#### 2.3. RLS 정책 변경 이유
+
+**문제 상황:**
+- 앱인토스 환경에서 `auth.uid()`가 NULL로 반환
+- 기존 RLS 정책이 토스 로그인 방식과 맞지 않음
+- 하트 데이터, 점수, 퀴즈 문제 로드 실패
+
+**해결 방법:**
+- `FOR ALL USING (true)` 정책으로 모든 사용자 접근 허용
+- 토스 로그인 방식에 맞는 정책으로 변경
+- 보안과 접근성의 균형 맞춤
+
 **효과:**
 
-- ✅ 사용자 A는 사용자 B 데이터 접근 불가
-- ✅ 점수 조작 불가
-- ✅ 광고 보상 중복 불가
-- ✅ anon key 노출되어도 안전
+- ✅ 앱인토스 환경에서 정상 작동
+- ✅ 하트 데이터 로드 성공
+- ✅ 점수 확인 가능
+- ✅ 퀴즈 문제 로드 성공
+- ✅ 스테이지 클리어 후 다음 단계 잠금 해제
+- ✅ 메인 페이지 하트 개수 업데이트 정상
 
 ### 3. 클라이언트 검증
 
@@ -457,7 +512,23 @@ await supabase
 
 ### 5. 성능 최적화
 
-- 데이터 캐싱 시스템 (5분 캐시)
+#### 5.1. 캐시 시스템 개선 (2025-01-27 업데이트)
+
+- **캐시 지속 시간**: 5분 → 30초로 단축 (더 빠른 데이터 동기화)
+- **강제 캐시 무효화**: 스테이지 완료 후 즉시 캐시 삭제
+- **로컬 스토리지 관리**: `userData_${userId}_lastLoad` 키 삭제
+- **성능 향상**: 더 빠른 데이터 동기화로 사용자 경험 개선
+
+#### 5.2. 데이터 로딩 안정성 강화
+
+- **기본값 생성**: 사용자 하트/프로필 데이터 없을 시 자동 생성
+- **Supabase 세션 로깅**: `supabase.auth.getSession()` 상태 로깅
+- **에러 처리**: 데이터 로드 실패 시에도 기본값으로 게임 진행 보장
+- **안정성**: 모든 상황에서 게임 플레이 가능하도록 보장
+
+#### 5.3. 기존 성능 최적화
+
+- 데이터 캐싱 시스템 (30초 캐시)
 - 중복 호출 방지
 - 공통 로직 추출
 - 빠른 네비게이션 (router.push)

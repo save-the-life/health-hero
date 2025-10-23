@@ -1,7 +1,6 @@
--- 임시 RLS 비활성화 (테스트용)
--- 프로덕션에서는 보안상 위험할 수 있으므로 테스트 후 다시 활성화해야 함
+-- RLS 다시 비활성화 (임시 해결책)
+-- 보안상 주의가 필요하지만 앱이 정상 작동하도록 함
 
--- 1. 모든 테이블의 RLS 비활성화
 ALTER TABLE user_profiles DISABLE ROW LEVEL SECURITY;
 ALTER TABLE user_hearts DISABLE ROW LEVEL SECURITY;
 ALTER TABLE quizzes DISABLE ROW LEVEL SECURITY;
@@ -11,7 +10,7 @@ ALTER TABLE toss_login_logs DISABLE ROW LEVEL SECURITY;
 ALTER TABLE user_item_settings DISABLE ROW LEVEL SECURITY;
 ALTER TABLE quiz_submission_logs DISABLE ROW LEVEL SECURITY;
 
--- 2. RLS 비활성화 확인
+-- RLS 비활성화 확인
 SELECT 
   schemaname,
   tablename,

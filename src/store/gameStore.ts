@@ -26,6 +26,10 @@ interface GameState {
   isLoading: boolean
   error: string | null
   
+  // 캐시 관련
+  userDataCache: { level: number; totalScore: number; currentExp: number; currentPhase: number; currentStage: number; hearts: UserHearts | null } | null
+  cacheTimestamp: number | null
+  
   // Actions
   loadUserData: (userId: string) => Promise<void>
   updateHearts: () => Promise<void>
@@ -56,6 +60,8 @@ export const useGameStore = create<GameState>()(
       heartTimer: '5분00초',
       isLoading: false,
       error: null,
+      userDataCache: null,
+      cacheTimestamp: null,
 
       // 사용자 데이터 로드 (캐싱 적용)
       loadUserData: async (userId: string) => {
@@ -67,11 +73,11 @@ export const useGameStore = create<GameState>()(
           return
         }
         
-        // 데이터가 이미 있고 최근에 로드되었다면 스킵 (5분 캐시)
+        // 캐시 확인 (더 짧은 시간으로 변경)
         const lastLoadTime = localStorage.getItem(`userData_${userId}_lastLoad`)
         if (lastLoadTime && state.level > 1) {
           const timeDiff = Date.now() - parseInt(lastLoadTime)
-          if (timeDiff < 5 * 60 * 1000) { // 5분
+          if (timeDiff < 30 * 1000) { // 30초로 단축
             console.log('캐시된 데이터 사용. 서버 호출 스킵')
             return
           }
@@ -80,6 +86,18 @@ export const useGameStore = create<GameState>()(
         set({ isLoading: true, error: null })
         
         try {
+          // Supabase 인증 상태 확인
+          const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+          console.log('🔍 Supabase 세션 상태:', { 
+            hasSession: !!session, 
+            userId: session?.user?.id, 
+            error: sessionError?.message 
+          })
+          
+          if (sessionError) {
+            console.warn('세션 확인 실패:', sessionError.message)
+          }
+          
           // 사용자 프로필과 하트 데이터를 함께 조회
           const [profileResult, heartsResult] = await Promise.all([
             supabase
@@ -97,44 +115,114 @@ export const useGameStore = create<GameState>()(
 
           if (profileResult.error) {
             console.warn('프로필 로드 실패, 기본값 사용:', profileResult.error.message)
-            // 프로필이 없으면 기본값 사용 (최초 회원가입 시 500포인트 지급)
-            const defaultProfile = {
-              level: 1,
-              total_score: 500,
-              current_exp: 0,
-              current_phase: 1,
-              current_stage: 1
-            }
             
-            set({
-              level: defaultProfile.level,
-              totalScore: defaultProfile.total_score,
-              currentExp: defaultProfile.current_exp,
-              currentPhase: defaultProfile.current_phase,
-              currentStage: defaultProfile.current_stage,
-              isLoading: false
-            })
+            // 프로필이 없으면 기본값으로 생성
+            try {
+              const defaultProfile = {
+                id: userId,
+                level: 1,
+                total_score: 500,
+                current_exp: 0,
+                current_phase: 1,
+                current_stage: 1,
+                email: `user${userId.substring(0, 8)}@health-hero.app`,
+                name: '헬스 히어로',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              }
+              
+              // 기본 프로필을 데이터베이스에 삽입
+              const { error: insertError } = await supabase
+                .from('user_profiles')
+                .insert(defaultProfile)
+              
+              if (insertError) {
+                console.warn('기본 프로필 삽입 실패:', insertError.message)
+              } else {
+                console.log('기본 프로필 생성 완료')
+              }
+              
+              set({
+                level: defaultProfile.level,
+                totalScore: defaultProfile.total_score,
+                currentExp: defaultProfile.current_exp,
+                currentPhase: defaultProfile.current_phase,
+                currentStage: defaultProfile.current_stage,
+                isLoading: false
+              })
+            } catch (insertError) {
+              console.error('프로필 생성 중 오류:', insertError)
+              // 생성 실패해도 기본값으로 계속 진행
+              const defaultProfile = {
+                level: 1,
+                total_score: 500,
+                current_exp: 0,
+                current_phase: 1,
+                current_stage: 1
+              }
+              
+              set({
+                level: defaultProfile.level,
+                totalScore: defaultProfile.total_score,
+                currentExp: defaultProfile.current_exp,
+                currentPhase: defaultProfile.current_phase,
+                currentStage: defaultProfile.current_stage,
+                isLoading: false
+              })
+            }
             return
           }
 
           if (heartsResult.error) {
             console.warn('하트 데이터 로드 실패, 기본값 사용:', heartsResult.error.message)
-            // 하트 데이터가 없으면 기본값 사용
-            const defaultHearts = {
-              user_id: userId,
-              current_hearts: 5,
-              last_refill_at: new Date().toISOString(),
-              ad_views_today: 0,
-              ad_reset_at: new Date().toISOString()
+            
+            // 하트 데이터가 없으면 기본값으로 생성
+            try {
+              const defaultHearts = {
+                user_id: userId,
+                current_hearts: 5,
+                last_refill_at: new Date().toISOString(),
+                ad_views_today: 0,
+                ad_reset_at: new Date().toISOString()
+              }
+              
+              // 기본 하트 데이터를 데이터베이스에 삽입
+              const { error: insertError } = await supabase
+                .from('user_hearts')
+                .insert(defaultHearts)
+              
+              if (insertError) {
+                console.warn('기본 하트 데이터 삽입 실패:', insertError.message)
+              } else {
+                console.log('기본 하트 데이터 생성 완료')
+              }
+              
+              const heartTimer = get().calculateHeartTimer(defaultHearts.last_refill_at, defaultHearts.current_hearts)
+              
+              set({
+                hearts: defaultHearts,
+                heartTimer,
+                isLoading: false
+              })
+            } catch (insertError) {
+              console.error('하트 데이터 생성 중 오류:', insertError)
+              // 생성 실패해도 기본값으로 계속 진행
+              const defaultHearts = {
+                user_id: userId,
+                current_hearts: 5,
+                last_refill_at: new Date().toISOString(),
+                ad_views_today: 0,
+                ad_reset_at: new Date().toISOString()
+              }
+              
+              const heartTimer = get().calculateHeartTimer(defaultHearts.last_refill_at, defaultHearts.current_hearts)
+              
+              set({
+                hearts: defaultHearts,
+                heartTimer,
+                isLoading: false
+              })
             }
-            
-            const heartTimer = get().calculateHeartTimer(defaultHearts.last_refill_at, defaultHearts.current_hearts)
-            
-            set({
-              hearts: defaultHearts,
-              heartTimer,
-              isLoading: false
-            })
             return
           }
 
@@ -438,6 +526,27 @@ export const useGameStore = create<GameState>()(
           if (data && data.length > 0) {
             const result = data[0]
             console.log('스테이지 완료 결과:', result)
+            
+            // 스테이지 완료 후 캐시 무효화하여 최신 데이터 반영
+            if (result.success) {
+              set({ 
+                userDataCache: null, 
+                cacheTimestamp: null,
+                // 현재 스테이지 정보도 즉시 업데이트
+                currentStage: result.next_stage_unlocked ? stage + 1 : stage,
+                currentPhase: result.phase_cleared ? phase + 1 : phase
+              })
+              console.log('스테이지 완료 후 강제 캐시 무효화 및 상태 업데이트 완료')
+              
+              // 로컬 스토리지 캐시도 삭제
+              localStorage.removeItem(`userData_${hearts.user_id}_lastLoad`)
+              console.log('로컬 스토리지 캐시 삭제 완료')
+              
+              // 사용자 데이터 새로고침 (캐시 무시)
+              await get().loadUserData(hearts.user_id)
+              console.log('스테이지 완료 후 사용자 데이터 새로고침 완료')
+            }
+            
             return result.success
           }
           
