@@ -142,33 +142,117 @@ CREATE POLICY "Authenticated users can read quizzes"
   USING (auth.role() = 'authenticated');
 ```
 
-### 3. 광고 (Advertising)
+### 3. 광고 시스템 (Advertising) - 2025-01-27 업데이트
 
 ```
-하트 0 → 컨티뉴 모달
+하트 부족 모달 표시
   │
-  │ "광고 보고 계속하기" 클릭
+  │ "광고 시청하고 하트 충전" 클릭
   ▼
-앱인토스 광고 SDK / AdMob SDK
+Apps-in-Toss AdMob SDK
   │
-  │ 광고 시청 완료
+  │ 광고 로딩 및 표시
   ▼
-클라이언트에서 보상 처리
+userEarnedReward 이벤트 발생
   │
-  │ hearts++
+  │ 클라이언트에서 즉시 처리
   ▼
-supabase.from('ad_rewards').insert(...)
+supabase.rpc('add_heart_by_ad', { p_user_id })
   │
-  │ RLS로 조작 방지
+  │ 일일 제한 체크 (5회)
+  │ 하트 추가 (최대 5개)
   ▼
-게임 재개
+PostgreSQL (Supabase) - RLS 보안
+  │
+  │ 성공 응답
+  ▼
+하트 충전 완료
 ```
 
-**특징:**
+**구현 특징:**
 
-- SDK만으로 광고 표시
-- 서버 검증 불필요 (RLS로 대체)
-- 클라이언트에서 완결
+- ✅ **Apps-in-Toss AdMob SDK**: 네이티브 광고 통합
+- ✅ **일일 제한**: 사용자당 하루 5회 광고 시청
+- ✅ **자동 리셋**: 자정마다 광고 시청 횟수 초기화
+- ✅ **RLS 보안**: Row Level Security로 데이터 보호
+- ✅ **실시간 처리**: 광고 시청 완료 즉시 하트 충전
+
+**데이터베이스 스키마:**
+
+```sql
+-- 광고 시청 기록 관리
+user_hearts (
+  user_id UUID,
+  current_hearts INTEGER,
+  ad_views_today INTEGER,  -- 일일 광고 시청 횟수
+  ad_reset_at TIMESTAMP    -- 광고 카운트 리셋 시간
+)
+
+-- 광고 보상 함수
+add_heart_by_ad(p_user_id UUID) → {
+  success: BOOLEAN,
+  current_hearts: INTEGER,
+  ad_views_today: INTEGER,
+  message: TEXT
+}
+```
+
+### 4. 오디오 시스템 (Audio) - 2025-01-27 추가
+
+```
+사용자 액션 (버튼 클릭, 게임 이벤트)
+  │
+  │ SoundButton/Clickable 컴포넌트
+  ▼
+useAudio Hook
+  │
+  │ 오디오 파일 식별
+  ▼
+AudioService (싱글톤)
+  │
+  │ Web Audio API 우선 사용
+  │ HTML Audio 폴백
+  ▼
+오디오 재생
+  │
+  │ 음소거 상태 확인
+  ▼
+사용자에게 사운드 출력
+```
+
+**구현 특징:**
+
+- ✅ **싱글톤 패턴**: 전역 오디오 상태 관리
+- ✅ **Web Audio API**: 빠른 응답을 위한 버퍼 기반 재생
+- ✅ **HTML Audio 폴백**: 호환성 보장
+- ✅ **SSR 호환**: 서버 사이드 렌더링 안전
+- ✅ **사용자 설정**: 음소거 상태 데이터베이스 저장
+
+**오디오 파일 관리:**
+
+```typescript
+// 지원하는 사운드 효과
+AUDIO_FILES = {
+  buttonClick: "/sounds/button-click.mp3",    // 버튼 클릭
+  quizRight: "/sounds/quiz-right.mp3",        // 정답
+  quizWrong: "/sounds/quiz-wrong.mp3",        // 오답
+  stageClear: "/sounds/stage-clear.mp3",      // 스테이지 클리어
+  stageFailed: "/sounds/stage-failed.mp3",    // 스테이지 실패
+  levelUp: "/sounds/level-up.mp3",            // 레벨업
+  nextPhase: "/sounds/next-phase.mp3"         // 다음 페이즈
+}
+```
+
+**데이터베이스 스키마:**
+
+```sql
+-- 음소거 설정 저장
+user_item_settings (
+  user_id UUID,
+  item_type VARCHAR,     -- 'audio_mute'
+  show_popup BOOLEAN     -- false = 음소거, true = 소리 켜짐
+)
+```
 
 ---
 
@@ -456,6 +540,8 @@ await supabase
 - Styling: Tailwind CSS 4
 - Game: Phaser 3.90.0
 - Animation: Framer Motion
+- Audio: Web Audio API + HTML Audio
+- Performance: Code Splitting, Lazy Loading
 ```
 
 ### Backend (서버리스)
@@ -471,7 +557,8 @@ await supabase
 
 ```
 - Login: 앱인토스 (토스)
-- Ads: 앱인토스/AdMob
+- Ads: Apps-in-Toss AdMob SDK
+- Audio: Web Audio API (브라우저 네이티브)
 ```
 
 ### Deployment
