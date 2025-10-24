@@ -2,16 +2,22 @@
 
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, useRef, Suspense } from "react";
+import { useEffect, useState, useRef, Suspense, lazy } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { useGameStore } from "@/store/gameStore";
 import GameHeader from "@/components/GameHeader";
 import { QuizService, QuizQuestion } from "@/services/quizService";
 import QuizChoiceButton from "@/components/QuizChoiceButton";
-import StageResultModal from "@/components/StageResultModal";
-import HeartShortageModal from "@/components/HeartShortageModal";
-import ItemUseModal from "@/components/ItemUseModal";
-import HintModal from "@/components/HintModal";
+import { SoundButton } from "@/components/SoundButton";
+import { useAudio } from "@/hooks/useAudio";
+
+// 지연 로딩으로 모달 컴포넌트들 최적화
+const StageResultModal = lazy(() => import("@/components/StageResultModal"));
+const HeartShortageModal = lazy(
+  () => import("@/components/HeartShortageModal")
+);
+const ItemUseModal = lazy(() => import("@/components/ItemUseModal"));
+const HintModal = lazy(() => import("@/components/HintModal"));
 
 function QuizPageContent() {
   const router = useRouter();
@@ -27,11 +33,18 @@ function QuizPageContent() {
     updateHearts,
     consumeHeart,
     updateScore,
-    addScoreAndExp,
     completeStage,
     checkLevelUp,
     getLevelInfo,
   } = useGameStore();
+
+  // 오디오 훅
+  const {
+    playQuizRightSound,
+    playQuizWrongSound,
+    playStageClearSound,
+    playStageFailedSound,
+  } = useAudio();
 
   // URL 파라미터에서 현재 퀴즈 정보 가져오기
   const quizPhase = parseInt(searchParams.get("phase") || "1");
@@ -74,7 +87,7 @@ function QuizPageContent() {
   const [stageExp, setStageExp] = useState(0);
 
   // 레벨업 관련 상태
-  const [levelUpInfo, setLevelUpInfo] = useState<{
+  const [, setLevelUpInfo] = useState<{
     leveledUp: boolean;
     newLevel: number;
     expToNext: number;
@@ -167,17 +180,30 @@ function QuizPageContent() {
       console.log("선택한 인덱스:", choiceIndex);
       console.log("선택한 답안:", currentQuestion.choices[choiceIndex]);
       console.log("데이터베이스 정답 인덱스:", currentQuestion.answer_index);
-      console.log("데이터베이스 정답 인덱스 타입:", typeof currentQuestion.answer_index);
+      console.log(
+        "데이터베이스 정답 인덱스 타입:",
+        typeof currentQuestion.answer_index
+      );
       console.log(
         "데이터베이스 정답:",
         currentQuestion.choices[currentQuestion.answer_index]
       );
       console.log("정답 여부:", choiceIndex === currentQuestion.answer_index);
-      console.log("정답 인덱스 범위 확인:", currentQuestion.answer_index >= 0 && currentQuestion.answer_index <= 3);
+      console.log(
+        "정답 인덱스 범위 확인:",
+        currentQuestion.answer_index >= 0 && currentQuestion.answer_index <= 3
+      );
       console.log("========================");
 
       const correct = choiceIndex === currentQuestion.answer_index;
       setIsCorrect(correct);
+
+      // 정답/오답에 따른 사운드 재생
+      if (correct) {
+        playQuizRightSound();
+      } else {
+        playQuizWrongSound();
+      }
 
       // 사용자 답안 저장
       const newAnswers = [...userAnswers];
@@ -254,13 +280,13 @@ function QuizPageContent() {
 
     const itemCosts = {
       "remove-wrong": 50,
-      "hint": 80,
+      hint: 80,
       "double-score": 100,
       "auto-answer": 200,
     };
 
     const cost = itemCosts[itemId as keyof typeof itemCosts];
-    
+
     // 점수 부족 체크
     if (!totalScore || totalScore < cost) {
       console.log("점수가 부족합니다.");
@@ -300,19 +326,23 @@ function QuizPageContent() {
   // 오답 제거 아이템 핸들러
   const handleRemoveWrongAnswer = () => {
     if (!currentQuestion) return;
-    
+
     const correctAnswerIndex = currentQuestion.answer_index;
     const wrongAnswers = currentQuestion.choices
       .map((_, index) => index)
-      .filter(index => index !== correctAnswerIndex);
-    
+      .filter((index) => index !== correctAnswerIndex);
+
     // 이미 제거된 선택지 제외
-    const availableWrongAnswers = wrongAnswers.filter(index => !removedChoices.includes(index));
-    
+    const availableWrongAnswers = wrongAnswers.filter(
+      (index) => !removedChoices.includes(index)
+    );
+
     if (availableWrongAnswers.length > 0) {
-      const randomIndex = Math.floor(Math.random() * availableWrongAnswers.length);
+      const randomIndex = Math.floor(
+        Math.random() * availableWrongAnswers.length
+      );
       const toRemove = availableWrongAnswers[randomIndex];
-      setRemovedChoices(prev => [...prev, toRemove]);
+      setRemovedChoices((prev) => [...prev, toRemove]);
     }
   };
 
@@ -329,18 +359,23 @@ function QuizPageContent() {
   // 자동 정답 아이템 핸들러
   const handleAutoAnswer = () => {
     if (!currentQuestion) return;
-    
+
     const correctAnswerIndex = currentQuestion.answer_index;
     setSelectedAnswer(correctAnswerIndex);
     setIsCorrect(true);
+
+    // 자동 정답은 항상 정답이므로 정답 사운드 재생
+    playQuizRightSound();
+
     setShowResult(true);
   };
 
   // 아이템 클릭 핸들러
   const handleItemClick = (itemType: string) => {
     // 체크박스가 체크되어 있으면 바로 사용, 아니면 모달 표시
-    const skipPopup = localStorage.getItem(`item_skip_popup_${itemType}`) === 'true';
-    
+    const skipPopup =
+      localStorage.getItem(`item_skip_popup_${itemType}`) === "true";
+
     if (skipPopup) {
       // 바로 아이템 사용
       handleItemUse(itemType);
@@ -368,22 +403,22 @@ function QuizPageContent() {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setShowResult(false);
       setSelectedAnswer(null);
-      
+
       // 아이템 상태 초기화
       setUsedItem(null);
       setShowHintModal(false);
       setDoubleScoreActive(false);
       setRemovedChoices([]);
-      
+
       // 아이템 사용 정보 초기화
-      setUserItemsUsed(prev => [...prev, usedItem]);
+      setUserItemsUsed((prev) => [...prev, usedItem]);
     } else {
       // 모든 문제 완료 - 스테이지 결과 계산
       console.log("스테이지 완료!");
 
       // 마지막 문제의 아이템 사용 정보 저장
       if (usedItem) {
-        setUserItemsUsed(prev => [...prev, usedItem]);
+        setUserItemsUsed((prev) => [...prev, usedItem]);
       }
 
       // 정답 개수 계산
@@ -424,14 +459,16 @@ function QuizPageContent() {
           const questionNum = index + 1;
           const itemNames = {
             "remove-wrong": "오답 제거",
-            "hint": "힌트",
+            hint: "힌트",
             "double-score": "점수 2배",
-            "auto-answer": "자동 정답"
+            "auto-answer": "자동 정답",
           };
           const itemName = itemNames[item as keyof typeof itemNames] || item;
-          
+
           if (item === "double-score") {
-            console.log(`  문제 ${questionNum}: ${itemName} 사용 (점수 2배 획득!)`);
+            console.log(
+              `  문제 ${questionNum}: ${itemName} 사용 (점수 2배 획득!)`
+            );
           } else {
             console.log(`  문제 ${questionNum}: ${itemName} 사용`);
           }
@@ -475,6 +512,14 @@ function QuizPageContent() {
               earnedExp: totalExp,
               earnedScore: totalScore,
             });
+
+            // 스테이지 결과에 따른 사운드 재생
+            if (isSuccess) {
+              playStageClearSound();
+            } else {
+              playStageFailedSound();
+            }
+
             setShowStageResultModal(true);
           } else {
             console.log("스테이지 완료 데이터 저장 실패");
@@ -486,52 +531,65 @@ function QuizPageContent() {
     }
   };
 
-  // 컴포넌트 마운트 시 인증 상태 초기화 및 데이터 로드
+  // 컴포넌트 마운트 시 인증 상태 초기화 및 데이터 로드 (최적화)
   useEffect(() => {
     const initData = async () => {
-      await initialize();
-      if (user?.id) {
-        await loadUserData(user.id);
-      }
-    };
-    initData();
-  }, [initialize, user?.id, loadUserData]);
+      // 인증 초기화와 사용자 데이터 로드를 병렬로 처리
+      const initPromise = initialize();
 
-  // 퀴즈 데이터 로드
-  useEffect(() => {
-    const loadQuizData = async () => {
-      if (!isAuthenticated) return;
-
-      setQuizLoading(true);
-      setQuizError(null);
-      heartDeductedRef.current = false; // 새로운 스테이지 진입 시 플래그 리셋
-
-      try {
-        const questions = await QuizService.getStageQuestions(
-          quizPhase,
-          quizStage,
-          user?.id
-        );
-        if (questions && questions.length > 0) {
-          setStageQuestions(questions);
-          setCurrentQuestionIndex(0);
-          // 사용자 답안 배열 초기화
-          setUserAnswers(new Array(questions.length).fill(null));
-          setStageScore(0);
-          setStageExp(0);
-        } else {
-          setQuizError("퀴즈 문제를 찾을 수 없습니다.");
+      // 인증이 완료되면 사용자 데이터도 병렬로 로드
+      const userDataPromise = initPromise.then(() => {
+        if (user?.id) {
+          return loadUserData(user.id);
         }
-      } catch (error) {
-        console.error("퀴즈 데이터 로드 실패:", error);
-        setQuizError("퀴즈 데이터를 불러오는데 실패했습니다.");
-      } finally {
-        setQuizLoading(false);
-      }
+        return Promise.resolve();
+      });
+
+      // 퀴즈 데이터도 병렬로 로드 (인증 완료 후)
+      const quizDataPromise = initPromise.then(async () => {
+        if (isAuthenticated && user?.id) {
+          setQuizLoading(true);
+          setQuizError(null);
+          heartDeductedRef.current = false;
+
+          try {
+            const questions = await QuizService.getStageQuestions(
+              quizPhase,
+              quizStage,
+              user.id
+            );
+            if (questions && questions.length > 0) {
+              setStageQuestions(questions);
+              setCurrentQuestionIndex(0);
+              setUserAnswers(new Array(questions.length).fill(null));
+              setStageScore(0);
+              setStageExp(0);
+              setQuizError(null);
+            } else {
+              setQuizError("퀴즈 문제를 찾을 수 없습니다.");
+            }
+          } catch (error) {
+            console.error("퀴즈 데이터 로드 실패:", error);
+            setQuizError("퀴즈 데이터를 불러오는데 실패했습니다.");
+          } finally {
+            setQuizLoading(false);
+          }
+        }
+      });
+
+      // 모든 작업을 병렬로 실행
+      await Promise.allSettled([userDataPromise, quizDataPromise]);
     };
 
-    loadQuizData();
-  }, [isAuthenticated, quizPhase, quizStage]);
+    initData();
+  }, [
+    initialize,
+    user?.id,
+    loadUserData,
+    isAuthenticated,
+    quizPhase,
+    quizStage,
+  ]);
 
   // 스테이지 진입 시 하트 차감 (별도 useEffect로 분리)
   useEffect(() => {
@@ -690,6 +748,7 @@ function QuizPageContent() {
           fill
           className="object-cover"
           priority
+          sizes="100vw"
         />
       </div>
 
@@ -804,7 +863,6 @@ function QuizPageContent() {
                   <QuizChoiceButton
                     key={index}
                     choice={choice}
-                    index={index}
                     isSelected={selectedAnswer === index}
                     onClick={() => handleChoiceClick(index)}
                   />
@@ -855,7 +913,7 @@ function QuizPageContent() {
                 </p>
 
                 {/* 다음 문제 버튼 */}
-                <button
+                <SoundButton
                   className="font-medium h-[56px] w-[160px] rounded-[10px] relative cursor-pointer hover:opacity-80 transition-opacity"
                   style={{
                     background:
@@ -915,7 +973,7 @@ function QuizPageContent() {
                       }}
                     />
                   </div>
-                </button>
+                </SoundButton>
               </div>
             </div>
 
@@ -993,16 +1051,29 @@ function QuizPageContent() {
         <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-4 mb-10">
           <div className="flex gap-5">
             {/* 오답 삭제 아이템 */}
-            <button
+            <SoundButton
               onClick={() => handleItemClick("remove-wrong")}
               className={`w-[60px] h-[60px] flex items-center justify-center ${
                 usedItem && usedItem !== "remove-wrong" ? "opacity-50" : ""
               }`}
-              disabled={!totalScore || totalScore < 50 || (usedItem ? usedItem !== "remove-wrong" : false)}
+              disabled={
+                !totalScore ||
+                totalScore < 50 ||
+                (usedItem ? usedItem !== "remove-wrong" : false)
+              }
+              playClickSound={
+                !!(
+                  totalScore &&
+                  totalScore >= 50 &&
+                  (!usedItem || usedItem === "remove-wrong")
+                )
+              } // 사용 가능한 경우에만 클릭 사운드 재생
             >
               <Image
                 src={
-                  totalScore && totalScore >= 50 && (!usedItem || usedItem === "remove-wrong")
+                  totalScore &&
+                  totalScore >= 50 &&
+                  (!usedItem || usedItem === "remove-wrong")
                     ? "/images/items/item-remove-wrong-able.png"
                     : "/images/items/item-remove-wrong-disable.png"
                 }
@@ -1011,19 +1082,32 @@ function QuizPageContent() {
                 height={60}
                 className="object-cover"
               />
-            </button>
+            </SoundButton>
 
             {/* 힌트 아이템 */}
-            <button
+            <SoundButton
               onClick={() => handleItemClick("hint")}
               className={`w-[60px] h-[60px] flex items-center justify-center ${
                 usedItem && usedItem !== "hint" ? "opacity-50" : ""
               }`}
-              disabled={!totalScore || totalScore < 80 || (usedItem ? usedItem !== "hint" : false)}
+              disabled={
+                !totalScore ||
+                totalScore < 80 ||
+                (usedItem ? usedItem !== "hint" : false)
+              }
+              playClickSound={
+                !!(
+                  totalScore &&
+                  totalScore >= 80 &&
+                  (!usedItem || usedItem === "hint")
+                )
+              } // 사용 가능한 경우에만 클릭 사운드 재생
             >
               <Image
                 src={
-                  totalScore && totalScore >= 80 && (!usedItem || usedItem === "hint")
+                  totalScore &&
+                  totalScore >= 80 &&
+                  (!usedItem || usedItem === "hint")
                     ? "/images/items/item-hint-able.png"
                     : "/images/items/item-hint-disable.png"
                 }
@@ -1032,21 +1116,32 @@ function QuizPageContent() {
                 height={60}
                 className="object-cover"
               />
-            </button>
+            </SoundButton>
 
             {/* 점수 2배 아이템 */}
-            <button
+            <SoundButton
               onClick={() => handleItemClick("double-score")}
               className={`w-[60px] h-[60px] flex items-center justify-center ${
                 usedItem && usedItem !== "double-score" ? "opacity-50" : ""
-              } ${
-                usedItem === "double-score" ? "animate-pulse" : ""
-              }`}
-              disabled={!totalScore || totalScore < 100 || (usedItem ? usedItem !== "double-score" : false)}
+              } ${usedItem === "double-score" ? "animate-pulse" : ""}`}
+              disabled={
+                !totalScore ||
+                totalScore < 100 ||
+                (usedItem ? usedItem !== "double-score" : false)
+              }
+              playClickSound={
+                !!(
+                  totalScore &&
+                  totalScore >= 100 &&
+                  (!usedItem || usedItem === "double-score")
+                )
+              } // 사용 가능한 경우에만 클릭 사운드 재생
             >
               <Image
                 src={
-                  totalScore && totalScore >= 100 && (!usedItem || usedItem === "double-score")
+                  totalScore &&
+                  totalScore >= 100 &&
+                  (!usedItem || usedItem === "double-score")
                     ? "/images/items/item-double-able.png"
                     : "/images/items/item-double-disable.png"
                 }
@@ -1055,19 +1150,32 @@ function QuizPageContent() {
                 height={60}
                 className="object-cover"
               />
-            </button>
+            </SoundButton>
 
             {/* 자동 정답 아이템 */}
-            <button
+            <SoundButton
               onClick={() => handleItemClick("auto-answer")}
               className={`w-[60px] h-[60px] flex items-center justify-center ${
                 usedItem && usedItem !== "auto-answer" ? "opacity-50" : ""
               }`}
-              disabled={!totalScore || totalScore < 200 || (usedItem ? usedItem !== "auto-answer" : false)}
+              disabled={
+                !totalScore ||
+                totalScore < 200 ||
+                (usedItem ? usedItem !== "auto-answer" : false)
+              }
+              playClickSound={
+                !!(
+                  totalScore &&
+                  totalScore >= 200 &&
+                  (!usedItem || usedItem === "auto-answer")
+                )
+              } // 사용 가능한 경우에만 클릭 사운드 재생
             >
               <Image
                 src={
-                  totalScore && totalScore >= 200 && (!usedItem || usedItem === "auto-answer")
+                  totalScore &&
+                  totalScore >= 200 &&
+                  (!usedItem || usedItem === "auto-answer")
                     ? "/images/items/item-auto-answer-able.png"
                     : "/images/items/item-auto-answer-disable.png"
                 }
@@ -1076,49 +1184,79 @@ function QuizPageContent() {
                 height={60}
                 className="object-cover"
               />
-            </button>
+            </SoundButton>
           </div>
         </div>
       )}
 
       {/* 스테이지 결과 모달 */}
       {stageResultData && (
-        <StageResultModal
-          isOpen={showStageResultModal}
-          isSuccess={stageResultData.isSuccess}
-          correctCount={stageResultData.correctCount}
-          totalQuestions={stageQuestions.length}
-          earnedExp={stageResultData.earnedExp}
-          earnedScore={stageResultData.earnedScore}
-          currentPhase={quizPhase}
-          onClose={handleCloseStageResultModal}
-        />
+        <Suspense
+          fallback={
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+              <div className="text-white">로딩 중...</div>
+            </div>
+          }
+        >
+          <StageResultModal
+            isOpen={showStageResultModal}
+            isSuccess={stageResultData.isSuccess}
+            earnedExp={stageResultData.earnedExp}
+            earnedScore={stageResultData.earnedScore}
+            currentPhase={quizPhase}
+            onClose={handleCloseStageResultModal}
+          />
+        </Suspense>
       )}
 
       {/* 하트 부족 모달 */}
-      <HeartShortageModal
-        isOpen={showHeartShortageModal}
-        currentPhase={quizPhase}
-        onClose={handleCloseHeartShortageModal}
-      />
+      <Suspense
+        fallback={
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="text-white">로딩 중...</div>
+          </div>
+        }
+      >
+        <HeartShortageModal
+          isOpen={showHeartShortageModal}
+          currentPhase={quizPhase}
+          onClose={handleCloseHeartShortageModal}
+        />
+      </Suspense>
 
       {/* 아이템 사용 모달 */}
       {showItemUseModal && (
-        <ItemUseModal
-          isOpen={true}
-          onClose={handleCloseItemUseModal}
-          itemId={showItemUseModal}
-          onUseItem={handleItemUse}
-        />
+        <Suspense
+          fallback={
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+              <div className="text-white">로딩 중...</div>
+            </div>
+          }
+        >
+          <ItemUseModal
+            isOpen={true}
+            onClose={handleCloseItemUseModal}
+            itemId={showItemUseModal}
+            onUseItem={handleItemUse}
+          />
+        </Suspense>
       )}
 
       {/* 힌트 모달 */}
       {currentQuestion && (
-        <HintModal
-          isOpen={showHintModal}
-          onClose={() => setShowHintModal(false)}
-          hint={currentQuestion.hint || "힌트가 없습니다."}
-        />
+        <Suspense
+          fallback={
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+              <div className="text-white">로딩 중...</div>
+            </div>
+          }
+        >
+          <HintModal
+            isOpen={showHintModal}
+            onClose={() => setShowHintModal(false)}
+            hint={currentQuestion.hint || "힌트가 없습니다."}
+          />
+        </Suspense>
       )}
     </div>
   );
@@ -1126,9 +1264,13 @@ function QuizPageContent() {
 
 export default function QuizPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-400 to-blue-600">
-      <div className="text-white text-xl">로딩 중...</div>
-    </div>}>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-400 to-blue-600">
+          <div className="text-white text-xl">로딩 중...</div>
+        </div>
+      }
+    >
       <QuizPageContent />
     </Suspense>
   );

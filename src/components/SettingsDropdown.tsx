@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { useAudio } from "@/hooks/useAudio";
+import { SoundButton } from "./SoundButton";
 
 interface SettingsDropdownProps {
   isOpen: boolean;
@@ -19,6 +21,8 @@ export default function SettingsDropdown({
   pageType = "quiz", // 기본값은 quiz
 }: SettingsDropdownProps) {
   const [isClosing, setIsClosing] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const { toggleMute, isMuted: getMuteState } = useAudio();
 
   // 닫기 애니메이션 처리
   const handleClose = () => {
@@ -30,6 +34,11 @@ export default function SettingsDropdown({
     }, 500); // 애니메이션 지속 시간을 500ms로 증가
   };
 
+  // 음소거 상태 업데이트
+  useEffect(() => {
+    setIsMuted(getMuteState());
+  }, [getMuteState]);
+
   // 컴포넌트가 닫힐 때 애니메이션 상태 초기화
   useEffect(() => {
     if (!isOpen) {
@@ -39,8 +48,9 @@ export default function SettingsDropdown({
 
   if (!isOpen) return null;
 
-  const handleMuteClick = () => {
-    console.log("음소거 버튼 클릭");
+  const handleMuteClick = async () => {
+    const newMuteState = await toggleMute();
+    setIsMuted(newMuteState);
     handleClose();
   };
 
@@ -60,7 +70,6 @@ export default function SettingsDropdown({
     }, 500); // 애니메이션 지속 시간과 동일
   };
 
-
   return (
     <>
       {/* 배경 블러 오버레이 */}
@@ -70,7 +79,7 @@ export default function SettingsDropdown({
       <div className="fixed top-[48px] right-6 z-40">
         {/* 설정 버튼 */}
         <div className="flex justify-end mb-2">
-          <button
+          <SoundButton
             onClick={handleClose}
             className={`w-9 h-9 flex items-center justify-center hover:opacity-80 transition-all duration-300 ease-out ${
               isClosing ? "animate-button-shrink" : "animate-button-expand"
@@ -83,7 +92,7 @@ export default function SettingsDropdown({
               height={36}
               className="object-cover"
             />
-          </button>
+          </SoundButton>
         </div>
 
         {/* 드롭다운 메뉴 */}
@@ -95,25 +104,30 @@ export default function SettingsDropdown({
           }`}
         >
           {/* 음소거 버튼 - 모든 페이지에서 표시 */}
-          <button
+          <SoundButton
             onClick={handleMuteClick}
+            playClickSound={false} // 음소거 버튼은 클릭 사운드 재생 안함
             className={`w-9 h-9 flex items-center justify-center hover:opacity-80 transition-opacity ${
               isClosing ? "animate-fade-out" : "animate-fade-in"
             }`}
             style={{ animationDelay: isClosing ? "0.2s" : "0.1s" }}
           >
             <Image
-              src="/images/items/button-mute.png"
-              alt="음소거"
+              src={
+                isMuted
+                  ? "/images/items/button-mute-off.png"
+                  : "/images/items/button-mute.png"
+              }
+              alt={isMuted ? "음소거 해제" : "음소거"}
               width={36}
               height={36}
               className="object-cover"
             />
-          </button>
+          </SoundButton>
 
           {/* 아이템 정보 버튼 - 퀴즈 페이지에서만 표시 */}
           {pageType === "quiz" && (
-            <button
+            <SoundButton
               onClick={handleItemInfoClick}
               className={`w-9 h-9 flex items-center justify-center hover:opacity-80 transition-opacity ${
                 isClosing ? "animate-fade-out" : "animate-fade-in"
@@ -127,12 +141,12 @@ export default function SettingsDropdown({
                 height={36}
                 className="object-cover"
               />
-            </button>
+            </SoundButton>
           )}
 
           {/* 나가기 버튼 - 퀴즈 페이지에서만 표시 */}
           {pageType === "quiz" && (
-            <button
+            <SoundButton
               onClick={handleExitClick}
               className={`w-9 h-9 flex items-center justify-center hover:opacity-80 transition-opacity ${
                 isClosing ? "animate-fade-out" : "animate-fade-in"
@@ -146,7 +160,7 @@ export default function SettingsDropdown({
                 height={36}
                 className="object-cover"
               />
-            </button>
+            </SoundButton>
           )}
         </div>
       </div>

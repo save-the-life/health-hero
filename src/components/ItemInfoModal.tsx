@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { SoundButton } from "./SoundButton";
 
 interface ItemInfoModalProps {
   isOpen: boolean;
@@ -85,17 +86,17 @@ export default function ItemInfoModal({ isOpen, onClose }: ItemInfoModalProps) {
         </div>
 
         {/* 닫기 버튼 - 우측 상단 */}
-        <button
+        <SoundButton
           onClick={onClose}
           className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center hover:opacity-80 transition-opacity"
         >
           <span className="text-white text-xl font-bold">×</span>
-        </button>
+        </SoundButton>
 
         {/* 아이템 박스와 네비게이션 버튼 - 텍스트로부터 86px 아래 */}
         <div className="absolute top-[156px] left-1/2 transform -translate-x-1/2 flex items-center gap-4">
           {/* 왼쪽 네비게이션 버튼 */}
-          <button
+          <SoundButton
             onClick={handlePrevious}
             className="w-[32px] h-[32px] flex items-center justify-center hover:opacity-80 transition-opacity"
           >
@@ -113,12 +114,13 @@ export default function ItemInfoModal({ isOpen, onClose }: ItemInfoModalProps) {
               height={20}
               className="relative z-10"
             />
-          </button>
+          </SoundButton>
 
           {/* 아이템 박스 */}
-          <div className="w-[80px] h-[80px] bg-[#F5E6D3] rounded-lg flex items-center justify-center relative"
+          <div
+            className="w-[80px] h-[80px] bg-[#F5E6D3] rounded-lg flex items-center justify-center relative"
             style={{
-              boxShadow: 'inset 0px 2px 4px rgba(0, 0, 0, 0.1)'
+              boxShadow: "inset 0px 2px 4px rgba(0, 0, 0, 0.1)",
             }}
           >
             <Image
@@ -131,7 +133,7 @@ export default function ItemInfoModal({ isOpen, onClose }: ItemInfoModalProps) {
           </div>
 
           {/* 오른쪽 네비게이션 버튼 */}
-          <button
+          <SoundButton
             onClick={handleNext}
             className="w-[32px] h-[32px] flex items-center justify-center hover:opacity-80 transition-opacity"
           >
@@ -149,7 +151,7 @@ export default function ItemInfoModal({ isOpen, onClose }: ItemInfoModalProps) {
               height={20}
               className="relative z-10"
             />
-          </button>
+          </SoundButton>
         </div>
 
         {/* 아이템 설명 텍스트 - 아이템 박스 아래 */}
@@ -184,7 +186,7 @@ export default function ItemInfoModal({ isOpen, onClose }: ItemInfoModalProps) {
               height={6.3}
               className="absolute top-[3px] left-[3px]"
             />
-            
+
             {/* 텍스트와 별 아이콘 */}
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
               <Image
@@ -194,9 +196,7 @@ export default function ItemInfoModal({ isOpen, onClose }: ItemInfoModalProps) {
                 height={20}
                 className="object-cover"
               />
-              <span className="whitespace-nowrap">
-                {currentItem.cost}
-              </span>
+              <span className="whitespace-nowrap">{currentItem.cost}</span>
             </div>
           </button>
         </div>

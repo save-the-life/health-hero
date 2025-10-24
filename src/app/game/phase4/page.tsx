@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { useGameStore } from "@/store/gameStore";
 import StageButton from "@/components/StageButton";
+import { SoundButton } from "@/components/SoundButton";
 
 export default function Phase4Page() {
   const router = useRouter();
@@ -59,8 +60,9 @@ export default function Phase4Page() {
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [isAuthenticated, user?.id, loadUserData]);
 
   // 하트 타이머 업데이트 (30초마다)
@@ -174,9 +176,9 @@ export default function Phase4Page() {
       <div className="relative z-10 w-full h-screen">
         {/* 뒤로가기 버튼 */}
         <div className="absolute top-4 left-4 z-20">
-          <button
+          <SoundButton
             onClick={() => router.push("/game")}
-            className="flex items-center gap-2 text-white hover:opacity-80 transition-opacity  px-3 py-2 rounded-lg"
+            className="flex items-center gap-2 text-white hover:opacity-80 transition-opacity px-3 py-2 rounded-lg"
           >
             <Image
               src="/images/items/icon-backspace.png"
@@ -184,7 +186,7 @@ export default function Phase4Page() {
               width={24}
               height={24}
             />
-          </button>
+          </SoundButton>
         </div>
 
         {/* 스테이지 버튼들 - 화면 크기에 따른 조건부 배치 */}

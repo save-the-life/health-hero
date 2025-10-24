@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { SoundButton } from "./SoundButton";
 
 interface HintModalProps {
   isOpen: boolean;
@@ -34,12 +35,12 @@ export default function HintModal({ isOpen, onClose, hint }: HintModalProps) {
         </div>
 
         {/* 닫기 버튼 - 우측 상단 */}
-        <button
+        <SoundButton
           onClick={onClose}
           className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center hover:opacity-80 transition-opacity"
         >
           <span className="text-white text-xl font-bold">×</span>
-        </button>
+        </SoundButton>
 
         {/* 힌트 내용 */}
         <div className="absolute top-[160px] left-1/2 transform -translate-x-1/2 w-[220px] text-center">

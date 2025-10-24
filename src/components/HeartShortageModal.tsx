@@ -3,6 +3,11 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useGameStore } from "@/store/gameStore";
+import { useAdMob } from "@/hooks/useAdMob";
+import { canWatchAd } from "@/services/adService";
+import { useAuthStore } from "@/store/authStore";
+import { useState, useEffect } from "react";
+import { SoundButton } from "./SoundButton";
 
 interface HeartShortageModalProps {
   isOpen: boolean;
@@ -16,9 +21,21 @@ export default function HeartShortageModal({
   onClose,
 }: HeartShortageModalProps) {
   const router = useRouter();
-  const { totalScore, buyHeartWithPoints } = useGameStore();
+  const { totalScore, buyHeartWithPoints, updateHearts } = useGameStore();
+  const { user } = useAuthStore();
+  const {
+    getAdStatus,
+    showAd,
+    autoLoadAd,
+    reloadAd,
+    resetAdInstance,
+    isSupported,
+  } = useAdMob(user?.id);
 
-  if (!isOpen) return null;
+  const [isWatchingAd, setIsWatchingAd] = useState(false);
+  const [adStatus, setAdStatus] = useState<"loading" | "ready" | "failed">(
+    "loading"
+  );
 
   const handleBuyHeart = async () => {
     try {
@@ -40,12 +57,104 @@ export default function HeartShortageModal({
     router.push(`/game/phase${currentPhase}`);
   };
 
-  const handleAdClick = () => {
-    console.log("광고 버튼 클릭.");
-    // TODO: 광고 시청 로직 구현
+  // 모달이 열릴 때 광고 로드
+  useEffect(() => {
+    if (isOpen && isSupported) {
+      autoLoadAd("HEART_REFILL").catch(console.error);
+    }
+  }, [isOpen, isSupported, autoLoadAd]);
+
+  // 광고 상태 모니터링
+  useEffect(() => {
+    const checkAdStatus = () => {
+      const status = getAdStatus("HEART_REFILL");
+      switch (status) {
+        case "loading":
+          setAdStatus("loading");
+          break;
+        case "loaded":
+          setAdStatus("ready");
+          break;
+        case "failed":
+          setAdStatus("failed");
+          break;
+        default:
+          setAdStatus("loading");
+      }
+    };
+
+    checkAdStatus();
+    const interval = setInterval(checkAdStatus, 1000);
+    return () => clearInterval(interval);
+  }, [getAdStatus]);
+
+  const handleAdClick = async () => {
+    if (!user?.id) {
+      console.error("사용자 정보가 없습니다.");
+      return;
+    }
+
+    if (isWatchingAd) {
+      return;
+    }
+
+    try {
+      setIsWatchingAd(true);
+
+      // 광고 시청 가능 여부 확인
+      const canWatch = await canWatchAd(user.id);
+      if (!canWatch.canWatch) {
+        alert(canWatch.reason || "광고를 시청할 수 없습니다.");
+        return;
+      }
+
+      // 광고 시청
+      const result = await showAd("HEART_REFILL");
+
+      if (result.success) {
+        // 하트 충전 성공
+        alert("하트를 획득했습니다!");
+
+        // 하트 상태 업데이트
+        await updateHearts();
+
+        // 모달 닫기
+        onClose();
+
+        // 광고 재로드
+        setTimeout(() => {
+          reloadAd("HEART_REFILL");
+        }, 1000);
+      } else {
+        alert(result.message || "하트 획득에 실패했습니다.");
+      }
+    } catch (error: unknown) {
+      console.error("광고 시청 에러:", error);
+
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
+      if (errorMessage.includes("간격이 너무 짧습니다")) {
+        alert("광고 시청 간격이 너무 짧습니다. 잠시 후 다시 시도해주세요.");
+      } else if (errorMessage.includes("광고가 로드되지 않았습니다")) {
+        alert("광고를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
+      } else {
+        alert("광고 시청에 실패했습니다.");
+      }
+
+      // 에러 발생 시 광고 리셋 및 재로드
+      resetAdInstance("HEART_REFILL");
+      setTimeout(() => {
+        reloadAd("HEART_REFILL");
+      }, 2000);
+    } finally {
+      setIsWatchingAd(false);
+    }
   };
 
   const canBuyHeart = totalScore && totalScore >= 500;
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -147,7 +256,7 @@ export default function HeartShortageModal({
         <div className="flex gap-4 justify-center mt-4">
           {/* 500 포인트 버튼 또는 나가기 버튼 */}
           {canBuyHeart ? (
-            <button
+            <SoundButton
               className="font-medium h-[56px] w-[140px] rounded-[10px] relative cursor-pointer hover:opacity-80 transition-opacity"
               style={{
                 background:
@@ -197,9 +306,9 @@ export default function HeartShortageModal({
                   500
                 </span>
               </div>
-            </button>
+            </SoundButton>
           ) : (
-            <button
+            <SoundButton
               className="font-medium h-[56px] w-[140px] rounded-[10px] relative cursor-pointer hover:opacity-80 transition-opacity"
               style={{
                 background:
@@ -242,16 +351,25 @@ export default function HeartShortageModal({
               >
                 나가기
               </span>
-            </button>
+            </SoundButton>
           )}
 
           {/* 광고 버튼 */}
-          <button
-            className="font-medium h-[56px] w-[140px] rounded-[10px] relative cursor-pointer hover:opacity-80 transition-opacity"
+          <SoundButton
+            className={`font-medium h-[56px] w-[140px] rounded-[10px] relative transition-opacity ${
+              !isSupported || adStatus === "loading" || isWatchingAd
+                ? "cursor-not-allowed opacity-60"
+                : "cursor-pointer hover:opacity-80"
+            }`}
             style={{
               background:
-                "linear-gradient(180deg, #50B0FF 0%, #50B0FF 50%, #008DFF 50%, #008DFF 100%)",
-              border: "2px solid #76C1FF",
+                !isSupported || adStatus === "loading" || isWatchingAd
+                  ? "linear-gradient(180deg, #9CA3AF 0%, #9CA3AF 50%, #6B7280 50%, #6B7280 100%)"
+                  : "linear-gradient(180deg, #50B0FF 0%, #50B0FF 50%, #008DFF 50%, #008DFF 100%)",
+              border:
+                !isSupported || adStatus === "loading" || isWatchingAd
+                  ? "2px solid #D1D5DB"
+                  : "2px solid #76C1FF",
               outline: "2px solid #000000",
               boxShadow:
                 "0px 4px 4px 0px rgba(0, 0, 0, 0.25), inset 0px 3px 0px 0px rgba(0, 0, 0, 0.1)",
@@ -261,6 +379,10 @@ export default function HeartShortageModal({
               WebkitTextStroke: "1px #000000",
             }}
             onClick={handleAdClick}
+            disabled={!isSupported || adStatus === "loading" || isWatchingAd}
+            playClickSound={
+              isSupported && adStatus === "ready" && !isWatchingAd
+            } // 광고 버튼은 준비된 상태에서만 클릭 사운드 재생
           >
             {/* 버튼 포인트 이미지 */}
             <Image
@@ -300,10 +422,16 @@ export default function HeartShortageModal({
                   lineHeight: "1.2",
                 }}
               >
-                하트 받기
+                {!isSupported
+                  ? "광고 미지원"
+                  : adStatus === "loading"
+                  ? "로딩 중..."
+                  : isWatchingAd
+                  ? "광고 시청 중..."
+                  : "하트 받기"}
               </span>
             </div>
-          </button>
+          </SoundButton>
         </div>
       </div>
     </div>

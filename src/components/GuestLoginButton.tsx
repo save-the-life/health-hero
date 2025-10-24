@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import { SoundButton } from "./SoundButton";
 
 export default function GuestLoginButton() {
   const [loading, setLoading] = useState(false);
@@ -22,24 +23,24 @@ export default function GuestLoginButton() {
       // 게스트 사용자 프로필 생성
       if (data.user) {
         const { error: profileError } = await supabase
-          .from('user_profiles')
+          .from("user_profiles")
           .upsert({
             id: data.user.id,
             email: data.user.email,
-            name: '게스트',
+            name: "게스트",
             level: 1,
             current_exp: 0,
             total_score: 500, // 최초 회원가입 시 500포인트 지급
             current_streak: 0,
             current_stage: 1,
-            current_phase: 1
+            current_phase: 1,
           });
 
         if (profileError) {
-          console.error('프로필 생성 실패:', profileError);
+          console.error("프로필 생성 실패:", profileError);
           // 프로필 생성 실패해도 게임은 진행 가능하도록 함
         } else {
-          console.log('게스트 프로필 생성 완료 (500포인트 지급)');
+          console.log("게스트 프로필 생성 완료 (500포인트 지급)");
         }
       }
 
@@ -54,12 +55,12 @@ export default function GuestLoginButton() {
   };
 
   return (
-    <button
+    <SoundButton
       onClick={handleGuestLogin}
       disabled={loading}
       className="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-4 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {loading ? "로그인 중..." : "게스트로 시작하기"}
-    </button>
+    </SoundButton>
   );
 }

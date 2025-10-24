@@ -7,6 +7,7 @@ import { useGameStore } from "@/store/gameStore";
 import SettingsDropdown from "./SettingsDropdown";
 import ItemInfoModal from "./ItemInfoModal";
 import ItemUseModal from "./ItemUseModal";
+import { SoundButton } from "./SoundButton";
 
 interface GameHeaderProps {
   pageType?: "main" | "quiz"; // 페이지 타입 추가
@@ -14,7 +15,11 @@ interface GameHeaderProps {
   onShowItemUseModal?: (showModal: (itemId: string) => void) => void; // 아이템 사용 모달 표시 콜백 추가
 }
 
-export default function GameHeader({ pageType = "quiz", onItemUse, onShowItemUseModal }: GameHeaderProps) {
+export default function GameHeader({
+  pageType = "quiz",
+  onItemUse,
+  onShowItemUseModal,
+}: GameHeaderProps) {
   const router = useRouter();
   const {
     level,
@@ -228,7 +233,7 @@ export default function GameHeader({ pageType = "quiz", onItemUse, onShowItemUse
         {/* 설정 버튼 */}
         {!showSettingsMenu && (
           <div className="flex items-center">
-            <button
+            <SoundButton
               onClick={() => setShowSettingsMenu(!showSettingsMenu)}
               className="hover:opacity-80 transition-opacity"
             >
@@ -239,7 +244,7 @@ export default function GameHeader({ pageType = "quiz", onItemUse, onShowItemUse
                 height={24}
                 className="cursor-pointer"
               />
-            </button>
+            </SoundButton>
           </div>
         )}
       </div>
@@ -301,7 +306,7 @@ export default function GameHeader({ pageType = "quiz", onItemUse, onShowItemUse
 
             {/* 나가기 버튼 - 하단 */}
             <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2">
-              <button
+              <SoundButton
                 onClick={() => {
                   setShowExitModal(false);
                   // 현재 페이즈로 이동 (router.push 사용으로 더 빠른 네비게이션)
@@ -355,7 +360,7 @@ export default function GameHeader({ pageType = "quiz", onItemUse, onShowItemUse
                     나가기
                   </span>
                 </div>
-              </button>
+              </SoundButton>
             </div>
           </div>
         </div>

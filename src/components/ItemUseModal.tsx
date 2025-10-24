@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { SoundButton } from "./SoundButton";
 
 interface ItemUseModalProps {
   isOpen: boolean;
@@ -41,17 +42,24 @@ const items = [
   },
 ];
 
-export default function ItemUseModal({ isOpen, onClose, itemId, onUseItem }: ItemUseModalProps) {
+export default function ItemUseModal({
+  isOpen,
+  onClose,
+  itemId,
+  onUseItem,
+}: ItemUseModalProps) {
   const [skipPopup, setSkipPopup] = useState(false);
 
   // 현재 아이템 정보 가져오기
-  const currentItem = items.find(item => item.id === itemId);
+  const currentItem = items.find((item) => item.id === itemId);
 
   // 체크박스 상태 로컬 스토리지에서 불러오기
   useEffect(() => {
     if (isOpen && currentItem) {
-      const savedSkipState = localStorage.getItem(`item_skip_popup_${currentItem.id}`);
-      setSkipPopup(savedSkipState === 'true');
+      const savedSkipState = localStorage.getItem(
+        `item_skip_popup_${currentItem.id}`
+      );
+      setSkipPopup(savedSkipState === "true");
     }
   }, [isOpen, currentItem]);
 
@@ -60,12 +68,12 @@ export default function ItemUseModal({ isOpen, onClose, itemId, onUseItem }: Ite
   const handleUseItem = () => {
     // 체크박스가 체크되어 있으면 로컬 스토리지에 저장
     if (skipPopup) {
-      localStorage.setItem(`item_skip_popup_${currentItem.id}`, 'true');
+      localStorage.setItem(`item_skip_popup_${currentItem.id}`, "true");
     }
 
     // 아이템 사용 처리
     onUseItem(currentItem.id);
-    
+
     // 모달 닫기
     onClose();
   };
@@ -97,12 +105,12 @@ export default function ItemUseModal({ isOpen, onClose, itemId, onUseItem }: Ite
         </div>
 
         {/* 닫기 버튼 - 우측 상단 */}
-        <button
+        <SoundButton
           onClick={onClose}
           className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center hover:opacity-80 transition-opacity"
         >
           <span className="text-white text-xl font-bold">×</span>
-        </button>
+        </SoundButton>
 
         {/* 아이템 박스 - 텍스트로부터 86px 아래 */}
         <div className="absolute top-[156px] left-1/2 transform -translate-x-1/2">
@@ -136,7 +144,7 @@ export default function ItemUseModal({ isOpen, onClose, itemId, onUseItem }: Ite
 
         {/* 사용 버튼 - 하단 */}
         <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2">
-          <button
+          <SoundButton
             onClick={handleUseItem}
             className="font-medium h-[56px] w-[160px] rounded-[10px] relative cursor-pointer hover:opacity-80 transition-opacity"
             style={{
@@ -160,7 +168,7 @@ export default function ItemUseModal({ isOpen, onClose, itemId, onUseItem }: Ite
               height={6.3}
               className="absolute top-[3px] left-[3px]"
             />
-            
+
             {/* 텍스트와 별 아이콘 */}
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
               <Image
@@ -170,11 +178,9 @@ export default function ItemUseModal({ isOpen, onClose, itemId, onUseItem }: Ite
                 height={20}
                 className="object-cover"
               />
-              <span className="whitespace-nowrap">
-                {currentItem.cost}
-              </span>
+              <span className="whitespace-nowrap">{currentItem.cost}</span>
             </div>
-          </button>
+          </SoundButton>
         </div>
 
         {/* 체크박스 - 하단 */}
@@ -186,7 +192,10 @@ export default function ItemUseModal({ isOpen, onClose, itemId, onUseItem }: Ite
             onChange={handleSkipPopupChange}
             className="w-4 h-4 rounded border-2 border-gray-300 focus:ring-2 focus:ring-blue-500"
           />
-          <label htmlFor="skip-popup" className="text-black text-sm font-normal cursor-pointer whitespace-nowrap">
+          <label
+            htmlFor="skip-popup"
+            className="text-black text-sm font-normal cursor-pointer whitespace-nowrap"
+          >
             다음 사용부터 팝업 표시 안함
           </label>
         </div>

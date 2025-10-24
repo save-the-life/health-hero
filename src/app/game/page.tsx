@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { useGameStore } from "@/store/gameStore";
 import GameHeader from "@/components/GameHeader";
+import { Clickable } from "@/components/SoundButton";
 
 export default function GamePage() {
   const router = useRouter();
@@ -213,7 +214,8 @@ export default function GamePage() {
           }}
         >
           {/* 페이즈 1 - 우측 하단 */}
-          <div
+          <Clickable
+            as="div"
             className="absolute bottom-[20px] right-[24px] w-[150px] h-[160px] rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={() => handlePhaseClick(1)}
           >
@@ -226,16 +228,18 @@ export default function GamePage() {
                 className="mb-2"
               />
             </div>
-          </div>
+          </Clickable>
 
           {/* 페이즈 2 - 좌측 중앙 */}
-          <div
+          <Clickable
+            as="div"
             className={`absolute bottom-[180px] left-[24px] w-[150px] h-[160px] rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${
               currentPhase >= 2
                 ? "cursor-pointer hover:opacity-80 transition-opacity"
                 : "cursor-not-allowed"
             }`}
             onClick={() => handlePhaseClick(2)}
+            playClickSound={currentPhase >= 2} // 잠금 해제된 경우에만 클릭 사운드 재생
           >
             <div className="w-full h-full flex flex-col items-center justify-center">
               <Image
@@ -246,16 +250,18 @@ export default function GamePage() {
                 className="mb-2"
               />
             </div>
-          </div>
+          </Clickable>
 
           {/* 페이즈 3 - 우측 상단 */}
-          <div
+          <Clickable
+            as="div"
             className={`absolute bottom-[340px] right-[24px] w-[150px] h-[160px] rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${
               currentPhase >= 3
                 ? "cursor-pointer hover:opacity-80 transition-opacity"
                 : "cursor-not-allowed"
             }`}
             onClick={() => handlePhaseClick(3)}
+            playClickSound={currentPhase >= 3} // 잠금 해제된 경우에만 클릭 사운드 재생
           >
             <div className="w-full h-full flex flex-col items-center justify-center">
               <Image
@@ -266,16 +272,18 @@ export default function GamePage() {
                 className="mb-2"
               />
             </div>
-          </div>
+          </Clickable>
 
           {/* 페이즈 4 - 좌측 상단 */}
-          <div
+          <Clickable
+            as="div"
             className={`absolute bottom-[500px] left-[24px] w-[150px] h-[160px] rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${
               currentPhase >= 4
                 ? "cursor-pointer hover:opacity-80 transition-opacity"
                 : "cursor-not-allowed"
             }`}
             onClick={() => handlePhaseClick(4)}
+            playClickSound={currentPhase >= 4} // 잠금 해제된 경우에만 클릭 사운드 재생
           >
             <div className="w-full h-full flex flex-col items-center justify-center">
               <Image
@@ -286,7 +294,7 @@ export default function GamePage() {
                 className="mb-2"
               />
             </div>
-          </div>
+          </Clickable>
 
           {/* 페이즈 간 연결선 */}
           {/* 페이즈 1 → 페이즈 2 */}

@@ -561,13 +561,7 @@ export const useGameStore = create<GameState>()(
       checkLevelUp: (currentExp: number) => {
         const currentLevel = get().level;
         let newLevel = currentLevel;
-        let totalExpForCurrentLevel = 0;
         let totalExpForNextLevel = 0;
-
-        // 현재 레벨까지 필요한 총 경험치 계산
-        for (let i = 1; i <= currentLevel; i++) {
-          totalExpForCurrentLevel += Math.round(120 * Math.pow(1.15, i - 1));
-        }
 
         // 다음 레벨까지 필요한 총 경험치 계산
         for (let i = 1; i <= currentLevel + 1; i++) {

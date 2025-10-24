@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { useGameStore } from "@/store/gameStore";
 import StageButton from "@/components/StageButton";
+import { SoundButton } from "@/components/SoundButton";
 
 export default function Phase1Page() {
   const router = useRouter();
@@ -49,20 +50,23 @@ export default function Phase1Page() {
       if (!document.hidden && isAuthenticated && user?.id) {
         try {
           // 앱인토스 환경을 고려한 타임아웃 설정
-          const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('데이터 로드 타임아웃')), 8000)
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("데이터 로드 타임아웃")), 8000)
           );
-          
+
           await Promise.race([loadUserData(user.id), timeoutPromise]);
-          console.log("페이즈 페이지 가시성 변경 - 사용자 데이터 새로고침 완료");
+          console.log(
+            "페이즈 페이지 가시성 변경 - 사용자 데이터 새로고침 완료"
+          );
         } catch (error) {
           console.error("페이즈 페이지 데이터 새로고침 실패:", error);
         }
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [isAuthenticated, user?.id, loadUserData]);
 
   // 하트 타이머 업데이트 (30초마다)
@@ -83,7 +87,9 @@ export default function Phase1Page() {
   const isStageLocked = (stageNumber: number) => {
     // 현재 스테이지보다 높은 스테이지는 잠금
     const locked = stageNumber > currentStage;
-    console.log(`스테이지 ${stageNumber} 잠금 상태 확인: currentStage=${currentStage}, locked=${locked}`);
+    console.log(
+      `스테이지 ${stageNumber} 잠금 상태 확인: currentStage=${currentStage}, locked=${locked}`
+    );
     return locked;
   };
 
@@ -91,7 +97,9 @@ export default function Phase1Page() {
   const handleStageClick = async (stageNumber: number) => {
     // 잠금된 스테이지는 클릭 불가
     if (isStageLocked(stageNumber)) {
-      console.log(`스테이지 ${stageNumber} 클릭 시도 - 잠금 상태로 인해 차단됨`);
+      console.log(
+        `스테이지 ${stageNumber} 클릭 시도 - 잠금 상태로 인해 차단됨`
+      );
       return;
     }
 
@@ -180,9 +188,9 @@ export default function Phase1Page() {
       <div className="relative z-10 w-full h-screen">
         {/* 뒤로가기 버튼 */}
         <div className="absolute top-4 left-4 z-20">
-          <button
+          <SoundButton
             onClick={() => router.push("/game")}
-            className="flex items-center gap-2 text-white hover:opacity-80 transition-opacity  px-3 py-2 rounded-lg"
+            className="flex items-center gap-2 text-white hover:opacity-80 transition-opacity px-3 py-2 rounded-lg"
           >
             <Image
               src="/images/items/icon-backspace.png"
@@ -190,7 +198,7 @@ export default function Phase1Page() {
               width={24}
               height={24}
             />
-          </button>
+          </SoundButton>
         </div>
 
         {/* 스테이지 버튼들 - 화면 크기에 따른 조건부 배치 */}
