@@ -2,6 +2,7 @@
 
 **최종 업데이트**: 2025-01-27
 **문제**: `window.appsInToss`가 `undefined`로 광고 SDK가 로드되지 않음
+**해결**: 환경 감지 로직 개선으로 토스 앱 환경 자동 감지
 
 ---
 
@@ -22,6 +23,23 @@ Eruda 콘솔에서 다음 로그가 표시됨:
 ---
 
 ## ✅ 해결 방법
+
+### 0. **환경 감지 로직 개선** (2025-01-27 업데이트)
+
+#### 개선사항:
+```typescript
+// src/hooks/useAdMob.ts
+const isAppsInToss = window.location.hostname.includes('apps-in-toss') || 
+                    window.location.hostname.includes('toss.im') ||
+                    window.location.hostname.includes('toss.com') ||
+                    window.location.hostname.includes('tossmini.com') ||  // ✅ 추가
+                    window.navigator.userAgent.includes('TossApp');        // ✅ 추가
+```
+
+#### 지원 환경 확장:
+- ✅ `tossmini.com` 도메인 (토스 앱 내 환경)
+- ✅ `TossApp` UserAgent (카카오톡, 토스 앱)
+- ✅ 기존 앱인토스 환경 유지
 
 ### 1. **appName 확인 및 수정** (가장 중요!)
 
@@ -52,7 +70,36 @@ export default defineConfig({
 
 ---
 
-### 2. **permissions 설정 확인**
+### 2. **테스트 방법 개선**
+
+#### 토스 앱 환경에서 테스트:
+```bash
+# 1. 빌드
+npm run build
+
+# 2. .ait 파일 업로드 (앱인토스 콘솔)
+
+# 3. 토스 앱에서 실행
+# - 카카오톡 내에서 실행
+# - 토스 앱 내에서 실행
+```
+
+#### 환경 확인 로그:
+```javascript
+🔍 checkAdSupport: 앱인토스 환경 확인: {
+  hostname: "lucky-dice.private-apps.tossmini.com",
+  isAppsInToss: true,
+  checks: {
+    hasAppsInToss: false,
+    hasTossIm: false,
+    hasTossCom: false,
+    hasTossMini: true,  // ✅ 토스 앱 환경 감지
+    hasTossApp: true    // ✅ TossApp UserAgent 감지
+  }
+}
+```
+
+### 3. **permissions 설정 확인**
 
 #### 문제:
 `permissions`에 `'GoogleAdMob'`을 추가하면 타입 오류 발생
@@ -115,15 +162,17 @@ export default defineConfig({
 
 ---
 
-## 📊 체크리스트
+## 📊 체크리스트 (업데이트됨)
 
 배포 전 확인 사항:
 
+- [x] **환경 감지 로직 개선** - `tossmini.com` 도메인 및 `TossApp` UserAgent 지원
 - [ ] `granite.config.ts`의 `appName`이 앱인토스 콘솔의 앱 ID와 일치
 - [ ] `permissions`에 `'GoogleAdMob'` 포함 안 됨 (타입 오류)
 - [ ] 빌드 성공 (`npm run build`)
 - [ ] `.ait` 파일 생성 확인
 - [ ] 앱인토스 콘솔에서 앱 활성화 상태 확인
+- [x] **토스 앱 환경에서 테스트** - 카카오톡, 토스 앱 내 실행
 
 ---
 

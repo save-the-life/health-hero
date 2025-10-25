@@ -1,6 +1,7 @@
 # 광고 시스템 디버깅 가이드
 
 **최종 업데이트**: 2025-01-27
+**주요 개선사항**: 환경 감지 로직 개선, 로그 최적화, 에러 처리 강화
 
 ---
 
@@ -35,18 +36,31 @@ useEffect(() => {
 ### 2. 광고 상태 모니터링
 
 ```typescript
-// 1초마다 광고 상태 체크
+// 2초마다 광고 상태 체크 (최적화됨)
 useEffect(() => {
   const checkAdStatus = () => {
     const status = getAdStatus("HEART_REFILL");
-    console.log("📊 광고 상태 체크:", status);
+    // 상태가 변경될 때만 로그 출력
 
-    // "loading" | "loaded" | "failed" | "not_loaded"
-    setAdStatus(status);
+    switch (status) {
+      case "loading":
+        if (adStatus !== "loading") {
+          console.log("🔄 광고 로딩 중...");
+          setAdStatus("loading");
+        }
+        break;
+      case "loaded":
+        if (adStatus !== "ready") {
+          console.log("✅ 광고 로드 완료 - 버튼 활성화");
+          setAdStatus("ready");
+        }
+        break;
+      // ... 기타 상태 처리
+    }
   };
 
   checkAdStatus();
-  const interval = setInterval(checkAdStatus, 1000);
+  const interval = setInterval(checkAdStatus, 2000); // 1초 → 2초로 변경
   return () => clearInterval(interval);
 }, [getAdStatus, adStatus]);
 ```
@@ -77,20 +91,28 @@ const isButtonEnabled = isSupported && adStatus === "ready" && !isWatchingAd;
 
 ```
 ❌ 광고 미지원 환경
-🔍 디버깅 정보:
-- window: object
-- appsInToss: undefined
-- GoogleAdMob: undefined
-- loadAppsInTossAdMob: undefined
-- isSupported: undefined
+🔍 checkAdSupport: 앱인토스 환경 확인: {
+  hostname: "localhost:3000",
+  isAppsInToss: false,
+  checks: {
+    hasAppsInToss: false,
+    hasTossIm: false,
+    hasTossCom: false,
+    hasTossMini: false,
+    hasTossApp: false
+  }
+}
 ```
 
 **원인:**
 - 로컬 개발 환경 (앱인토스 SDK 없음)
 - 일반 브라우저 (토스 앱 아님)
+- 환경 감지 실패
 
 **해결:**
-- 앱인토스 샌드박스 앱에서 테스트 필요
+- 토스 앱 내에서 실행 (카카오톡, 토스 앱)
+- `tossmini.com` 도메인에서 실행
+- `TossApp` UserAgent 확인
 
 ---
 
@@ -98,12 +120,7 @@ const isButtonEnabled = isSupported && adStatus === "ready" && !isWatchingAd;
 
 ```
 ✅ 광고 지원됨 - 자동 로드 시작
-📡 광고 로드 시작 - 타입: HEART_REFILL
-📊 현재 광고 상태: not_loaded
-🔄 광고 인스턴스 상태를 loading으로 설정
-🎯 광고 그룹 ID: health-hero-heart-refill
-📺 Apps-in-Toss AdMob 로드 요청
-📊 광고 상태 체크: loading
+🔄 광고 로딩 중...
 ```
 
 **상태:**
@@ -116,10 +133,7 @@ const isButtonEnabled = isSupported && adStatus === "ready" && !isWatchingAd;
 ### 상태 3: 광고 로드 완료
 
 ```
-[HEART_REFILL] 광고 이벤트: {type: "loaded"}
-[HEART_REFILL] 광고 로드 성공
 ✅ 광고 자동 로드 완료
-📊 광고 상태 체크: loaded
 ✅ 광고 로드 완료 - 버튼 활성화
 ```
 
@@ -148,6 +162,55 @@ const isButtonEnabled = isSupported && adStatus === "ready" && !isWatchingAd;
 - 광고 그룹 ID 확인 (`.env` 파일)
 - 네트워크 연결 확인
 - 나중에 다시 시도
+
+---
+
+## 🔍 새로운 디버깅 로그 (2025-01-27 업데이트)
+
+### 환경 감지 개선
+```javascript
+🔍 checkAdSupport: 앱인토스 환경 확인: {
+  hostname: "lucky-dice.private-apps.tossmini.com",
+  isAppsInToss: true,
+  checks: {
+    hasAppsInToss: false,
+    hasTossIm: false,
+    hasTossCom: false,
+    hasTossMini: true,  // ✅ 토스 앱 환경 감지
+    hasTossApp: true    // ✅ TossApp UserAgent 감지
+  }
+}
+```
+
+### 광고 보상 처리 강화
+```javascript
+🎁 광고 보상 획득 이벤트 발생: {
+  adType: "HEART_REFILL",
+  eventData: {...},
+  hasPendingPromise: true
+}
+
+🔍 광고 보상 API 호출 시작...
+🔍 callAdRewardAPI 시작 - adType: HEART_REFILL
+🔍 사용자 인증 확인 중...
+✅ 사용자 인증 성공 - userId: d430df9d-7a9f-4204-a02b-4a346dfde9f5
+🔍 Supabase RPC 함수 호출 시작 - add_heart_by_ad
+🔍 Supabase RPC 응답: { data: {...}, error: null }
+✅ Supabase RPC 성공 - 결과: {...}
+✅ 광고 보상 API 호출 성공: {...}
+🎉 광고 보상 성공 - 하트 충전됨
+```
+
+### 에러 처리 개선
+```javascript
+❌ 광고 보상 처리 실패: Error: ...
+❌ 에러 상세 정보: {
+  message: "사용자가 로그인되지 않았습니다",
+  stack: "Error: ...",
+  adType: "HEART_REFILL",
+  errorType: "Error"
+}
+```
 
 ---
 
@@ -277,7 +340,40 @@ const isButtonEnabled = isSupported && adStatus === "ready" && !isWatchingAd;
 
 ---
 
-### 문제 4: 하트 충전 실패
+### 문제 4: 인증 세션 오류 (AuthSessionMissingError)
+
+**증상:**
+```
+❌ 사용자 인증 에러: AuthSessionMissingError
+❌ HEART_REFILL 광고 보상 API 호출 실패: AuthSessionMissingError
+❌ 에러 상세 정보: {message: "Auth session missing!", ...}
+❌ 광고 시청 에러: {type: "HEART_REFILL", message: "Auth session missing!", ...}
+```
+
+**원인:**
+- 사용자 로그인 세션이 만료됨
+- 인증 토큰이 유효하지 않음
+- Supabase 세션 상태 불일치
+
+**확인:**
+```javascript
+// 인증 상태 확인
+const { data: sessionData } = await supabase.auth.getSession();
+console.log('세션 상태:', sessionData.session ? '있음' : '없음');
+
+// 사용자 정보 확인
+const { data: { user } } = await supabase.auth.getUser();
+console.log('사용자 정보:', user ? '있음' : '없음');
+```
+
+**해결 방법:**
+- 사용자에게 재로그인 안내
+- 세션 갱신 시도
+- 인증 상태 모니터링 활성화
+
+---
+
+### 문제 5: 하트 충전 실패
 
 **증상:**
 ```
@@ -317,6 +413,9 @@ WHERE user_id = 'abc-123-def';
 - [ ] 광고 시청 후 모달이 닫히는지 확인
 - [ ] 광고 재로드가 정상적으로 작동하는지 확인
 - [ ] 일일 제한 (5회) 정상 작동 확인
+- [ ] **인증 세션 상태 정상 확인** (2025-01-27 추가)
+- [ ] **AuthSessionMissingError 발생 시 재로그인 안내** (2025-01-27 추가)
+- [ ] **에러 바운더리로 앱 크래시 방지** (2025-01-27 추가)
 
 ---
 
@@ -385,3 +484,4 @@ WHERE user_id = 'abc-123-def';
 
 **Last Updated**: 2025-01-27
 **Status**: Production Ready ✓
+**Latest Update**: 인증 오류 해결 및 앱 안정성 강화 완료
