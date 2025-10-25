@@ -5,10 +5,7 @@ const nextConfig: NextConfig = {
   output: 'export',
   images: {
     unoptimized: true,
-    // 이미지 최적화 설정
-    formats: ['image/webp', 'image/avif'],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    // Static export에서는 formats, deviceSizes, imageSizes 사용 불가
   },
   // 성능 최적화 설정
   experimental: {
@@ -16,7 +13,9 @@ const nextConfig: NextConfig = {
   },
   // 컴파일러 최적화
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+    // Eruda 콘솔 로그 출력을 위해 console 제거 비활성화
+    // 프로덕션에서도 디버깅이 필요하므로 console.log 유지
+    removeConsole: false,
   },
   // 번들 분석기 (개발 시에만)
   ...(process.env.ANALYZE === 'true' && {

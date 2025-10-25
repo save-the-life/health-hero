@@ -20,6 +20,13 @@ const ItemUseModal = lazy(() => import("@/components/ItemUseModal"));
 const HintModal = lazy(() => import("@/components/HintModal"));
 
 function QuizPageContent() {
+  console.log("🚀 QuizPageContent 컴포넌트 시작");
+  console.log("🚀 현재 시간:", new Date().toISOString());
+  console.log(
+    "🚀 Apps-in-Toss 환경 확인:",
+    typeof window !== "undefined" ? "window 존재" : "window 없음"
+  );
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isAuthenticated, initialize } = useAuthStore();
@@ -37,6 +44,49 @@ function QuizPageContent() {
     checkLevelUp,
     getLevelInfo,
   } = useGameStore();
+
+  console.log("🚀 하트 상태:", hearts);
+  console.log("🚀 로딩 상태:", isLoading);
+
+  // 하트 상태 상세 확인
+  if (hearts) {
+    console.log("🚀 현재 하트 개수:", hearts.current_hearts);
+    console.log("🚀 하트가 0개인가?", hearts.current_hearts <= 0);
+  }
+
+  // Apps-in-Toss 환경에서 기본 로그 테스트
+  if (typeof window !== "undefined") {
+    console.log("🚀 window 객체 존재 - QuizPageContent 로드됨");
+    console.log("🚀 현재 시간:", new Date().toLocaleTimeString());
+
+    // document.title 변경으로 로그 실행 확인
+    document.title =
+      "QuizPageContent 로드됨 - " + new Date().toLocaleTimeString();
+
+    // Eruda 콘솔 로그 강제 출력 테스트
+    console.error("🔴 ERROR 테스트 - 이 로그가 보이나요?");
+    console.warn("🟡 WARN 테스트 - 이 로그가 보이나요?");
+    console.info("🔵 INFO 테스트 - 이 로그가 보이나요?");
+
+    // Eruda 초기화 및 활성화 시도
+    try {
+      const erudaObj = (window as unknown as Record<string, unknown>).eruda;
+      if (erudaObj) {
+        console.log("🔧 Eruda 객체 발견 - 초기화 시도");
+        (erudaObj as { init: () => void; show: () => void }).init();
+        (erudaObj as { init: () => void; show: () => void }).show();
+        console.log("🔧 Eruda 초기화 및 표시 완료");
+      } else {
+        console.log("❌ Eruda 객체를 찾을 수 없음");
+      }
+    } catch (error) {
+      console.error("❌ Eruda 초기화 실패:", error);
+    }
+
+    // 원본 console 메서드 확인
+    console.log("🔧 console.log 원본:", console.log.toString());
+    console.log("🔧 console.error 원본:", console.error.toString());
+  }
 
   // 오디오 훅
   const {
@@ -105,6 +155,11 @@ function QuizPageContent() {
 
   // 하트 부족 모달 상태
   const [showHeartShortageModal, setShowHeartShortageModal] = useState(false);
+
+  // 하트 부족 모달 상태 변화 추적
+  useEffect(() => {
+    console.log("💔 showHeartShortageModal 상태 변화:", showHeartShortageModal);
+  }, [showHeartShortageModal]);
 
   // 아이템 사용 모달 상태
   const [showItemUseModal, setShowItemUseModal] = useState<string | null>(null);
@@ -253,7 +308,8 @@ function QuizPageContent() {
 
               // 하트 차감 후 하트가 0이 되었는지 체크
               if (hearts.current_hearts - 1 <= 0) {
-                console.log("하트가 0이 되었습니다. 하트 부족 모달 표시");
+                console.log("💔 하트가 0이 되었습니다. 하트 부족 모달 표시");
+                console.log("💔 setShowHeartShortageModal(true) 호출");
                 setShowHeartShortageModal(true);
               }
             } else {
@@ -263,7 +319,8 @@ function QuizPageContent() {
             console.error("하트 차감 중 오류:", error);
           }
         } else {
-          console.log("하트가 없어서 차감할 수 없습니다");
+          console.log("💔 하트가 없어서 차감할 수 없습니다");
+          console.log("💔 setShowHeartShortageModal(true) 호출 (하트 없음)");
           // 하트가 0일 때 하트 부족 모달 표시
           setShowHeartShortageModal(true);
         }
@@ -393,6 +450,7 @@ function QuizPageContent() {
 
   // 하트 부족 모달 닫기 핸들러
   const handleCloseHeartShortageModal = () => {
+    console.log("💔 하트 부족 모달 닫기 핸들러 호출");
     setShowHeartShortageModal(false);
   };
 
@@ -603,7 +661,8 @@ function QuizPageContent() {
       }
 
       if (hearts.current_hearts <= 0) {
-        console.log("하트가 없어서 스테이지에 진입할 수 없습니다");
+        console.log("💔 하트가 없어서 스테이지에 진입할 수 없습니다");
+        console.log("💔 setShowHeartShortageModal(true) 호출 (스테이지 진입)");
         setShowHeartShortageModal(true);
         return;
       }

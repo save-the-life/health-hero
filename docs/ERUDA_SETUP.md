@@ -249,6 +249,31 @@ const handleLogin = async () => {
 
 ## 🔒 프로덕션 환경
 
+### ⚠️ 중요: next.config.ts 설정
+
+프로덕션 빌드에서 Eruda 콘솔 로그가 출력되지 않는 문제를 방지하려면:
+
+```typescript
+// next.config.ts
+const nextConfig: NextConfig = {
+  compiler: {
+    // Eruda 콘솔 로그 출력을 위해 console 제거 비활성화
+    // 프로덕션에서도 디버깅이 필요하므로 console.log 유지
+    removeConsole: false,  // ✅ false로 설정 필수!
+  },
+};
+```
+
+**문제 원인:**
+- `removeConsole: process.env.NODE_ENV === 'production'` 설정 시
+- 프로덕션 빌드에서 모든 `console.log()` 제거됨
+- Eruda 콘솔에 아무 로그도 출력되지 않음
+
+**해결 방법:**
+- `removeConsole: false`로 설정
+- 프로덕션 빌드에서도 console.log 유지
+- 앱인토스 샌드박스에서 디버깅 가능
+
 ### 옵션 1: 조건부 로드 (개발 환경만)
 
 ```typescript
@@ -258,14 +283,14 @@ useEffect(() => {
   if (process.env.NODE_ENV === 'production') {
     return
   }
-  
+
   // ... Eruda 로드 코드
 }, [])
 ```
 
-### 옵션 2: 항상 로드 (샌드박스 테스트용)
+### 옵션 2: 항상 로드 (샌드박스 테스트용) ✅ 권장
 
-현재 구현은 항상 로드됩니다.  
+현재 구현은 항상 로드됩니다.
 샌드박스 테스트 시 디버깅이 필요하므로 이 방식을 권장합니다.
 
 ---
