@@ -1,6 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { getAdGroupId, AdType, LoadAdMobEvent, ShowAdMobEvent, AdLoadStatus, AdInstances, UseAdMobReturn, AdRewardResult } from '@/types/adMob';
 import { supabase } from '@/lib/supabase';
+import { adLogger } from '@/utils/adLogger';
+import { TokenManager } from '@/utils/tokenManager';
 
 // 광고 지원 여부 확인
 const checkAdSupport = async (): Promise<boolean> => {
@@ -142,6 +144,7 @@ export const useAdMob = (): UseAdMobReturn => {
     return () => {
       subscription.unsubscribe();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSupported]);
 
   // 컴포넌트 언마운트 시 정리
@@ -163,67 +166,96 @@ export const useAdMob = (): UseAdMobReturn => {
   // Supabase RPC 함수 호출
   const callAdRewardAPI = async (adType: AdType): Promise<AdRewardResult> => {
     try {
-      console.log('🔍 callAdRewardAPI 시작 - adType:', adType);
+      adLogger.log('info', '🔍 callAdRewardAPI 시작', { adType });
       
       if (adType === 'HEART_REFILL') {
         // 현재 사용자 ID 가져오기
-        console.log('🔍 사용자 인증 확인 중...');
+        adLogger.log('info', '🔍 사용자 인증 확인 중...');
         
         // 먼저 현재 세션 상태 확인
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        const { data: initialSessionData, error: initialSessionError } = await supabase.auth.getSession();
+        let sessionData = initialSessionData;
+        const sessionError = initialSessionError;
+        
+        // 세션이 없으면 토큰 갱신 시도
+        if (!sessionData.session || sessionError) {
+          adLogger.log('warning', '⚠️ 세션이 없거나 만료됨 - 토큰 갱신 시도');
+          
+          try {
+            // 토큰 갱신 시도
+            const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+            
+            if (refreshError) {
+              adLogger.log('error', '❌ 토큰 갱신 실패', { error: refreshError });
+            } else if (refreshData.session) {
+              adLogger.log('success', '✅ 토큰 갱신 성공 - 세션 복구됨');
+              sessionData = refreshData;
+            }
+          } catch (refreshErr) {
+            adLogger.log('error', '❌ 토큰 갱신 중 에러', { error: refreshErr });
+          }
+        }
         
         if (sessionError) {
-          console.error('❌ 세션 확인 실패:', sessionError);
+          adLogger.log('error', '❌ 세션 확인 실패', { error: sessionError });
           throw new Error(`세션 확인 실패: ${sessionError.message}`);
         }
         
-        if (!sessionData.session) {
-          console.error('❌ 활성 세션 없음');
-          throw new Error("활성 세션이 없습니다. 다시 로그인해주세요.");
+        // 사용자 ID 찾기 - Supabase Auth 세션 또는 토스 토큰으로
+        let userId: string | null = null;
+        
+        if (sessionData.session) {
+          userId = sessionData.session.user.id;
+          adLogger.log('success', '✅ Supabase Auth 세션으로 user_id 획득', { userId });
+        } else {
+          adLogger.log('warning', '⚠️ Supabase Auth 세션 없음 - 토스 토큰으로 user_id 찾기 시도');
+          
+          // 토스 토큰 정보로 user_id 찾기
+          const tossUserKey = TokenManager.getUserKey();
+          if (tossUserKey !== null) {
+            const { data: profile, error: profileError } = await supabase
+              .from('user_profiles')
+              .select('id')
+              .eq('toss_user_key', tossUserKey.toString())
+              .single();
+            
+            if (profileError) {
+              adLogger.log('error', '❌ user_profiles에서 user_id 조회 실패', { error: profileError });
+            } else if (profile) {
+              userId = profile.id;
+              adLogger.log('success', '✅ 토스 토큰으로 user_id 획득', { userId, tossUserKey });
+            }
+          } else {
+            adLogger.log('error', '❌ 토스 userKey도 없음');
+          }
         }
         
-        console.log('✅ 활성 세션 확인됨:', {
-          userId: sessionData.session.user.id,
-          expiresAt: sessionData.session.expires_at
-        });
-        
-        // 사용자 정보 가져오기
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-        
-        if (authError) {
-          console.error('❌ 사용자 인증 에러:', authError);
-          throw authError;
+        if (!userId) {
+          adLogger.log('error', '❌ user_id를 찾을 수 없음 - 모든 방법 실패');
+          throw new Error("사용자 인증 정보를 찾을 수 없습니다. 다시 로그인해주세요.");
         }
-        
-        if (!user) {
-          console.error('❌ 사용자가 로그인되지 않음');
-          throw new Error('사용자가 로그인되지 않았습니다');
-        }
-
-        console.log('✅ 사용자 인증 성공 - userId:', user.id);
 
         // Supabase RPC 함수 호출
-        console.log('🔍 Supabase RPC 함수 호출 시작 - add_heart_by_ad');
+        adLogger.log('info', '🔍 Supabase RPC 함수 호출 시작', { functionName: 'add_heart_by_ad', userId });
         const { data, error } = await supabase.rpc('add_heart_by_ad', {
-          p_user_id: user.id
+          p_user_id: userId
         });
 
-        console.log('🔍 Supabase RPC 응답:', { data, error });
+        adLogger.log('info', '🔍 Supabase RPC 응답', { data, error });
 
         if (error) {
-          console.error('❌ Supabase RPC 에러:', error);
+          adLogger.log('error', '❌ Supabase RPC 에러', { error });
           throw error;
         }
 
-        console.log('✅ Supabase RPC 성공 - 결과:', data);
+        adLogger.log('success', '✅ Supabase RPC 성공', { result: data });
         return data;
       } else {
-        console.error('❌ 지원하지 않는 광고 타입:', adType);
+        adLogger.log('error', '❌ 지원하지 않는 광고 타입', { adType });
         throw new Error(`지원하지 않는 광고 타입: ${adType}`);
       }
     } catch (error) {
-      console.error(`❌ ${adType} 광고 보상 API 호출 실패:`, error);
-      console.error('❌ 에러 상세 정보:', {
+      adLogger.log('error', `❌ ${adType} 광고 보상 API 호출 실패`, {
         message: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined,
         adType,
@@ -306,17 +338,23 @@ export const useAdMob = (): UseAdMobReturn => {
 
   // 광고 표시 함수
   const showAd = useCallback(async (adType: AdType): Promise<AdRewardResult> => {
+    adLogger.log('info', '🎬 광고 표시 함수 시작', { adType, isSupported });
+    
     if (!isSupported) {
+      adLogger.log('error', '❌ 광고 미지원 환경');
       throw new Error('광고가 지원되지 않는 환경입니다');
     }
     
     const instance = adInstancesRef.current[adType];
     const currentStatus = adStatuses[adType];
     
+    adLogger.log('info', '📊 현재 광고 상태', { adType, currentStatus, isReady: instance.isReady });
+    
     // 광고 시청 간격 체크 (최소 3초 간격)
     const now = Date.now();
     const lastAdTime = instance.lastAdTime || 0;
     if (now - lastAdTime < 3000) {
+      adLogger.log('warning', '⚠️ 광고 시청 간격이 너무 짧음', { elapsed: now - lastAdTime });
       throw new Error('광고 시청 간격이 너무 짧습니다. 잠시 후 다시 시도해주세요.');
     }
 
@@ -371,11 +409,15 @@ export const useAdMob = (): UseAdMobReturn => {
 
     return new Promise((resolve, reject) => {
       try {
+        adLogger.log('info', '🔄 새 Promise 생성', { adType });
+        
         // 보류 중인 광고 Promise 참조 저장
       instance.pendingPromise = { resolve, reject };
+        adLogger.log('info', '✅ pendingPromise 설정됨', { adType });
 
         // 광고 시청 시작 시간 기록
         instance.lastAdTime = now;
+        adLogger.log('info', '📝 lastAdTime 기록', { adType, now });
         
         // 광고 표시
         showAppsInTossAdMob({
@@ -403,47 +445,59 @@ export const useAdMob = (): UseAdMobReturn => {
                 console.log(`${adType} 광고 컨텐츠 표시`);
               break;
               case 'userEarnedReward':
-                console.log('🎁 광고 보상 획득 이벤트 발생:', {
+                adLogger.log('success', '🎁 광고 보상 획득 이벤트 발생', {
                   adType,
                   eventData: event.data,
                   hasPendingPromise: !!instance.pendingPromise
                 });
                 
-                if (instance.pendingPromise) {
-                  // 광고 보상 API 호출
-                  (async () => {
-                    try {
-                      console.log('🔍 광고 보상 API 호출 시작...');
-                      const rewardData = await callAdRewardAPI(adType);
-                      console.log('✅ 광고 보상 API 호출 성공:', rewardData);
+                // 중복 호출 방지: pendingPromise가 없으면 이미 처리된 것
+                if (!instance.pendingPromise) {
+                  adLogger.log('warning', '⚠️ userEarnedReward 중복 호출 감지 - 무시', { adType });
+                  return;
+                }
+                
+                // 이벤트가 여러 번 발생할 수 있으므로, pendingPromise를 즉시 null로 설정
+                const currentPromise = instance.pendingPromise;
+                instance.pendingPromise = null;
+                
+                // 광고 보상 API 호출
+                (async () => {
+                  try {
+                    adLogger.log('info', '🔍 광고 보상 API 호출 시작...');
+                    const rewardData = await callAdRewardAPI(adType);
+                      adLogger.log('success', '✅ 광고 보상 API 호출 성공', { rewardData });
                       
                       // 결과 검증
                       if (rewardData && typeof rewardData === 'object' && 'success' in rewardData) {
                         if (rewardData.success) {
-                          console.log('🎉 광고 보상 성공 - 하트 충전됨');
+                          adLogger.log('success', '🎉 광고 보상 성공 - 하트 충전됨');
                         } else {
-                          console.warn('⚠️ 광고 보상 실패:', rewardData.message);
+                          adLogger.log('warning', '⚠️ 광고 보상 실패', { message: rewardData.message });
                         }
                       } else {
-                        console.error('❌ 광고 보상 결과 형식 오류:', rewardData);
+                        adLogger.log('error', '❌ 광고 보상 결과 형식 오류', { rewardData });
                       }
                       
                       // Promise resolve
-                      if (instance.pendingPromise) {
-                        instance.pendingPromise.resolve(rewardData);
-                        instance.pendingPromise = null;
+                      adLogger.log('info', '🔄 Promise resolve 시작', { adType });
+                      if (currentPromise) {
+                        currentPromise.resolve(rewardData);
+                        adLogger.log('success', '✅ Promise resolve 완료', { adType });
                       }
                     } catch (error) {
-                      console.error(`❌ ${adType} showAd: 광고 보상 API 호출 실패:`, error);
+                      adLogger.log('error', `❌ ${adType} showAd: 광고 보상 API 호출 실패`, { error });
                       
                       try {
-                        console.error('❌ 에러 상세 정보:', {
+                        const errorDetails = {
                           message: error instanceof Error ? error.message : 'Unknown error',
                           stack: error instanceof Error ? error.stack : undefined,
                           adType
-                        });
+                        };
                         
-                        if (instance.pendingPromise) {
+                        adLogger.log('error', '❌ 에러 상세 정보', errorDetails);
+                        
+                        if (currentPromise) {
                           // 안전한 에러 응답 생성
                           const safeError = {
                             type: adType,
@@ -453,25 +507,20 @@ export const useAdMob = (): UseAdMobReturn => {
                             errorDetails: error instanceof Error ? error.message : String(error)
                           };
                           
-                          instance.pendingPromise.reject(safeError);
-                          instance.pendingPromise = null;
+                          adLogger.log('error', '🔄 Promise reject 시작', { adType, error: safeError });
+                          currentPromise.reject(safeError);
+                          adLogger.log('success', '✅ Promise reject 완료', { adType });
                         }
-                      } catch (rejectError) {
-                        console.error("❌ 에러 처리 실패:", rejectError);
-                        if (instance.pendingPromise) {
-                          instance.pendingPromise = null;
-                        }
-                      }
+                    } catch (rejectError) {
+                      adLogger.log('error', "❌ 에러 처리 실패", { rejectError });
                     }
-                  })();
-                  
-                  // 광고 인스턴스 리셋을 지연시켜 호출
-                  setTimeout(() => {
-                    resetAdInstance(adType);
-                  }, 2000);
-                } else {
-                  console.warn('⚠️ 광고 보상 획득했지만 pendingPromise가 없음');
-              }
+                  }
+                })();
+                
+                // 광고 인스턴스 리셋을 지연시켜 호출
+                setTimeout(() => {
+                  resetAdInstance(adType);
+                }, 2000);
               break;
           }
         },
@@ -539,6 +588,7 @@ export const useAdMob = (): UseAdMobReturn => {
         reject(error);
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSupported, adStatuses, loadAd]);
 
   // resetAdInstance 함수
@@ -624,7 +674,7 @@ export const useAdMob = (): UseAdMobReturn => {
       loadAd(adType as AdType)
     );
     await Promise.all(loadPromises);
-  }, [loadAd, resetAdInstance]);
+  }, [loadAd]);
 
   return {
     getAdStatus,

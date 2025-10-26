@@ -283,6 +283,9 @@ SET search_path = public;
 -- 하트 소모 함수
 -- ============================================
 
+-- 기존 함수 삭제 (반환 타입 변경 시 필요)
+DROP FUNCTION IF EXISTS consume_heart(UUID, INTEGER);
+
 CREATE OR REPLACE FUNCTION consume_heart(p_user_id UUID, p_amount INTEGER DEFAULT 1)
 RETURNS TABLE(
   success BOOLEAN,
@@ -290,31 +293,37 @@ RETURNS TABLE(
   message TEXT
 ) AS $$
 DECLARE
-  v_hearts INTEGER;
+  v_hearts_before INTEGER;
+  v_hearts_after INTEGER;
 BEGIN
   -- 먼저 하트 자동 충전 시도
   PERFORM refill_heart(p_user_id);
 
   -- 현재 하트 조회
-  SELECT uh.current_hearts INTO v_hearts
+  SELECT uh.current_hearts INTO v_hearts_before
   FROM user_hearts uh
   WHERE uh.user_id = p_user_id;
 
   -- 하트가 부족하면 실패
-  IF v_hearts < p_amount THEN
+  IF v_hearts_before < p_amount THEN
     RETURN QUERY
-    SELECT FALSE, v_hearts, '하트가 부족합니다.'::TEXT;
+    SELECT FALSE, v_hearts_before, '하트가 부족합니다.'::TEXT;
     RETURN;
   END IF;
 
   -- 하트 차감
-  UPDATE user_hearts
-  SET current_hearts = current_hearts - p_amount
-  WHERE user_id = p_user_id;
+  UPDATE user_hearts uh
+  SET current_hearts = uh.current_hearts - p_amount
+  WHERE uh.user_id = p_user_id;
 
-  -- 성공 반환
+  -- **차감 후 실제 값을 다시 조회하여 반환**
+  SELECT uh.current_hearts INTO v_hearts_after
+  FROM user_hearts uh
+  WHERE uh.user_id = p_user_id;
+
+  -- 성공 반환 (실제 차감된 값 사용)
   RETURN QUERY
-  SELECT TRUE, v_hearts - p_amount, '하트가 소모되었습니다.'::TEXT;
+  SELECT TRUE, v_hearts_after, '하트가 소모되었습니다.'::TEXT;
 END;
 $$ LANGUAGE plpgsql
 SECURITY DEFINER

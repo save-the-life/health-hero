@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { useGameStore } from "@/store/gameStore";
 import { useAdMob } from "@/hooks/useAdMob";
 import { useAuthStore } from "@/store/authStore";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { SoundButton } from "./SoundButton";
 import { AdErrorBoundary } from "@/components/ErrorBoundary";
+import { adLogger } from "@/utils/adLogger";
 
 interface HeartShortageModalProps {
   isOpen: boolean;
@@ -36,9 +37,13 @@ function HeartShortageModalContent({
   } = useAdMob();
 
   const [isWatchingAd, setIsWatchingAd] = useState(false);
-  const [adStatus, setAdStatus] = useState<"loading" | "ready" | "failed" | "cleaning">(
-    "loading"
-  );
+  const [adStatus, setAdStatus] = useState<
+    "loading" | "ready" | "failed" | "cleaning"
+  >("loading");
+
+  // 중복 호출 방지를 위한 ref
+  const isProcessingRef = useRef(false);
+  const hasUpdatedHeartsRef = useRef(false);
 
   const handleBuyHeart = async () => {
     try {
@@ -64,16 +69,19 @@ function HeartShortageModalContent({
   useEffect(() => {
     if (isOpen && isSupported) {
       const currentStatus = getAdStatus("HEART_REFILL");
-      
+
       // 이미 로드되었거나 로딩 중이면 재로드하지 않음
       if (currentStatus === "loaded" || currentStatus === "loading") {
-        console.log("🎯 HeartShortageModal 열림 - 광고 이미 로드됨:", currentStatus);
+        console.log(
+          "🎯 HeartShortageModal 열림 - 광고 이미 로드됨:",
+          currentStatus
+        );
         return;
       }
-      
+
       console.log("🎯 HeartShortageModal 열림 - 광고 로드 시작");
       console.log("✅ 광고 지원됨 - 자동 로드 시작");
-      
+
       autoLoadAd("HEART_REFILL")
         .then(() => {
           console.log("✅ 광고 자동 로드 완료");
@@ -90,7 +98,7 @@ function HeartShortageModalContent({
   useEffect(() => {
     const checkAdStatus = () => {
       const status = getAdStatus("HEART_REFILL");
-      
+
       // 상태가 실제로 변경될 때만 업데이트
       if (status !== adStatus) {
         switch (status) {
@@ -130,73 +138,114 @@ function HeartShortageModalContent({
   }, [isOpen, getAdStatus, adStatus]);
 
   const handleAdClick = async () => {
+    adLogger.log("info", "🎬 광고 버튼 클릭됨", { userId: user?.id });
     console.log("🎬 광고 버튼 클릭됨");
 
+    // 중복 호출 방지
+    if (isProcessingRef.current) {
+      adLogger.log("warning", "⏳ 이미 처리 중입니다. 중복 호출 무시");
+      console.log("⏳ 이미 처리 중입니다. 중복 호출 무시");
+      return;
+    }
+
     if (!user?.id) {
+      adLogger.log("error", "❌ 사용자 정보가 없습니다.");
       console.error("❌ 사용자 정보가 없습니다.");
       return;
     }
 
     if (isWatchingAd) {
+      adLogger.log("warning", "⏳ 이미 광고 시청 중입니다.");
       console.log("⏳ 이미 광고 시청 중입니다.");
       return;
     }
 
+    // 처리 시작 표시
+    isProcessingRef.current = true;
+    hasUpdatedHeartsRef.current = false;
+
     try {
+      adLogger.log("info", "🎬 광고 시청 시작");
       console.log("🎬 광고 시청 시작");
       setIsWatchingAd(true);
 
+      adLogger.log("info", "✅ 광고 시청 가능 - 광고 표시 시작");
       console.log("✅ 광고 시청 가능 - 광고 표시 시작");
       // 광고 시청
       const result = await showAd("HEART_REFILL");
+      adLogger.log("info", "📺 광고 시청 결과", { result });
       console.log("📺 광고 시청 결과:", result);
 
       if (result.success) {
+        adLogger.log("success", "🎉 하트 충전 성공!");
         console.log("🎉 하트 충전 성공!");
-        // 하트 충전 성공
-        alert("하트를 획득했습니다!");
 
-        // 하트 상태 업데이트
-        console.log("💖 하트 상태 업데이트 중...");
-        await updateHearts();
+        // 중복 업데이트 방지
+        if (!hasUpdatedHeartsRef.current) {
+          hasUpdatedHeartsRef.current = true;
+
+          // 하트 충전 성공
+          alert("하트를 획득했습니다!");
+
+          // 하트 상태 업데이트 (한 번만)
+          adLogger.log("info", "💖 하트 상태 업데이트 중...");
+          console.log("💖 하트 상태 업데이트 중...");
+          await updateHearts();
+          adLogger.log("success", "✅ 하트 상태 업데이트 완료");
+        } else {
+          adLogger.log(
+            "warning",
+            "⚠️ 하트 업데이트 이미 완료됨 - 중복 호출 방지"
+          );
+          console.log("⚠️ 하트 업데이트 이미 완료됨");
+        }
 
         // 모달 닫기
+        adLogger.log("info", "🚪 모달 닫기");
         console.log("🚪 모달 닫기");
         onClose();
 
         // 광고 재로드
+        adLogger.log("info", "🔄 광고 재로드 예약");
         console.log("🔄 광고 재로드 예약");
         setTimeout(() => {
           reloadAd("HEART_REFILL");
         }, 1000);
       } else {
+        adLogger.log("error", "❌ 하트 획득 실패", { message: result.message });
         console.log("❌ 하트 획득 실패:", result.message);
         alert(result.message || "하트 획득에 실패했습니다.");
       }
     } catch (error: unknown) {
+      adLogger.log("error", "💥 광고 시청 에러", { error });
       console.error("💥 광고 시청 에러:", error);
-      
+
       // 에러 정보를 안전하게 수집
       let errorMessage = "광고 시청에 실패했습니다.";
       let errorType = "unknown";
-      
+
       try {
         if (error instanceof Error) {
           errorMessage = error.message;
           errorType = "Error";
-          console.error("❌ 에러 상세 정보:", {
+          const errorDetails = {
             message: error.message,
             stack: error.stack,
-            errorType: "Error"
-          });
-        } else if (typeof error === 'string') {
+            errorType: "Error",
+          };
+          adLogger.log("error", "❌ 에러 상세 정보", errorDetails);
+          console.error("❌ 에러 상세 정보:", errorDetails);
+        } else if (typeof error === "string") {
           errorMessage = error;
           errorType = "string";
-        } else if (error && typeof error === 'object' && 'message' in error) {
+          adLogger.log("error", "❌ 에러 발생", { errorMessage, errorType });
+        } else if (error && typeof error === "object" && "message" in error) {
           errorMessage = String(error.message);
           errorType = "object";
+          adLogger.log("error", "❌ 에러 발생", { errorMessage, errorType });
         }
       } catch (logError) {
+        adLogger.log("error", "❌ 에러 로깅 실패", { logError });
         console.error("❌ 에러 로깅 실패:", logError);
         errorMessage = "알 수 없는 오류가 발생했습니다.";
       }
@@ -204,39 +253,52 @@ function HeartShortageModalContent({
       // 사용자에게 안전한 메시지 표시
       try {
         if (errorMessage.includes("간격이 너무 짧습니다")) {
+          adLogger.log("warning", "⏰ 광고 시청 간격이 너무 짧음");
           console.log("⏰ 광고 시청 간격이 너무 짧음");
           alert("광고 시청 간격이 너무 짧습니다. 잠시 후 다시 시도해주세요.");
         } else if (errorMessage.includes("광고가 로드되지 않았습니다")) {
+          adLogger.log("warning", "📡 광고가 로드되지 않음");
           console.log("📡 광고가 로드되지 않음");
           alert("광고를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
         } else if (errorMessage.includes("로그인")) {
+          adLogger.log("warning", "🔐 로그인 필요");
           console.log("🔐 로그인 필요");
           alert("로그인이 필요합니다. 다시 로그인해주세요.");
         } else if (errorMessage.includes("세션")) {
+          adLogger.log("warning", "🔐 세션 만료");
           console.log("🔐 세션 만료");
           alert("로그인 세션이 만료되었습니다. 다시 로그인해주세요.");
         } else if (errorMessage.includes("Auth session missing")) {
+          adLogger.log("warning", "🔐 인증 세션 없음");
           console.log("🔐 인증 세션 없음");
           alert("인증 세션이 없습니다. 다시 로그인해주세요.");
         } else if (errorMessage.includes("timeout")) {
+          adLogger.log("warning", "⏰ 광고 시청 시간 초과");
           console.log("⏰ 광고 시청 시간 초과");
           alert("광고 시청 시간이 초과되었습니다. 다시 시도해주세요.");
         } else {
+          adLogger.log("error", "❌ 기타 광고 시청 실패", { errorMessage });
           console.log("❌ 기타 광고 시청 실패");
           alert("광고 시청에 실패했습니다. 잠시 후 다시 시도해주세요.");
         }
       } catch (alertError) {
+        adLogger.log("error", "❌ 알림 표시 실패", { alertError });
         console.error("❌ 알림 표시 실패:", alertError);
         // 알림 표시도 실패하면 조용히 넘어감
       }
 
       // 에러 발생 시 광고 리셋 및 재로드
+      adLogger.log("info", "🔄 광고 인스턴스 리셋 및 재로드");
       console.log("🔄 광고 인스턴스 리셋 및 재로드");
       resetAdInstance("HEART_REFILL");
       setTimeout(() => {
         reloadAd("HEART_REFILL");
       }, 2000);
     } finally {
+      // 처리 완료 표시
+      isProcessingRef.current = false;
+
+      adLogger.log("info", "🏁 광고 시청 프로세스 완료");
       console.log("🏁 광고 시청 프로세스 완료");
       setIsWatchingAd(false);
     }

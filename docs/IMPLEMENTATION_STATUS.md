@@ -28,6 +28,7 @@
 - **Phase 4.17**: 페이지 로딩 최적화 ✅ **100%** (완료)
 - **Phase 4.18**: 광고 시스템 환경 감지 및 디버깅 개선 ✅ **100%** (완료)
 - **Phase 4.19**: 인증 오류 해결 및 앱 안정성 강화 ✅ **100%** (완료)
+- **Phase 4.20**: 광고 시스템 중복 호출 방지 및 하트 충전 버그 수정 ✅ **100%** (완료)
 
 ---
 
@@ -61,7 +62,7 @@
 - **문제**: 스테이지 클리어 후 다음 단계가 잠겨있음
 - **원인**: 캐시 무효화 및 상태 업데이트 로직 부재
 - **해결**: `completeStage` 함수에 강제 캐시 무효화 및 상태 업데이트 로직 추가
-- **구현**: 
+- **구현**:
   - `userDataCache: null`, `cacheTimestamp: null` 설정
   - 로컬 스토리지 캐시 삭제
   - `loadUserData` 재호출로 최신 데이터 반영
@@ -207,7 +208,7 @@
 
 - **닫기 버튼**: 우측 상단 X 버튼으로 직관적인 모달 닫기
 - **일관된 버튼 스타일**: 하단 비용 표시 버튼을 나가기 확인 버튼과 동일한 스타일 적용
-- **고정 사이즈**: 160px * 56px 버튼으로 일관된 UI
+- **고정 사이즈**: 160px \* 56px 버튼으로 일관된 UI
 - **부드러운 애니메이션**: 호버 효과와 전환 애니메이션
 
 ### 4. 페이지 로딩 성능 최적화 (2025-01-27 완료)
@@ -917,6 +918,73 @@
 
 ---
 
+## 🎵 Phase 4.20: 광고 시스템 중복 호출 방지 및 하트 충전 버그 수정 (2025-01-27 완료)
+
+### 20.1. 하트 차감 함수 정확도 개선
+
+- **문제**: `consume_heart` RPC 함수에서 차감 후 실제 값을 재조회하지 않아 계산된 값과 DB 값 불일치
+- **원인**: UPDATE 후 계산된 값 반환 (`v_hearts - p_amount`)
+- **해결**: 차감 후 실제 DB 값을 조회하여 반환하도록 수정
+- **구현**:
+
+  ```sql
+  -- 차감 후 실제 값을 다시 조회하여 반환
+  SELECT uh.current_hearts INTO v_hearts_after
+  FROM user_hearts uh
+  WHERE uh.user_id = p_user_id;
+
+  -- 실제 차감된 값 반환
+  RETURN QUERY SELECT TRUE, v_hearts_after, '하트가 소모되었습니다.'::TEXT;
+  ```
+
+### 20.2. 광고 보상 중복 호출 방지
+
+- **문제**: `userEarnedReward` 이벤트가 여러 번 발생하여 하트 3개 충전
+- **원인**: 이벤트 핸들러가 중복 실행되지 않도록 보호되지 않음
+- **해결**: `pendingPromise`를 즉시 null로 설정하여 중복 처리 방지
+- **구현**:
+
+  ```typescript
+  // 중복 호출 방지: pendingPromise가 없으면 이미 처리된 것
+  if (!instance.pendingPromise) {
+    adLogger.log("warning", "⚠️ userEarnedReward 중복 호출 감지 - 무시");
+    return;
+  }
+
+  // 이벤트가 여러 번 발생할 수 있으므로, pendingPromise를 즉시 null로 설정
+  const currentPromise = instance.pendingPromise;
+  instance.pendingPromise = null;
+  ```
+
+### 20.3. 하트 업데이트 중복 방지
+
+- **문제**: `updateHearts` 함수가 여러 번 호출되어 중복 업데이트
+- **원인**: 컴포넌트 리렌더링 및 이벤트 핸들러 중복 실행
+- **해결**: `useRef`를 사용한 중복 호출 방지 플래그 추가
+- **구현**:
+
+  ```typescript
+  // 중복 호출 방지를 위한 ref
+  const isProcessingRef = useRef(false);
+  const hasUpdatedHeartsRef = useRef(false);
+
+  // 중복 업데이트 방지
+  if (!hasUpdatedHeartsRef.current) {
+    hasUpdatedHeartsRef.current = true;
+    await updateHearts();
+  }
+  ```
+
+### 20.4. Eruda 자동 초기화 제거
+
+- **변경**: Eruda 자동 시작 기능 제거하여 수동 제어 가능하도록 변경
+- **구현**:
+  - Eruda 자동 초기화 코드 제거
+  - 테스트 로그 코드 정리
+  - 디버깅 로그 제거
+
+---
+
 ## 🎵 Phase 4.18: 광고 시스템 환경 감지 및 디버깅 개선 (2025-01-27 완료)
 
 ### 18.1. 환경 감지 로직 개선
@@ -925,11 +993,12 @@
 - **원인**: 기존 환경 감지 로직이 `tossmini.com` 도메인과 `TossApp` UserAgent를 감지하지 못함
 - **해결**: 환경 감지 조건 확장
   ```typescript
-  const isAppsInToss = window.location.hostname.includes('apps-in-toss') || 
-                      window.location.hostname.includes('toss.im') ||
-                      window.location.hostname.includes('toss.com') ||
-                      window.location.hostname.includes('tossmini.com') ||  // ✅ 추가
-                      window.navigator.userAgent.includes('TossApp');        // ✅ 추가
+  const isAppsInToss =
+    window.location.hostname.includes("apps-in-toss") ||
+    window.location.hostname.includes("toss.im") ||
+    window.location.hostname.includes("toss.com") ||
+    window.location.hostname.includes("tossmini.com") || // ✅ 추가
+    window.navigator.userAgent.includes("TossApp"); // ✅ 추가
   ```
 
 ### 18.2. 디버깅 로그 강화
@@ -981,7 +1050,7 @@
 
 ### 15.4. 환경 감지 및 디버깅 개선 (2025-01-27 업데이트)
 
-- **환경 감지 로직 개선**: 
+- **환경 감지 로직 개선**:
   - `tossmini.com` 도메인 감지 추가
   - `TossApp` UserAgent 감지 추가
   - 토스 앱 내 환경 자동 감지
