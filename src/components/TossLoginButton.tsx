@@ -17,9 +17,15 @@ declare global {
 export default function TossLoginButton() {
   const router = useRouter();
   const { login, isLoading: tossLoading, error: tossError } = useTossAuth();
-  const { setUser, setLoading, setError } = useAuthStore();
+  const {
+    setUser,
+    setLoading,
+    setError,
+    isLoading: authLoading,
+  } = useAuthStore();
   const [localError, setLocalError] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   // Hydration 에러 방지: 클라이언트에서만 렌더링
   useEffect(() => {
@@ -31,6 +37,7 @@ export default function TossLoginButton() {
     setLocalError(null);
     setError(null);
     setLoading(true);
+    setIsNavigating(true);
 
     try {
       // 1. 토스 로그인
@@ -65,9 +72,11 @@ export default function TossLoginButton() {
         }, 100);
       }
 
-      // 4. 게임 페이지로 이동
+      // 4. 게임 페이지로 이동 (로딩 상태 유지)
       console.log("🎮 [TossLogin] 게임 페이지로 이동");
       router.push("/game");
+      // 페이지 이동이 완료될 때까지 로딩 상태 유지
+      // setLoading(false)는 finally 블록에서 제거하여 페이지 이동 중에도 로딩 표시
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "로그인에 실패했습니다.";
@@ -78,10 +87,11 @@ export default function TossLoginButton() {
       });
       setLocalError(errorMessage);
       setError(errorMessage);
-    } finally {
+      setIsNavigating(false);
       setLoading(false);
       console.log("🏁 [TossLogin] 로그인 플로우 종료");
     }
+    // finally 블록 제거하여 에러가 아닌 경우 로딩 상태 유지
   };
 
   const displayError = tossError || localError;
@@ -90,10 +100,10 @@ export default function TossLoginButton() {
     <div className="w-full space-y-4">
       <SoundButton
         onClick={handleLogin}
-        disabled={tossLoading}
+        disabled={tossLoading || authLoading || isNavigating}
         className="w-full bg-[#3182F6] hover:bg-[#2C5FCC] text-white font-bold py-4 px-8 rounded-2xl text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
       >
-        {tossLoading ? (
+        {tossLoading || authLoading || isNavigating ? (
           <span className="flex items-center justify-center">
             <svg
               className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"

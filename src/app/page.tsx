@@ -16,6 +16,17 @@ export default function Home() {
         />
       </div>
 
+      {/* 게임 등급 이미지 (우측 상단) */}
+      <div className="absolute top-4 right-4 z-20">
+        <Image
+          src="/images/ui/game-rating.png"
+          alt="게임 등급"
+          width={60}
+          height={70}
+          priority
+        />
+      </div>
+
       {/* 메인 콘텐츠 */}
       <div className="relative z-10 flex flex-col items-center justify-between min-h-screen py-8">
         {/* 상단 타이틀 */}
