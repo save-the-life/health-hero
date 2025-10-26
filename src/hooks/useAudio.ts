@@ -62,6 +62,14 @@ export const useAudio = () => {
     return audioService.getVolume();
   }, []);
 
+  const playBackgroundMusic = useCallback(async () => {
+    await audioService.playBackgroundMusic();
+  }, []);
+
+  const stopBackgroundMusic = useCallback(() => {
+    audioService.stopBackgroundMusic();
+  }, []);
+
   return {
     // 오디오 재생 함수들
     playAudio,
@@ -78,5 +86,9 @@ export const useAudio = () => {
     isMuted,
     setVolume,
     getVolume,
+
+    // 배경음악 함수들
+    playBackgroundMusic,
+    stopBackgroundMusic,
   };
 };

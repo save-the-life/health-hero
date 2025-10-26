@@ -8,12 +8,14 @@ import { useAuthStore } from "@/store/authStore";
 import { useGameStore } from "@/store/gameStore";
 import GameHeader from "@/components/GameHeader";
 import { Clickable } from "@/components/SoundButton";
+import { useAudio } from "@/hooks/useAudio";
 
 export default function GamePage() {
   const router = useRouter();
   const { user, isAuthenticated, initialize } = useAuthStore();
   const { currentPhase, hearts, isLoading, error, loadUserData, updateHearts } =
     useGameStore();
+  const { playBackgroundMusic, stopBackgroundMusic } = useAudio();
 
   // 화면 높이 감지
   const [isSmallScreen, setIsSmallScreen] = useState(false);
@@ -44,6 +46,19 @@ export default function GamePage() {
       loadUserData(user.id);
     }
   }, [isAuthenticated, user?.id, loadUserData]);
+
+  // 배경음악 재생 (메인 페이지에서만)
+  useEffect(() => {
+    if (!isAuthenticated || isLoading) return;
+
+    console.log("🎵 배경음악 재생 시작");
+    playBackgroundMusic();
+
+    return () => {
+      console.log("🔇 배경음악 정지");
+      stopBackgroundMusic();
+    };
+  }, [isAuthenticated, isLoading, playBackgroundMusic, stopBackgroundMusic]);
 
   // 하트 타이머 업데이트 (30초마다)
   useEffect(() => {

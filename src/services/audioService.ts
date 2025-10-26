@@ -9,6 +9,7 @@ const AUDIO_FILES = {
   quizWrong: "/sounds/quiz-wrong.mp3",
   stageClear: "/sounds/stage-clear.mp3",
   stageFailed: "/sounds/stage-failed.mp3",
+  background: "/sounds/background.mp3",
 } as const;
 
 export type AudioFile = keyof typeof AUDIO_FILES;
@@ -23,6 +24,7 @@ class AudioService {
   private userId: string | null = null;
   private initialized: boolean = false;
   private webAudioInitialized: boolean = false;
+  private backgroundMusic: HTMLAudioElement | null = null;
 
   constructor() {
     // 서버 사이드에서는 초기화하지 않음
@@ -177,6 +179,11 @@ class AudioService {
       audio.volume = this.isMuted ? 0 : this.volume;
     });
 
+    // 배경음악 볼륨도 조정
+    if (this.backgroundMusic) {
+      this.backgroundMusic.volume = this.isMuted ? 0 : this.volume;
+    }
+
     await this.saveMuteState();
     return this.isMuted;
   }
@@ -200,6 +207,11 @@ class AudioService {
     this.audioInstances.forEach((audio) => {
       audio.volume = this.isMuted ? 0 : this.volume;
     });
+
+    // 배경음악 볼륨도 설정
+    if (this.backgroundMusic) {
+      this.backgroundMusic.volume = this.isMuted ? 0 : this.volume;
+    }
   }
 
   // 볼륨 조회
@@ -296,12 +308,56 @@ class AudioService {
       audio.pause();
       audio.currentTime = 0;
     });
+    if (this.backgroundMusic) {
+      this.backgroundMusic.pause();
+      this.backgroundMusic.currentTime = 0;
+    }
+  }
+
+  // 배경음악 재생
+  async playBackgroundMusic(): Promise<void> {
+    if (typeof window === "undefined") return;
+    if (this.isMuted) return;
+
+    try {
+      // 기존 배경음악이 재생 중이면 재생하지 않음
+      if (this.backgroundMusic && !this.backgroundMusic.paused) {
+        return;
+      }
+
+      // 새로 재생
+      if (!this.backgroundMusic) {
+        this.backgroundMusic = new Audio("/sounds/background.mp3");
+        this.backgroundMusic.loop = true;
+        this.backgroundMusic.volume = this.volume;
+      }
+
+      // 음소거 상태이면 볼륨 0으로 설정
+      this.backgroundMusic.volume = this.isMuted ? 0 : this.volume;
+
+      await this.backgroundMusic.play();
+      console.log("🎵 배경음악 재생 시작");
+    } catch (error) {
+      console.error("배경음악 재생 실패:", error);
+    }
+  }
+
+  // 배경음악 정지
+  stopBackgroundMusic(): void {
+    if (this.backgroundMusic) {
+      this.backgroundMusic.pause();
+      this.backgroundMusic.currentTime = 0;
+      console.log("🔇 배경음악 정지");
+    }
   }
 
   // 리소스 정리
   destroy(): void {
     this.stopAll();
     this.audioInstances.clear();
+    if (this.backgroundMusic) {
+      this.backgroundMusic = null;
+    }
   }
 }
 
