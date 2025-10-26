@@ -24,7 +24,8 @@ function HeartShortageModalContent({
   // 컴포넌트 렌더링 (로그 제거)
 
   const router = useRouter();
-  const { totalScore, buyHeartWithPoints, updateHearts } = useGameStore();
+  const { totalScore, buyHeartWithPoints, updateHearts, heartTimer } =
+    useGameStore();
   const { user } = useAuthStore();
 
   const {
@@ -44,6 +45,23 @@ function HeartShortageModalContent({
   // 중복 호출 방지를 위한 ref
   const isProcessingRef = useRef(false);
   const hasUpdatedHeartsRef = useRef(false);
+
+  // 타이머 자동 업데이트 (1초마다)
+  useEffect(() => {
+    const timerInterval = setInterval(() => {
+      const { hearts } = useGameStore.getState();
+      if (hearts) {
+        const { calculateHeartTimer } = useGameStore.getState();
+        const newTimer = calculateHeartTimer(
+          hearts.last_refill_at,
+          hearts.current_hearts
+        );
+        useGameStore.setState({ heartTimer: newTimer });
+      }
+    }, 1000);
+
+    return () => clearInterval(timerInterval);
+  }, []);
 
   const handleBuyHeart = async () => {
     try {
@@ -399,7 +417,7 @@ function HeartShortageModalContent({
                     fontWeight: "400",
                   }}
                 >
-                  4분 12초
+                  {heartTimer}
                 </span>
               </div>
             </div>
@@ -411,7 +429,7 @@ function HeartShortageModalContent({
           {/* 500 포인트 버튼 또는 나가기 버튼 */}
           {canBuyHeart ? (
             <SoundButton
-              className="font-medium h-[56px] w-[140px] rounded-[10px] relative cursor-pointer hover:opacity-80 transition-opacity"
+              className="font-medium h-[56px] w-[160px] rounded-[10px] relative cursor-pointer hover:opacity-80 transition-opacity"
               style={{
                 background:
                   "linear-gradient(180deg, #50B0FF 0%, #50B0FF 50%, #008DFF 50%, #008DFF 100%)",
@@ -463,7 +481,7 @@ function HeartShortageModalContent({
             </SoundButton>
           ) : (
             <SoundButton
-              className="font-medium h-[56px] w-[140px] rounded-[10px] relative cursor-pointer hover:opacity-80 transition-opacity"
+              className="font-medium h-[56px] w-[160px] rounded-[10px] relative cursor-pointer hover:opacity-80 transition-opacity"
               style={{
                 background:
                   "linear-gradient(180deg, #FF6B6B 0%, #FF6B6B 50%, #E53E3E 50%, #E53E3E 100%)",
@@ -510,7 +528,7 @@ function HeartShortageModalContent({
 
           {/* 광고 버튼 */}
           <SoundButton
-            className={`font-medium h-[56px] w-[140px] rounded-[10px] relative transition-opacity ${
+            className={`font-medium h-[56px] w-[160px] rounded-[10px] relative transition-opacity ${
               !isSupported || adStatus === "loading" || isWatchingAd
                 ? "cursor-not-allowed opacity-60"
                 : "cursor-pointer hover:opacity-80"
@@ -553,20 +571,13 @@ function HeartShortageModalContent({
             />
 
             {/* 플레이 아이콘과 텍스트 */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center gap-1">
-              <div
-                className="w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center"
-                style={{
-                  background: "#FF6B35",
-                }}
-              >
-                <div
-                  className="w-0 h-0 border-l-2 border-r-0 border-t-1 border-b-1 border-transparent border-l-white"
-                  style={{
-                    marginLeft: "2px",
-                  }}
-                />
-              </div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center gap-2 whitespace-nowrap">
+              <Image
+                src="/images/items/button-ad.png"
+                alt="광고"
+                width={16}
+                height={16}
+              />
               <span
                 style={{
                   color: "#FFFFFF",
