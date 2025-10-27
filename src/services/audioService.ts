@@ -228,7 +228,13 @@ class AudioService {
     try {
       // 이미 재생 중이면 중지
       if (!audio.paused) {
-        audio.pause();
+        try {
+          audio.pause();
+          // pause() 후에 currentTime을 설정하기 전에 잠시 대기
+          await new Promise(resolve => setTimeout(resolve, 50));
+        } catch (pauseError) {
+          // pause 에러는 무시
+        }
       }
       audio.currentTime = 0;
       
@@ -248,17 +254,21 @@ class AudioService {
       }
       
       // 재생 시도 (AbortError는 무시)
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        await playPromise.catch((err) => {
-          // pause()로 인한 AbortError는 정상적인 중단이므로 무시
-          if (err.name !== 'AbortError') {
-            console.warn(`오디오 재생 중단됨: ${err.message}`);
-          }
-        });
+      try {
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          await playPromise;
+        }
+      } catch (playError: unknown) {
+        // AbortError는 정상적인 중단이므로 무시
+        if (playError instanceof Error && 
+            playError.name !== 'AbortError' && 
+            playError.name !== 'NotAllowedError') {
+          // 조용히 무시
+        }
       }
     } catch (error: unknown) {
-      // AbortError는 정상적인 중단이므로 로그 안 남김
+      // AbortError와 Audio load timeout은 조용히 무시
       if (error instanceof Error && error.name !== 'AbortError' && error.message !== 'Audio load timeout') {
         console.error(`오디오 재생 실패 (${audioFile}):`, error);
       }

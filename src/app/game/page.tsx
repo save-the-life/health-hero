@@ -131,8 +131,8 @@ export default function GamePage() {
 
   // 페이즈 클릭 핸들러
   const handlePhaseClick = (phaseNumber: number) => {
-    // 현재 페이즈보다 높은 페이즈는 클릭 불가
-    if (phaseNumber > currentPhase) {
+    // 현재 페이즈와 동일한 페이즈만 클릭 가능 (클리어된 페이즈는 접근 불가)
+    if (phaseNumber !== currentPhase) {
       return;
     }
 
@@ -231,17 +231,33 @@ export default function GamePage() {
           {/* 페이즈 1 - 우측 하단 */}
           <Clickable
             as="div"
-            className="absolute bottom-[20px] right-[24px] w-[150px] h-[160px] rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 cursor-pointer hover:opacity-80 transition-opacity"
+            className={`absolute bottom-[20px] right-[24px] w-[150px] h-[160px] rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${
+              currentPhase === 1
+                ? "cursor-pointer hover:opacity-80 transition-opacity"
+                : "cursor-not-allowed"
+            }`}
             onClick={() => handlePhaseClick(1)}
+            playClickSound={currentPhase === 1}
           >
-            <div className="w-full h-full flex flex-col items-center justify-center">
+            <div className="w-full h-full flex flex-col items-center justify-center relative">
               <Image
                 src={getPhaseImage(1)}
                 alt="페이즈 1"
                 width={120}
                 height={120}
-                className="mb-2"
+                className={`mb-2 ${currentPhase > 1 ? "blur-sm" : ""}`}
               />
+              {/* 클리어 체크 아이콘 */}
+              {currentPhase > 1 && (
+                <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                  <Image
+                    src="/images/items/icon-check.png"
+                    alt="클리어"
+                    width={40}
+                    height={40}
+                  />
+                </div>
+              )}
             </div>
           </Clickable>
 
@@ -249,21 +265,32 @@ export default function GamePage() {
           <Clickable
             as="div"
             className={`absolute bottom-[180px] left-[24px] w-[150px] h-[160px] rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${
-              currentPhase >= 2
+              currentPhase === 2
                 ? "cursor-pointer hover:opacity-80 transition-opacity"
                 : "cursor-not-allowed"
             }`}
             onClick={() => handlePhaseClick(2)}
-            playClickSound={currentPhase >= 2} // 잠금 해제된 경우에만 클릭 사운드 재생
+            playClickSound={currentPhase === 2} // 현재 페이즈인 경우에만 클릭 사운드 재생
           >
-            <div className="w-full h-full flex flex-col items-center justify-center">
+            <div className="w-full h-full flex flex-col items-center justify-center relative">
               <Image
                 src={getPhaseImage(2)}
                 alt="페이즈 2"
                 width={120}
                 height={120}
-                className="mb-2"
+                className={`mb-2 ${currentPhase > 2 ? "blur-sm" : ""}`}
               />
+              {/* 클리어 체크 아이콘 */}
+              {currentPhase > 2 && (
+                <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                  <Image
+                    src="/images/items/icon-check.png"
+                    alt="클리어"
+                    width={40}
+                    height={40}
+                  />
+                </div>
+              )}
             </div>
           </Clickable>
 
@@ -271,21 +298,32 @@ export default function GamePage() {
           <Clickable
             as="div"
             className={`absolute bottom-[340px] right-[24px] w-[150px] h-[160px] rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${
-              currentPhase >= 3
+              currentPhase === 3
                 ? "cursor-pointer hover:opacity-80 transition-opacity"
                 : "cursor-not-allowed"
             }`}
             onClick={() => handlePhaseClick(3)}
-            playClickSound={currentPhase >= 3} // 잠금 해제된 경우에만 클릭 사운드 재생
+            playClickSound={currentPhase === 3} // 현재 페이즈인 경우에만 클릭 사운드 재생
           >
-            <div className="w-full h-full flex flex-col items-center justify-center">
+            <div className="w-full h-full flex flex-col items-center justify-center relative">
               <Image
                 src={getPhaseImage(3)}
                 alt="페이즈 3"
                 width={120}
                 height={120}
-                className="mb-2"
+                className={`mb-2 ${currentPhase > 3 ? "blur-sm" : ""}`}
               />
+              {/* 클리어 체크 아이콘 */}
+              {currentPhase > 3 && (
+                <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                  <Image
+                    src="/images/items/icon-check.png"
+                    alt="클리어"
+                    width={40}
+                    height={40}
+                  />
+                </div>
+              )}
             </div>
           </Clickable>
 
@@ -293,21 +331,32 @@ export default function GamePage() {
           <Clickable
             as="div"
             className={`absolute bottom-[500px] left-[24px] w-[150px] h-[160px] rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${
-              currentPhase >= 4
+              currentPhase === 4
                 ? "cursor-pointer hover:opacity-80 transition-opacity"
                 : "cursor-not-allowed"
             }`}
             onClick={() => handlePhaseClick(4)}
-            playClickSound={currentPhase >= 4} // 잠금 해제된 경우에만 클릭 사운드 재생
+            playClickSound={currentPhase === 4} // 현재 페이즈인 경우에만 클릭 사운드 재생
           >
-            <div className="w-full h-full flex flex-col items-center justify-center">
+            <div className="w-full h-full flex flex-col items-center justify-center relative">
               <Image
                 src={getPhaseImage(4)}
                 alt="페이즈 4"
                 width={120}
                 height={120}
-                className="mb-2"
+                className={`mb-2 ${currentPhase > 4 ? "blur-sm" : ""}`}
               />
+              {/* 클리어 체크 아이콘 */}
+              {currentPhase > 4 && (
+                <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                  <Image
+                    src="/images/items/icon-check.png"
+                    alt="클리어"
+                    width={40}
+                    height={40}
+                  />
+                </div>
+              )}
             </div>
           </Clickable>
 
