@@ -1,5 +1,3 @@
-import { supabase } from "@/lib/supabase";
-
 // 오디오 파일 경로 매핑
 const AUDIO_FILES = {
   buttonClick: "/sounds/button-click.mp3",
@@ -126,38 +124,26 @@ class AudioService {
     this.ensureWebAudioInitialized();
   }
 
-  // 음소거 상태 로드
-  private async loadMuteState() {
-    if (!this.userId) return;
+  // 음소거 상태 로드 (로컬 스토리지 사용)
+  private loadMuteState() {
+    if (typeof window === "undefined") return;
 
     try {
-      const { data, error } = await supabase
-        .from("user_item_settings")
-        .select("show_popup")
-        .eq("user_id", this.userId)
-        .eq("item_type", "audio_mute")
-        .single();
-
-      if (!error && data) {
-        this.isMuted = !data.show_popup; // show_popup이 false면 음소거
+      const savedState = localStorage.getItem('audio_muted');
+      if (savedState !== null) {
+        this.isMuted = savedState === 'true';
       }
     } catch (error) {
       console.error("음소거 상태 로드 실패:", error);
     }
   }
 
-  // 음소거 상태 저장
-  private async saveMuteState() {
-    if (!this.userId) return;
+  // 음소거 상태 저장 (로컬 스토리지 사용)
+  private saveMuteState() {
+    if (typeof window === "undefined") return;
 
     try {
-      await supabase
-        .from("user_item_settings")
-        .upsert({
-          user_id: this.userId,
-          item_type: "audio_mute",
-          show_popup: !this.isMuted, // 음소거가 아니면 show_popup true
-        });
+      localStorage.setItem('audio_muted', this.isMuted.toString());
     } catch (error) {
       console.error("음소거 상태 저장 실패:", error);
     }
@@ -240,8 +226,10 @@ class AudioService {
     }
 
     try {
-      // 현재 재생 중인 오디오 중지
-      audio.pause();
+      // 이미 재생 중이면 중지
+      if (!audio.paused) {
+        audio.pause();
+      }
       audio.currentTime = 0;
       
       // 오디오가 준비되지 않은 경우 로딩 대기
@@ -259,10 +247,21 @@ class AudioService {
         });
       }
       
-      // 재생
-      await audio.play();
-    } catch (error) {
-      console.error(`오디오 재생 실패 (${audioFile}):`, error);
+      // 재생 시도 (AbortError는 무시)
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        await playPromise.catch((err) => {
+          // pause()로 인한 AbortError는 정상적인 중단이므로 무시
+          if (err.name !== 'AbortError') {
+            console.warn(`오디오 재생 중단됨: ${err.message}`);
+          }
+        });
+      }
+    } catch (error: unknown) {
+      // AbortError는 정상적인 중단이므로 로그 안 남김
+      if (error instanceof Error && error.name !== 'AbortError' && error.message !== 'Audio load timeout') {
+        console.error(`오디오 재생 실패 (${audioFile}):`, error);
+      }
     }
   }
 

@@ -56,8 +56,8 @@ export default function StageButton({
         <Image
           src="/images/items/icon-lock.png"
           alt="잠금"
-          width={24}
-          height={24}
+          width={40}
+          height={40}
           style={{
             position: "absolute",
             top: "50%",
@@ -73,6 +73,10 @@ export default function StageButton({
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
+            fontSize: "32px",
+            fontWeight: "bold",
+            color: "#FFFFFF",
+            textShadow: "2px 2px 2px 2px #000000",
             pointerEvents: "none",
           }}
         >

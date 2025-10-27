@@ -76,12 +76,11 @@ export default function StageResultModal({
         <div className="absolute inset-0 flex flex-col items-center">
           {/* 스테이지 성공/실패 텍스트 */}
           <div
-            className="mt-[38px] text-center"
+            className="mt-[38px] text-center text-stroke"
             style={{
               fontSize: "32px",
               fontWeight: "400",
-              color: "#8B4513", // 나무색 텍스트
-              textShadow: "2px 2px 0px #FFD700", // 노란색 테두리 효과
+              color: "#FDE047",
             }}
           >
             {isSuccess ? "스테이지 성공!" : "스테이지 실패!"}
@@ -89,11 +88,11 @@ export default function StageResultModal({
 
           {/* 보상 헤더 */}
           <div
-            className="mt-[90px] text-center"
+            className="mt-[90px] text-center text-stroke"
             style={{
               fontSize: "18px",
               fontWeight: "600",
-              color: "#8B4513",
+              color: "#ffffff",
             }}
           >
             보상
@@ -129,10 +128,11 @@ export default function StageResultModal({
 
               {/* 획득 경험치 텍스트 */}
               <span
+                className="text-stroke"
                 style={{
                   fontSize: "14px",
                   fontWeight: "400",
-                  color: "#8B4513",
+                  color: "#ffffff",
                 }}
               >
                 +{earnedExp}
@@ -167,10 +167,11 @@ export default function StageResultModal({
 
               {/* 획득 점수 텍스트 */}
               <span
+                className="text-stroke"
                 style={{
                   fontSize: "14px",
                   fontWeight: "400",
-                  color: "#8B4513",
+                  color: "#ffffff",
                 }}
               >
                 +{earnedScore}

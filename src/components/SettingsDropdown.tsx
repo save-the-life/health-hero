@@ -46,6 +46,34 @@ export default function SettingsDropdown({
     }
   }, [isOpen]);
 
+  // 외부 클릭 감지로 메뉴 닫기
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      // 메뉴 컨테이너 요소 찾기
+      const menuContainer = document.querySelector('[data-menu-container]');
+      const settingButton = document.querySelector('[data-setting-button]');
+      
+      // 클릭된 요소가 메뉴 안이나 설정 버튼이면 무시
+      if (
+        menuContainer?.contains(event.target as Node) ||
+        settingButton?.contains(event.target as Node)
+      ) {
+        return;
+      }
+
+      // 외부를 클릭했으면 메뉴 닫기
+      handleClose();
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen, isClosing]);
+
   if (!isOpen) return null;
 
   const handleMuteClick = async () => {
@@ -76,11 +104,12 @@ export default function SettingsDropdown({
       <div className="fixed inset-0 backdrop-blur-md z-30" />
 
       {/* 설정 버튼과 드롭다운 메뉴 */}
-      <div className="fixed top-[48px] right-6 z-40">
+      <div className="fixed top-[48px] right-6 z-40" data-menu-container>
         {/* 설정 버튼 */}
         <div className="flex justify-end mb-2">
           <SoundButton
             onClick={handleClose}
+            data-setting-button
             className={`w-9 h-9 flex items-center justify-center hover:opacity-80 transition-all duration-300 ease-out ${
               isClosing ? "animate-button-shrink" : "animate-button-expand"
             }`}

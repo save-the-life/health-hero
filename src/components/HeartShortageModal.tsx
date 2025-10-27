@@ -346,11 +346,11 @@ function HeartShortageModalContent({
           />
 
           {/* 칠판 내용 */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
             {/* 텍스트 */}
-            <div className="text-center mb-4">
+            <div className="text-center mb-2">
               <p
-                className="text-white text-center font-normal leading-relaxed"
+                className="text-white text-stroke text-center font-normal leading-relaxed"
                 style={{
                   fontSize: "18px",
                   fontWeight: "400",
@@ -364,7 +364,7 @@ function HeartShortageModalContent({
             </div>
 
             {/* 하트 이미지 */}
-            <div className="relative mb-4">
+            <div className="relative mb-2">
               <Image
                 src="/images/items/icon-heart.png"
                 alt="하트"
@@ -388,38 +388,36 @@ function HeartShortageModalContent({
             </div>
 
             {/* 타이머 영역 */}
-            <div className="relative mb-6">
-              {/* block01.png 배경 */}
+            <div className="relative mb-6" style={{ width: '90px' }}>
+              {/* 타이머 아이콘 */}
+              <Image
+                src="/images/items/icon-timer.png"
+                alt="타이머"
+                width={44}
+                height={44}
+                className="relative z-10"
+              />
+              {/* 타이머 블록 */}
               <Image
                 src="/images/ui/block01.png"
                 alt="타이머 배경"
-                width={120}
-                height={32}
-                className="object-cover"
+                width={70}
+                height={24}
+                className="absolute top-1/2 left-6 transform -translate-y-1/2 z-0"
+                style={{
+                  width: "70px",
+                  height: "24px",
+                  minWidth: "70px",
+                  minHeight: "24px",
+                }}
               />
-
-              {/* 타이머 내용 */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                {/* 타이머 아이콘 */}
-                <Image
-                  src="/images/items/icon-timer.png"
-                  alt="타이머"
-                  width={16}
-                  height={16}
-                  className="mr-2"
-                />
-
-                {/* 충전까지 남은 시간 */}
-                <span
-                  style={{
-                    color: "#8B4513",
-                    fontSize: "14px",
-                    fontWeight: "400",
-                  }}
-                >
-                  {heartTimer}
-                </span>
-              </div>
+              {/* 타이머 텍스트 */}
+              <span 
+                className="no-text-stroke absolute top-1/2 left-6 transform -translate-y-1/2 z-10 text-[10px] font-bold whitespace-nowrap flex items-center justify-center w-[70px] ml-1"
+                style={{ color: '#683A11' }}
+              >
+                {heartTimer}
+              </span>
             </div>
           </div>
         </div>

@@ -148,7 +148,10 @@ export default function GameHeader({
               }}
             />
             {/* 레벨 텍스트 */}
-            <span className="absolute top-1/2 left-6 transform -translate-y-1/2 z-10 text-[10px] font-bold text-[#8B4513] whitespace-nowrap flex items-center justify-center w-[70px] ml-1">
+            <span 
+              className="no-text-stroke absolute top-1/2 left-6 transform -translate-y-1/2 z-10 text-[10px] font-bold whitespace-nowrap flex items-center justify-center w-[70px] ml-1"
+              style={{ color: '#683A11' }}
+            >
               Lv.{level}
             </span>
           </div>
@@ -161,12 +164,15 @@ export default function GameHeader({
             <Image
               src="/images/items/icon-heart.png"
               alt="하트"
-              width={44}
-              height={44}
+              width={48}
+              height={48}
               className="relative z-10"
             />
             {/* 하트 내부 숫자 */}
-            <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 text-white text-base font-normal">
+            <span 
+              className="no-text-stroke absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 text-base font-normal"
+              style={{ color: '#ffffff' }}
+            >
               {hearts?.current_hearts ?? 0}
             </span>
             {/* 광고 버튼 */}
@@ -192,7 +198,10 @@ export default function GameHeader({
               }}
             />
             {/* 타이머 텍스트 */}
-            <span className="absolute top-1/2 left-6 transform -translate-y-1/2 z-10 text-[10px] font-bold text-[#8B4513] whitespace-nowrap flex items-center justify-center w-[70px] ml-1">
+            <span 
+              className="no-text-stroke absolute top-1/2 left-6 transform -translate-y-1/2 z-10 text-[10px] font-bold whitespace-nowrap flex items-center justify-center w-[70px] ml-1"
+              style={{ color: '#683A11' }}
+            >
               {getHeartTimerText()}
             </span>
           </div>
@@ -215,7 +224,7 @@ export default function GameHeader({
               alt="점수 배경"
               width={70}
               height={24}
-              className="absolute top-1/2 left-6 transform -translate-y-1/2 z-0"
+              className="absolute top-1/2 left-4 transform -translate-y-1/2 z-0"
               style={{
                 width: "70px",
                 height: "24px",
@@ -224,7 +233,10 @@ export default function GameHeader({
               }}
             />
             {/* 점수 텍스트 */}
-            <span className="absolute top-1/2 left-6 transform -translate-y-1/2 z-10 text-[10px] font-bold text-[#8B4513] whitespace-nowrap flex items-center justify-center w-[70px] ml-1">
+            <span 
+              className="no-text-stroke absolute top-1/2 left-4 transform -translate-y-1/2 z-10 text-[10px] font-bold whitespace-nowrap flex items-center justify-center w-[70px] ml-1"
+              style={{ color: '#683A11' }}
+            >
               {totalScore.toLocaleString()}
             </span>
           </div>
@@ -276,7 +288,7 @@ export default function GameHeader({
 
             {/* 종료할까요? 텍스트 - 상단으로부터 38px */}
             <div className="absolute top-[38px] left-1/2 transform -translate-x-1/2">
-              <h2 className="text-black text-[32px] font-normal whitespace-nowrap">
+              <h2 className="text-white text-stroke text-[32px] font-normal whitespace-nowrap">
                 종료할까요?
               </h2>
             </div>
@@ -291,7 +303,7 @@ export default function GameHeader({
                   height={100}
                   className="relative z-10"
                 />
-                <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 text-white text-2xl font-bold">
+                <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 text-white text-2xl font-bold" style={{ textShadow: 'none' }}>
                   -1
                 </span>
               </div>
@@ -299,7 +311,7 @@ export default function GameHeader({
 
             {/* 경고 메시지 - 하트 아이콘 바로 아래 */}
             <div className="absolute top-[250px] left-1/2 transform -translate-x-1/2">
-              <p className="text-black text-[18px] font-normal whitespace-nowrap">
+              <p className="text-white text-stroke text-[18px] font-normal whitespace-nowrap">
                 지금 나가면 하트를 잃게 돼요!
               </p>
             </div>

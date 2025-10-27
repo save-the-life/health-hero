@@ -262,9 +262,16 @@ function QuizPageContent() {
 
               // 하트 차감 후 하트가 0이 되었는지 체크 (실제 DB 값 사용)
               if (updatedHearts && updatedHearts.current_hearts <= 0) {
-                console.log("💔 하트가 0이 되었습니다. 하트 부족 모달 표시");
-                console.log("💔 setShowHeartShortageModal(true) 호출");
-                setShowHeartShortageModal(true);
+                console.log("💔 하트가 0이 되었습니다.");
+                
+                // 마지막 문제가 아니고 하트가 0이면 하트 부족 모달 표시
+                const isLastQuestion = currentQuestionIndex === stageQuestions.length - 1;
+                if (!isLastQuestion) {
+                  console.log("💔 하트 부족 모달 표시 (다음 문제 있음)");
+                  setShowHeartShortageModal(true);
+                } else {
+                  console.log("💔 마지막 문제이므로 하트 부족 모달 표시 안함 (스테이지 결과로 진행)");
+                }
               }
             } else {
               console.log("하트 차감 실패");
@@ -274,9 +281,15 @@ function QuizPageContent() {
           }
         } else {
           console.log("💔 하트가 없어서 차감할 수 없습니다");
-          console.log("💔 setShowHeartShortageModal(true) 호출 (하트 없음)");
-          // 하트가 0일 때 하트 부족 모달 표시
-          setShowHeartShortageModal(true);
+          
+          // 마지막 문제가 아니고 하트가 없으면 하트 부족 모달 표시
+          const isLastQuestion = currentQuestionIndex === stageQuestions.length - 1;
+          if (!isLastQuestion) {
+            console.log("💔 하트 부족 모달 표시 (하트 없고 다음 문제 있음)");
+            setShowHeartShortageModal(true);
+          } else {
+            console.log("💔 마지막 문제이므로 하트 부족 모달 표시 안함 (스테이지 결과로 진행)");
+          }
         }
       }
 
@@ -850,7 +863,7 @@ function QuizPageContent() {
               <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
                 {/* 토픽 텍스트 */}
                 <p
-                  className={`text-white text-center font-normal leading-relaxed w-[245px] mb-2 ${getDynamicFontSize(
+                  className={`text-white text-stroke text-center font-normal leading-relaxed w-[245px] mb-2 ${getDynamicFontSize(
                     `[${currentQuestion.topic}]`
                   )}`}
                 >
@@ -858,7 +871,7 @@ function QuizPageContent() {
                 </p>
                 {/* 문제 텍스트 */}
                 <p
-                  className={`text-white text-center font-normal leading-relaxed w-[245px] ${getDynamicFontSize(
+                  className={`text-white text-stroke text-center font-normal leading-relaxed w-[245px] ${getDynamicFontSize(
                     currentQuestion.prompt
                   )}`}
                 >
@@ -868,7 +881,7 @@ function QuizPageContent() {
             </div>
 
             {/* 선택지 버튼들 */}
-            <div className="flex flex-col gap-4 mb-[80px]">
+            <div className="flex flex-col gap-4 mb-[120px]">
               {currentQuestion.choices
                 .map((choice, index) => ({ choice, index }))
                 .filter(({ index }) => !removedChoices.includes(index))
@@ -877,6 +890,7 @@ function QuizPageContent() {
                     key={index}
                     choice={choice}
                     isSelected={selectedAnswer === index}
+                    isDisabled={selectedAnswer !== null && selectedAnswer !== index}
                     onClick={() => handleChoiceClick(index)}
                   />
                 ))}
@@ -901,7 +915,7 @@ function QuizPageContent() {
               <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
                 {/* 정답/오답 텍스트 */}
                 <p
-                  className={`text-white text-center font-normal leading-relaxed w-[245px] mb-2 ${getDynamicFontSize(
+                  className={`text-white text-stroke text-center font-normal leading-relaxed w-[245px] mb-2 ${getDynamicFontSize(
                     isCorrect ? "정답입니다!" : "아쉽네요! 정답은,"
                   )}`}
                 >
@@ -910,7 +924,7 @@ function QuizPageContent() {
 
                 {/* 정답 및 설명 텍스트 */}
                 <p
-                  className={`text-white text-center font-normal leading-relaxed w-[245px] mb-4 ${getDynamicFontSize(
+                  className={`text-white text-stroke text-center font-normal leading-relaxed w-[245px] mb-4 ${getDynamicFontSize(
                     isCorrect
                       ? currentQuestion.explanation
                       : `${
@@ -1004,12 +1018,12 @@ function QuizPageContent() {
             {/* 선택한 답안 버튼 (표시용) */}
             <div className="relative">
               <button
-                className="font-medium h-[56px] w-[300px] rounded-[10px] relative cursor-default"
+                className="font-medium h-[56px] w-[300px] rounded-[10px] relative cursor-default mb-8"
                 style={{
                   background: isCorrect
-                    ? "linear-gradient(180deg, #00C951 0%, #00C951 50%, #00A041 50%, #00A041 100%)"
+                    ? "linear-gradient(180deg, #64E87C 0%, #64E87C 48%, rgba(255, 109, 112, 0) 50%, rgba(255, 109, 112, 0) 100%), #00C951"
                     : "linear-gradient(180deg, #FF2F32 0%, #FF2F32 50%, #CC2528 50%, #CC2528 100%)",
-                  border: isCorrect ? "2px solid #4DDD7A" : "2px solid #FF6D70",
+                  border: isCorrect ? "2px solid #99E8A8" : "2px solid #FF6D70",
                   outline: "2px solid #000000",
                   boxShadow:
                     "0px 4px 4px 0px rgba(0, 0, 0, 0.25), inset 0px 3px 0px 0px rgba(0, 0, 0, 0.1)",
@@ -1061,7 +1075,7 @@ function QuizPageContent() {
 
       {/* 하단 아이템 바 */}
       {!showResult && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-4 mb-10">
+        <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-6">
           <div className="flex gap-5">
             {/* 오답 삭제 아이템 */}
             <SoundButton

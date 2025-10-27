@@ -17,18 +17,6 @@ const nextConfig: NextConfig = {
     // 프로덕션에서도 디버깅이 필요하므로 console.log 유지
     removeConsole: false,
   },
-  // 번들 분석기 (개발 시에만)
-  ...(process.env.ANALYZE === 'true' && {
-    webpack: (config: any) => {
-      config.plugins.push(
-        new (require('webpack-bundle-analyzer').BundleAnalyzerPlugin)({
-          analyzerMode: 'static',
-          openAnalyzer: false,
-        })
-      );
-      return config;
-    },
-  }),
 };
 
 export default nextConfig;

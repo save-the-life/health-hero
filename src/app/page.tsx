@@ -31,10 +31,10 @@ export default function Home() {
       <div className="relative z-10 flex flex-col items-center justify-between min-h-screen py-8">
         {/* 상단 타이틀 */}
         <div className="text-center pt-12">
-          <h1 className="text-4xl font-bold text-white drop-shadow-lg mb-2">
+          <h1 className="text-4xl font-bold text-white text-stroke mb-2">
             헬스 히어로
           </h1>
-          <p className="text-lg text-white/90 drop-shadow-md">
+          <p className="text-lg text-white text-stroke">
             의료 상식 퀴즈 게임
           </p>
         </div>

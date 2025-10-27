@@ -6,19 +6,21 @@ import { SoundButton } from "./SoundButton";
 interface QuizChoiceButtonProps {
   choice: string;
   isSelected?: boolean;
+  isDisabled?: boolean;
   onClick: () => void;
 }
 
 export default function QuizChoiceButton({
   choice,
   isSelected = false,
+  isDisabled = false,
   onClick,
 }: QuizChoiceButtonProps) {
   return (
     <SoundButton
-      className={`font-medium h-[56px] w-[300px] rounded-[10px] relative cursor-pointer hover:opacity-80 transition-opacity ${
+      className={`font-medium h-[56px] w-[300px] rounded-[10px] relative transition-opacity ${
         isSelected ? "ring-2 ring-purple-400" : ""
-      }`}
+      } ${isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:opacity-80"}`}
       style={{
         background:
           "linear-gradient(180deg, #50B0FF 0%, #50B0FF 50%, #008DFF 50%, #008DFF 100%)",
@@ -32,6 +34,7 @@ export default function QuizChoiceButton({
         WebkitTextStroke: "1px #000000",
       }}
       onClick={onClick}
+      disabled={isDisabled}
     >
       {/* 버튼 포인트 이미지 */}
       <Image

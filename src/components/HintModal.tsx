@@ -29,7 +29,7 @@ export default function HintModal({ isOpen, onClose, hint }: HintModalProps) {
 
         {/* 힌트 텍스트 - 상단으로부터 38px */}
         <div className="absolute top-[38px] left-1/2 transform -translate-x-1/2">
-          <h2 className="text-black text-[32px] font-normal whitespace-nowrap">
+          <h2 className="text-white text-stroke text-[32px] font-normal whitespace-nowrap">
             힌트
           </h2>
         </div>
@@ -39,12 +39,12 @@ export default function HintModal({ isOpen, onClose, hint }: HintModalProps) {
           onClick={onClose}
           className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center hover:opacity-80 transition-opacity"
         >
-          <span className="text-white text-xl font-bold">×</span>
+          <span className="text-white text-stroke text-xl font-bold">×</span>
         </SoundButton>
 
         {/* 힌트 내용 */}
-        <div className="absolute top-[160px] left-1/2 transform -translate-x-1/2 w-[220px] text-center">
-          <p className="text-black text-center text-base font-normal leading-relaxed">
+        <div className="absolute top-[200px] left-1/2 transform -translate-x-1/2 w-[220px] text-center">
+          <p className="text-white text-stroke text-center text-base font-normal leading-relaxed">
             {hint}
           </p>
         </div>

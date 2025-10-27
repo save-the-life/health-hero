@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/* 폰트 정의 */
+@font-face {
+  font-family: 'ONE Mobile POP';
+  src: url('/fonts/ONE Mobile POP.ttf') format('truetype'),
+       url('/fonts/ONE Mobile POP OTF.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -22,7 +32,38 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'ONE Mobile POP', Arial, Helvetica, sans-serif;
+  touch-action: pan-x pan-y;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* 텍스트 스트로크 효과 - 클래스로 선택적 적용 */
+.text-stroke {
+  text-shadow: 
+    -2px -2px 0 #000,
+    2px -2px 0 #000,
+    -2px 2px 0 #000,
+    2px 2px 0 #000,
+    0 -2px 0 #000,
+    0 2px 0 #000,
+    -2px 0 0 #000,
+    2px 0 0 #000;
+}
+
+/* 버튼은 더 얇은 스트로크 적용 */
+.text-stroke-thin {
+  text-shadow: 
+    -0.5px -0.5px 0 #000,
+    0.5px -0.5px 0 #000,
+    -0.5px 0.5px 0 #000,
+    0.5px 0.5px 0 #000;
+}
+
+/* 헤더 정보 텍스트는 테두리 없음 (특정 요소) */
+.no-text-stroke {
+  text-shadow: none !important;
 }
 
 /* 설정 드롭다운 메뉴 애니메이션 */

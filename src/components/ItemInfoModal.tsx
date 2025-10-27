@@ -80,7 +80,7 @@ export default function ItemInfoModal({ isOpen, onClose }: ItemInfoModalProps) {
 
         {/* 아이템 사용법 텍스트 - 상단으로부터 38px */}
         <div className="absolute top-[38px] left-1/2 transform -translate-x-1/2">
-          <h2 className="text-black text-[32px] font-normal whitespace-nowrap">
+          <h2 className="text-white text-stroke text-[32px] font-normal whitespace-nowrap">
             아이템 사용법
           </h2>
         </div>
@@ -156,7 +156,7 @@ export default function ItemInfoModal({ isOpen, onClose }: ItemInfoModalProps) {
 
         {/* 아이템 설명 텍스트 - 아이템 박스 아래 */}
         <div className="absolute top-[260px] left-1/2 transform -translate-x-1/2 w-[280px]">
-          <p className="text-black text-center text-sm font-normal leading-relaxed">
+          <p className="text-white text-stroke text-center text-base font-normal leading-relaxed">
             {currentItem.description}
           </p>
         </div>
