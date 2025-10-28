@@ -350,13 +350,8 @@ export const useAdMob = (): UseAdMobReturn => {
     
     adLogger.log('info', '📊 현재 광고 상태', { adType, currentStatus, isReady: instance.isReady });
     
-    // 광고 시청 간격 체크 (최소 3초 간격)
+    // 광고 시청 간격 체크 제거 (사용자가 원하는 만큼 시청 가능)
     const now = Date.now();
-    const lastAdTime = instance.lastAdTime || 0;
-    if (now - lastAdTime < 3000) {
-      adLogger.log('warning', '⚠️ 광고 시청 간격이 너무 짧음', { elapsed: now - lastAdTime });
-      throw new Error('광고 시청 간격이 너무 짧습니다. 잠시 후 다시 시도해주세요.');
-    }
 
     // 보류 중인 Promise가 있으면 정리
     if (instance.pendingPromise) {

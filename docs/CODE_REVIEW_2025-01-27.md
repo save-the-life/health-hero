@@ -199,11 +199,41 @@ if (tossUserKey !== null) {
 
 ---
 
+## 🎵 배경음악 시스템 개선 (2025-01-28 추가)
+
+### 3. 배경음악 재생 로직 개선 ✅
+
+**파일**: `src/app/game/page.tsx`, `src/services/audioService.ts`, `src/components/SettingsDropdown.tsx`
+
+**문제**:
+
+1. 로그인 후 메인 페이지 진입 시 배경음악이 재생되지 않음
+2. 음소거 기능이 배경음악에 적용되지 않음
+3. 배경음악이 페이지 이동 시 끊김
+4. 설정 메뉴에서 음소거 버튼 클릭 시 메뉴가 닫힘
+
+**수정**:
+
+1. `useRef`를 사용하여 중복 재생 방지
+2. `useEffect` 의존성 배열 최적화
+3. 음소거 상태에서도 배경음악 재생 (볼륨만 0으로 설정)
+4. 음소거 버튼 클릭 시 메뉴 유지하도록 수정
+
+**결과**:
+
+- ✅ 메인 페이지 진입 시 배경음악 즉시 재생
+- ✅ 페이지 이동 시 배경음악 연속 재생
+- ✅ 음소거 버튼으로 배경음악 볼륨 조절 가능
+- ✅ 설정 메뉴에서 음소거 후 메뉴 유지
+
 ## 📅 리뷰 일시
 
-- **작성일**: 2025-01-27
+- **작성일**: 2025-01-27 (최초), 2025-01-28 (업데이트)
 - **검토 범위**: 전체 프로젝트 코드
-- **수정 파일**: 2개
-  - `src/app/game/quiz/page.tsx`
-  - `src/hooks/useAdMob.ts`
+- **수정 파일**: 5개
+  - `src/app/game/quiz/page.tsx` (하트 차감 로직)
+  - `src/hooks/useAdMob.ts` (토스 로그인 타입)
+  - `src/app/game/page.tsx` (배경음악 재생)
+  - `src/services/audioService.ts` (음소거 기능)
+  - `src/components/SettingsDropdown.tsx` (음소거 버튼)
 - **권장 사항**: 현재 상태 유지 ✅

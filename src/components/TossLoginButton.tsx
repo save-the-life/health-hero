@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useTossAuth } from "@/hooks/useTossAuth";
 import { TossAuthService } from "@/services/tossAuthService";
 import { useAuthStore } from "@/store/authStore";
@@ -24,13 +25,7 @@ export default function TossLoginButton() {
     isLoading: authLoading,
   } = useAuthStore();
   const [localError, setLocalError] = useState<string | null>(null);
-  const [isClient, setIsClient] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
-
-  // Hydration 에러 방지: 클라이언트에서만 렌더링
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   const handleLogin = async () => {
     console.log("🚀 [TossLogin] 로그인 시작");
@@ -101,35 +96,54 @@ export default function TossLoginButton() {
       <SoundButton
         onClick={handleLogin}
         disabled={tossLoading || authLoading || isNavigating}
-        className="w-full bg-[#3182F6] hover:bg-[#2C5FCC] text-white font-bold py-4 px-8 rounded-2xl text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+        className="w-full font-medium rounded-[10px] relative transition-opacity disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer hover:opacity-80"
+        style={{
+          height: "56px",
+          background:
+            "linear-gradient(180deg, #50B0FF 0%, #50B0FF 50%, #008DFF 50%, #008DFF 100%)",
+          border: "2px solid #76C1FF",
+          outline: "2px solid #000000",
+          boxShadow:
+            "0px 4px 4px 0px rgba(0, 0, 0, 0.25), inset 0px 3px 0px 0px rgba(0, 0, 0, 0.1)",
+          color: "#FFFFFF",
+          fontSize: "18px",
+          fontWeight: "400",
+          WebkitTextStroke: "1px #000000",
+        }}
       >
-        {tossLoading || authLoading || isNavigating ? (
-          <span className="flex items-center justify-center">
-            <svg
-              className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              ></circle>
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
-            로그인 중...
-          </span>
-        ) : (
-          "토스로 시작하기"
-        )}
+        {/* 버튼 포인트 이미지 */}
+        <div
+          style={{
+            position: "absolute",
+            top: "3px",
+            left: "3px",
+            pointerEvents: "none",
+          }}
+        >
+          <Image
+            src="/images/items/button-point-blue.png"
+            alt="button-point-blue"
+            width={8.47}
+            height={6.3}
+          />
+        </div>
+
+        {/* 버튼 텍스트 */}
+        <span
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+          style={{
+            pointerEvents: "none",
+            textAlign: "center",
+            lineHeight: "1.2",
+            width: "100%",
+            paddingLeft: "8px",
+            paddingRight: "8px",
+          }}
+        >
+          {tossLoading || authLoading || isNavigating
+            ? "로딩 중..."
+            : "퀴즈 풀러 가기"}
+        </span>
       </SoundButton>
 
       {displayError && (
@@ -139,7 +153,7 @@ export default function TossLoginButton() {
       )}
 
       {/* 개발 환경 안내 */}
-      {isClient &&
+      {/* {isClient &&
         typeof window !== "undefined" &&
         typeof window.appLogin === "undefined" && (
           <div className="bg-yellow-500/10 border border-yellow-500/50 rounded-lg p-3">
@@ -149,7 +163,7 @@ export default function TossLoginButton() {
               샌드박스 앱 또는 토스앱에서 테스트해주세요.
             </p>
           </div>
-        )}
+        )} */}
     </div>
   );
 }

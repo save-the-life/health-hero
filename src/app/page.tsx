@@ -28,26 +28,32 @@ export default function Home() {
       </div>
 
       {/* 메인 콘텐츠 */}
-      <div className="relative z-10 flex flex-col items-center justify-between min-h-screen py-8">
+      <div className="relative z-10 flex flex-col items-center justify-between min-h-screen pt-8">
         {/* 상단 타이틀 */}
         <div className="text-center pt-12">
-          <h1 className="text-4xl font-bold text-white text-stroke mb-2">
+          {/* <h1 className="text-4xl font-bold text-white text-stroke mb-2">
             헬스 히어로
-          </h1>
-          <p className="text-lg text-white text-stroke">
-            의료 상식 퀴즈 게임
+          </h1> */}
+          <p className="text-[24px] font-[400] text-white text-stroke">
+            첫걸음은 퀴즈부터!
+          </p>
+          <p className="text-[24px] font-[400] text-white text-stroke">
+            퀴즈 풀며 함께
+          </p>
+          <p className="text-[24px] font-[400] text-white text-stroke">
+            헬스히어로로 레벨업!
           </p>
         </div>
 
         {/* 캐릭터 이미지 */}
         <div className="flex items-center justify-center">
-          <div style={{ width: "450px", height: "450px" }}>
+          <div style={{ width: "420px", height: "420px" }}>
             <Image
               src="/images/characters/level-20.png"
               alt="헬스 히어로"
               width={450}
               height={450}
-              style={{ width: "450px", height: "450px" }}
+              style={{ width: "420px", height: "420px" }}
               className="drop-shadow-2xl"
               priority
             />
@@ -55,7 +61,7 @@ export default function Home() {
         </div>
 
         {/* 로그인 버튼 */}
-        <div className="w-full max-w-sm px-4 pb-8 space-y-3">
+        <div className="w-full max-w-sm px-4 space-y-3 -mt-10 mb-10 z-10">
           <TossLoginButton />
           <GuestLoginButton />
         </div>

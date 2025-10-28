@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { useGameStore } from "@/store/gameStore";
 import GameHeader from "@/components/GameHeader";
@@ -15,7 +15,7 @@ export default function GamePage() {
   const { user, isAuthenticated, initialize } = useAuthStore();
   const { currentPhase, hearts, isLoading, error, loadUserData, updateHearts } =
     useGameStore();
-  const { playBackgroundMusic, stopBackgroundMusic } = useAudio();
+  const { playBackgroundMusic } = useAudio();
 
   // 화면 높이 감지
   const [screenHeight, setScreenHeight] = useState(0);
@@ -48,17 +48,17 @@ export default function GamePage() {
   }, [isAuthenticated, user?.id, loadUserData]);
 
   // 배경음악 재생 (메인 페이지에서만)
+  const hasPlayedMusic = useRef(false);
+
+  // isAuthenticated가 true가 되면 배경음악 재생
   useEffect(() => {
-    if (!isAuthenticated || isLoading) return;
-
-    console.log("🎵 배경음악 재생 시작");
-    playBackgroundMusic();
-
-    return () => {
-      console.log("🔇 배경음악 정지");
-      stopBackgroundMusic();
-    };
-  }, [isAuthenticated, isLoading, playBackgroundMusic, stopBackgroundMusic]);
+    if (isAuthenticated && !hasPlayedMusic.current) {
+      console.log("🎵 [배경음악] 인증 완료 - 재생 시작");
+      hasPlayedMusic.current = true;
+      playBackgroundMusic();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
   // 하트 타이머 업데이트 (30초마다)
   useEffect(() => {
@@ -80,7 +80,26 @@ export default function GamePage() {
 
     if (screenHeight === 0) {
       return {
-        isSmall: false,
+        phase1: {
+          bottom: 20,
+          right: 24,
+          size: { width: 150, height: 160 },
+        },
+        phase2: {
+          bottom: 180,
+          left: 24,
+          size: { width: 150, height: 160 },
+        },
+        phase3: {
+          bottom: 340,
+          right: 24,
+          size: { width: 150, height: 160 },
+        },
+        phase4: {
+          bottom: 500,
+          left: 24,
+          size: { width: 150, height: 160 },
+        },
         scale: 1,
         spacing: 1,
         blockSize: 1,
@@ -90,7 +109,26 @@ export default function GamePage() {
     // 화면이 700px 이상이면 정상 크기
     if (screenHeight >= 700) {
       return {
-        isSmall: false,
+        phase1: {
+          bottom: 20,
+          right: 24,
+          size: { width: 150, height: 160 },
+        },
+        phase2: {
+          bottom: 180,
+          left: 24,
+          size: { width: 150, height: 160 },
+        },
+        phase3: {
+          bottom: 340,
+          right: 24,
+          size: { width: 150, height: 160 },
+        },
+        phase4: {
+          bottom: 500,
+          left: 24,
+          size: { width: 150, height: 160 },
+        },
         scale: 1,
         spacing: 1,
         blockSize: 1,
@@ -103,7 +141,26 @@ export default function GamePage() {
     const blockSize = screenHeight < 600 ? 0.85 : 0.95;
 
     return {
-      isSmall: true,
+      phase1: {
+        bottom: 20 * spacing,
+        right: 30 * blockSize,
+        size: { width: 130 * blockSize, height: 140 * blockSize },
+      },
+      phase2: {
+        bottom: 160 * spacing,
+        left: 30 * blockSize,
+        size: { width: 130 * blockSize, height: 140 * blockSize },
+      },
+      phase3: {
+        bottom: 320 * spacing,
+        right: 30 * blockSize,
+        size: { width: 130 * blockSize, height: 140 * blockSize },
+      },
+      phase4: {
+        bottom: 480 * spacing,
+        left: 30 * blockSize,
+        size: { width: 130 * blockSize, height: 140 * blockSize },
+      },
       scale,
       spacing,
       blockSize,
@@ -235,10 +292,10 @@ export default function GamePage() {
             onClick={() => handlePhaseClick(1)}
             playClickSound={currentPhase === 1}
             style={{
-              bottom: `${20 * responsiveStyle.spacing}px`,
-              right: `${24 * responsiveStyle.blockSize}px`,
-              width: `${150 * responsiveStyle.blockSize}px`,
-              height: `${160 * responsiveStyle.blockSize}px`,
+              bottom: `${responsiveStyle.phase1.bottom}px`,
+              right: `${responsiveStyle.phase1.right}px`,
+              width: `${responsiveStyle.phase1.size.width}px`,
+              height: `${responsiveStyle.phase1.size.height}px`,
             }}
           >
             <div className="w-full h-full flex flex-col items-center justify-center relative">
@@ -277,10 +334,10 @@ export default function GamePage() {
             onClick={() => handlePhaseClick(2)}
             playClickSound={currentPhase === 2} // 현재 페이즈인 경우에만 클릭 사운드 재생
             style={{
-              bottom: `${180 * responsiveStyle.spacing}px`,
-              left: `${24 * responsiveStyle.blockSize}px`,
-              width: `${150 * responsiveStyle.blockSize}px`,
-              height: `${160 * responsiveStyle.blockSize}px`,
+              bottom: `${responsiveStyle.phase2.bottom}px`,
+              left: `${responsiveStyle.phase2.left}px`,
+              width: `${responsiveStyle.phase2.size.width}px`,
+              height: `${responsiveStyle.phase2.size.height}px`,
             }}
           >
             <div className="w-full h-full flex flex-col items-center justify-center relative">
@@ -319,10 +376,10 @@ export default function GamePage() {
             onClick={() => handlePhaseClick(3)}
             playClickSound={currentPhase === 3} // 현재 페이즈인 경우에만 클릭 사운드 재생
             style={{
-              bottom: `${340 * responsiveStyle.spacing}px`,
-              right: `${24 * responsiveStyle.blockSize}px`,
-              width: `${150 * responsiveStyle.blockSize}px`,
-              height: `${160 * responsiveStyle.blockSize}px`,
+              bottom: `${responsiveStyle.phase3.bottom}px`,
+              right: `${responsiveStyle.phase3.right}px`,
+              width: `${responsiveStyle.phase3.size.width}px`,
+              height: `${responsiveStyle.phase3.size.height}px`,
             }}
           >
             <div className="w-full h-full flex flex-col items-center justify-center relative">
@@ -361,10 +418,10 @@ export default function GamePage() {
             onClick={() => handlePhaseClick(4)}
             playClickSound={currentPhase === 4} // 현재 페이즈인 경우에만 클릭 사운드 재생
             style={{
-              bottom: `${500 * responsiveStyle.spacing}px`,
-              left: `${24 * responsiveStyle.blockSize}px`,
-              width: `${150 * responsiveStyle.blockSize}px`,
-              height: `${160 * responsiveStyle.blockSize}px`,
+              bottom: `${responsiveStyle.phase4.bottom}px`,
+              left: `${responsiveStyle.phase4.left}px`,
+              width: `${responsiveStyle.phase4.size.width}px`,
+              height: `${responsiveStyle.phase4.size.height}px`,
             }}
           >
             <div className="w-full h-full flex flex-col items-center justify-center relative">

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useAudio } from "@/hooks/useAudio";
+import { audioService } from "@/services/audioService";
 import { SoundButton } from "./SoundButton";
 
 interface SettingsDropdownProps {
@@ -22,7 +23,7 @@ export default function SettingsDropdown({
 }: SettingsDropdownProps) {
   const [isClosing, setIsClosing] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const { toggleMute, isMuted: getMuteState } = useAudio();
+  const { toggleMute } = useAudio();
 
   // 닫기 애니메이션 처리
   const handleClose = () => {
@@ -34,10 +35,12 @@ export default function SettingsDropdown({
     }, 500); // 애니메이션 지속 시간을 500ms로 증가
   };
 
-  // 음소거 상태 업데이트
+  // 음소거 상태 업데이트 - 메뉴가 열릴 때마다 최신 상태 가져오기
   useEffect(() => {
-    setIsMuted(getMuteState());
-  }, [getMuteState]);
+    if (isOpen) {
+      setIsMuted(audioService.getMuteState());
+    }
+  }, [isOpen]);
 
   // 컴포넌트가 닫힐 때 애니메이션 상태 초기화
   useEffect(() => {
@@ -52,9 +55,9 @@ export default function SettingsDropdown({
 
     const handleClickOutside = (event: MouseEvent) => {
       // 메뉴 컨테이너 요소 찾기
-      const menuContainer = document.querySelector('[data-menu-container]');
-      const settingButton = document.querySelector('[data-setting-button]');
-      
+      const menuContainer = document.querySelector("[data-menu-container]");
+      const settingButton = document.querySelector("[data-setting-button]");
+
       // 클릭된 요소가 메뉴 안이나 설정 버튼이면 무시
       if (
         menuContainer?.contains(event.target as Node) ||
@@ -67,19 +70,22 @@ export default function SettingsDropdown({
       handleClose();
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    
+    document.addEventListener("mousedown", handleClickOutside);
+
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, isClosing]);
 
   if (!isOpen) return null;
 
   const handleMuteClick = async () => {
+    console.log("🔇 [SettingsDropdown] 음소거 버튼 클릭");
     const newMuteState = await toggleMute();
+    console.log("🔇 [SettingsDropdown] 음소거 상태 변경:", newMuteState);
     setIsMuted(newMuteState);
-    handleClose();
+    // 음소거 버튼 클릭 시에는 메뉴를 닫지 않음
   };
 
   const handleItemInfoClick = () => {

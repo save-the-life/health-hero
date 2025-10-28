@@ -10,7 +10,7 @@
     "deploy": "ait deploy"
   },
   "dependencies": {
-    "@apps-in-toss/web-framework": "^1.2.1",
+    "@apps-in-toss/web-framework": "^1.4.0",
     "@supabase/supabase-js": "^2.75.0",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.24",

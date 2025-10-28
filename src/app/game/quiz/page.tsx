@@ -41,6 +41,14 @@ function QuizPageContent() {
   // 화면 크기 감지
   const [screenHeight, setScreenHeight] = useState(0);
 
+  // 오디오 훅
+  const {
+    playQuizRightSound,
+    playQuizWrongSound,
+    playStageClearSound,
+    playStageFailedSound,
+  } = useAudio();
+
   // 화면 크기 감지
   useEffect(() => {
     const checkScreenSize = () => {
@@ -52,14 +60,6 @@ function QuizPageContent() {
 
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
-
-  // 오디오 훅
-  const {
-    playQuizRightSound,
-    playQuizWrongSound,
-    playStageClearSound,
-    playStageFailedSound,
-  } = useAudio();
 
   // URL 파라미터에서 현재 퀴즈 정보 가져오기
   const quizPhase = parseInt(searchParams.get("phase") || "1");
@@ -172,8 +172,27 @@ function QuizPageContent() {
   const getResponsiveStyle = () => {
     if (screenHeight === 0) {
       return {
-        chalkboardScale: 1,
-        choiceHeight: 1,
+        chalkboard: {
+          scale: 1,
+          size: { width: 342, height: 282 },
+        },
+        choices: {
+          scale: 1,
+          size: { width: 300, height: 56 },
+        },
+        resultCharacter: {
+          size: { width: 390, height: 390 },
+          marginTop: -32, // 캐릭터 상단 마진
+        },
+        resultButton: {
+          size: { width: 300, height: 56 },
+          marginTop: 0, // 선택 버튼 상단 마진
+        },
+        nextButton: {
+          size: { width: 160, height: 56 },
+        },
+        spacingBetween: 8, // 칠판과 선택지 사이 간격
+        choiceGap: 4, // 선택지 버튼들 사이 간격
         marginTop: 60,
       };
     }
@@ -181,26 +200,83 @@ function QuizPageContent() {
     // iPhone SE (667px) 이하의 작은 화면
     if (screenHeight <= 667) {
       return {
-        chalkboardScale: 0.8, // 20% 축소
-        choiceHeight: 0.8, // 20% 높이 축소
-        marginTop: 90, // 상단 마진 축소
+        chalkboard: {
+          scale: 1,
+          size: { width: 291, height: 240 },
+        },
+        choices: {
+          scale: 1,
+          size: { width: 280, height: 45 },
+        },
+        resultCharacter: {
+          size: { width: 293, height: 293 }, // 75% 축소
+          marginTop: -24, // 축소된 캐릭터 상단 마진
+        },
+        resultButton: {
+          size: { width: 225, height: 42 }, // 75% 축소
+          marginTop: -32, // 축소된 버튼 상단 마진
+        },
+        nextButton: {
+          size: { width: 120, height: 42 }, // 75% 축소
+        },
+        spacingBetween: 12, // 축소된 간격
+        choiceGap: 8, // 축소된 간격
+        marginTop: 120,
       };
     }
 
     // 중간 화면 (667-750px)
     if (screenHeight <= 750) {
       return {
-        chalkboardScale: 0.9, // 10% 축소
-        choiceHeight: 0.9, // 10% 높이 축소
-        marginTop: 50,
+        chalkboard: {
+          scale: 1,
+          size: { width: 291, height: 240 },
+        },
+        choices: {
+          scale: 0.85,
+          size: { width: 280, height: 48 },
+        },
+        resultCharacter: {
+          size: { width: 332, height: 332 }, // 85% 축소
+          marginTop: -28, // 중간 캐릭터 상단 마진
+        },
+        resultButton: {
+          size: { width: 255, height: 48 }, // 85% 축소
+          marginTop: -8, // 중간 버튼 상단 마진
+        },
+        nextButton: {
+          size: { width: 136, height: 48 }, // 85% 축소
+        },
+        spacingBetween: 12, // 중간 간격
+        choiceGap: 12,
+        marginTop: 120,
       };
     }
 
     // 정상 화면 (750px 이상)
     return {
-      chalkboardScale: 1,
-      choiceHeight: 1,
-      marginTop: 60,
+      chalkboard: {
+        scale: 1,
+        size: { width: 342, height: 282 },
+      },
+      choices: {
+        scale: 0.85,
+        size: { width: 300, height: 52 },
+      },
+      resultCharacter: {
+        size: { width: 332, height: 332 }, // 85% 축소
+        marginTop: -28, // 중간 캐릭터 상단 마진
+      },
+      resultButton: {
+        size: { width: 300, height: 52 }, // 85% 축소
+        marginTop: -8, // 중간 버튼 상단 마진
+      },
+      nextButton: {
+        size: { width: 160, height: 48 }, // 85% 축소
+      },
+      spacingBetween: 12, // 중간 간격
+      choiceGap: 12,
+      marginTop: 120,
     };
   };
 
@@ -316,14 +392,17 @@ function QuizPageContent() {
               // 하트 차감 후 하트가 0이 되었는지 체크 (실제 DB 값 사용)
               if (updatedHearts && updatedHearts.current_hearts <= 0) {
                 console.log("💔 하트가 0이 되었습니다.");
-                
+
                 // 마지막 문제가 아니고 하트가 0이면 하트 부족 모달 표시
-                const isLastQuestion = currentQuestionIndex === stageQuestions.length - 1;
+                const isLastQuestion =
+                  currentQuestionIndex === stageQuestions.length - 1;
                 if (!isLastQuestion) {
                   console.log("💔 하트 부족 모달 표시 (다음 문제 있음)");
                   setShowHeartShortageModal(true);
                 } else {
-                  console.log("💔 마지막 문제이므로 하트 부족 모달 표시 안함 (스테이지 결과로 진행)");
+                  console.log(
+                    "💔 마지막 문제이므로 하트 부족 모달 표시 안함 (스테이지 결과로 진행)"
+                  );
                 }
               }
             } else {
@@ -334,14 +413,17 @@ function QuizPageContent() {
           }
         } else {
           console.log("💔 하트가 없어서 차감할 수 없습니다");
-          
+
           // 마지막 문제가 아니고 하트가 없으면 하트 부족 모달 표시
-          const isLastQuestion = currentQuestionIndex === stageQuestions.length - 1;
+          const isLastQuestion =
+            currentQuestionIndex === stageQuestions.length - 1;
           if (!isLastQuestion) {
             console.log("💔 하트 부족 모달 표시 (하트 없고 다음 문제 있음)");
             setShowHeartShortageModal(true);
           } else {
-            console.log("💔 마지막 문제이므로 하트 부족 모달 표시 안함 (스테이지 결과로 진행)");
+            console.log(
+              "💔 마지막 문제이므로 하트 부족 모달 표시 안함 (스테이지 결과로 진행)"
+            );
           }
         }
       }
@@ -805,7 +887,7 @@ function QuizPageContent() {
           />
         </div>
         <div className="relative z-10 flex items-center justify-center min-h-screen">
-          <div className="text-white text-xl font-medium">로그인 중...</div>
+          <div className="text-white text-xl font-medium">로딩 중...</div>
         </div>
       </div>
     );
@@ -882,7 +964,7 @@ function QuizPageContent() {
       </div>
 
       {/* 메인 콘텐츠 영역 */}
-      <div 
+      <div
         className="relative z-10 px-4"
         style={{ paddingTop: `${responsiveStyle.marginTop}px` }}
       >
@@ -908,16 +990,20 @@ function QuizPageContent() {
             {/* 칠판 */}
             <div
               className="relative"
-              style={{ marginBottom: `8px` }}
+              style={{
+                marginBottom: `${responsiveStyle.spacingBetween}px`,
+                width: `${responsiveStyle.chalkboard.size.width}px`,
+                height: `${responsiveStyle.chalkboard.size.height}px`,
+              }}
             >
               <Image
                 src="/images/items/blackboard.png"
                 alt="칠판"
-                width={342}
-                height={282}
+                width={responsiveStyle.chalkboard.size.width}
+                height={responsiveStyle.chalkboard.size.height}
                 className="object-cover"
                 style={{
-                  transform: `scale(${responsiveStyle.chalkboardScale})`,
+                  transform: `scale(${responsiveStyle.chalkboard.scale})`,
                   transformOrigin: "center",
                 }}
               />
@@ -926,7 +1012,7 @@ function QuizPageContent() {
               <div className="absolute inset-0 flex flex-col items-center justify-center p-1">
                 {/* 토픽 텍스트 */}
                 <p
-                  className={`text-white text-stroke text-center font-normal leading-relaxed w-[245px] mb-2 ${getDynamicFontSize(
+                  className={`text-white text-stroke text-center font-normal leading-relaxed w-[245px] mb-1 ${getDynamicFontSize(
                     `[${currentQuestion.topic}]`
                   )}`}
                 >
@@ -945,9 +1031,9 @@ function QuizPageContent() {
 
             {/* 선택지 버튼들 */}
             <div
-              className="flex flex-col"
+              className="flex flex-col items-center"
               style={{
-                gap: `4px`,
+                gap: `${responsiveStyle.choiceGap}px`,
                 marginBottom: `40px`,
               }}
             >
@@ -955,20 +1041,17 @@ function QuizPageContent() {
                 .map((choice, index) => ({ choice, index }))
                 .filter(({ index }) => !removedChoices.includes(index))
                 .map(({ choice, index }) => (
-                  <div
+                  <QuizChoiceButton
                     key={index}
-                    style={{
-                      transform: `scale(${responsiveStyle.choiceHeight})`,
-                      transformOrigin: "top center",
-                    }}
-                  >
-                    <QuizChoiceButton
-                      choice={choice}
-                      isSelected={selectedAnswer === index}
-                      isDisabled={selectedAnswer !== null && selectedAnswer !== index}
-                      onClick={() => handleChoiceClick(index)}
-                    />
-                  </div>
+                    choice={choice}
+                    isSelected={selectedAnswer === index}
+                    isDisabled={
+                      selectedAnswer !== null && selectedAnswer !== index
+                    }
+                    onClick={() => handleChoiceClick(index)}
+                    width={responsiveStyle.choices.size.width}
+                    height={responsiveStyle.choices.size.height}
+                  />
                 ))}
             </div>
           </div>
@@ -980,16 +1063,20 @@ function QuizPageContent() {
             {/* 칠판 */}
             <div
               className="relative"
-              style={{ marginBottom: `8px` }}
+              style={{
+                marginBottom: `${responsiveStyle.spacingBetween}px`,
+                width: `${responsiveStyle.chalkboard.size.width}px`,
+                height: `${responsiveStyle.chalkboard.size.height}px`,
+              }}
             >
               <Image
                 src="/images/items/blackboard.png"
                 alt="칠판"
-                width={342}
-                height={282}
+                width={responsiveStyle.chalkboard.size.width}
+                height={responsiveStyle.chalkboard.size.height}
                 className="object-cover"
                 style={{
-                  transform: `scale(${responsiveStyle.chalkboardScale})`,
+                  transform: `scale(${responsiveStyle.chalkboard.scale})`,
                   transformOrigin: "center",
                 }}
               />
@@ -1024,8 +1111,10 @@ function QuizPageContent() {
 
                 {/* 다음 문제 버튼 */}
                 <SoundButton
-                  className="font-medium h-[56px] w-[160px] rounded-[10px] relative cursor-pointer hover:opacity-80 transition-opacity"
+                  className="font-medium rounded-[10px] relative cursor-pointer hover:opacity-80 transition-opacity"
                   style={{
+                    width: `${responsiveStyle.nextButton.size.width}px`,
+                    height: `${responsiveStyle.nextButton.size.height}px`,
                     background:
                       "linear-gradient(180deg, #50B0FF 0%, #50B0FF 50%, #008DFF 50%, #008DFF 100%)",
                     border: "2px solid #76C1FF",
@@ -1088,12 +1177,17 @@ function QuizPageContent() {
             </div>
 
             {/* 캐릭터 이미지 */}
-            <div className="relative -mb-8">
+            <div
+              className="relative -mb-8"
+              style={{
+                marginTop: `${responsiveStyle.resultCharacter.marginTop}px`,
+              }}
+            >
               <Image
                 src={getCharacterImage(level || 1)}
                 alt="캐릭터"
-                width={390}
-                height={390}
+                width={responsiveStyle.resultCharacter.size.width}
+                height={responsiveStyle.resultCharacter.size.height}
                 className="object-cover"
               />
             </div>
@@ -1101,8 +1195,11 @@ function QuizPageContent() {
             {/* 선택한 답안 버튼 (표시용) */}
             <div className="relative">
               <button
-                className="font-medium h-[56px] w-[300px] rounded-[10px] relative cursor-default mb-8"
+                className="font-medium rounded-[10px] relative cursor-default mb-8"
                 style={{
+                  marginTop: `${responsiveStyle.resultButton.marginTop}px`,
+                  width: `${responsiveStyle.resultButton.size.width}px`,
+                  height: `${responsiveStyle.resultButton.size.height}px`,
                   background: isCorrect
                     ? "linear-gradient(180deg, #64E87C 0%, #64E87C 48%, rgba(255, 109, 112, 0) 50%, rgba(255, 109, 112, 0) 100%), #00C951"
                     : "linear-gradient(180deg, #FF2F32 0%, #FF2F32 50%, #CC2528 50%, #CC2528 100%)",

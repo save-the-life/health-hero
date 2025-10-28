@@ -232,7 +232,7 @@ class AudioService {
           audio.pause();
           // pause() 후에 currentTime을 설정하기 전에 잠시 대기
           await new Promise(resolve => setTimeout(resolve, 50));
-        } catch (pauseError) {
+        } catch {
           // pause 에러는 무시
         }
       }
@@ -260,11 +260,15 @@ class AudioService {
           await playPromise;
         }
       } catch (playError: unknown) {
-        // AbortError는 정상적인 중단이므로 무시
-        if (playError instanceof Error && 
-            playError.name !== 'AbortError' && 
-            playError.name !== 'NotAllowedError') {
-          // 조용히 무시
+        // AbortError와 NotAllowedError는 정상적인 중단이므로 무시
+        if (playError instanceof Error) {
+          const isAbortError = playError.name === 'AbortError';
+          const isNotAllowedError = playError.name === 'NotAllowedError';
+          
+          // AbortError와 NotAllowedError 외에는 로그 출력
+          if (!isAbortError && !isNotAllowedError) {
+            console.error(`오디오 재생 중 예상치 못한 에러 (${audioFile}):`, playError);
+          }
         }
       }
     } catch (error: unknown) {
@@ -325,17 +329,29 @@ class AudioService {
 
   // 배경음악 재생
   async playBackgroundMusic(): Promise<void> {
-    if (typeof window === "undefined") return;
-    if (this.isMuted) return;
+    console.log("🔍 [audioService] playBackgroundMusic 호출", {
+      isWindow: typeof window !== "undefined",
+      isMuted: this.isMuted,
+      hasBackgroundMusic: !!this.backgroundMusic,
+      isAlreadyPlaying: this.backgroundMusic && !this.backgroundMusic.paused
+    });
+
+    if (typeof window === "undefined") {
+      console.log("🔍 [audioService] window 없음 - 리턴");
+      return;
+    }
+    // 음소거 상태에서는 리턴하지 않음 - 재생은 하지만 볼륨을 0으로 설정
 
     try {
       // 기존 배경음악이 재생 중이면 재생하지 않음
       if (this.backgroundMusic && !this.backgroundMusic.paused) {
+        console.log("🔍 [audioService] 이미 재생 중 - 리턴");
         return;
       }
 
       // 새로 재생
       if (!this.backgroundMusic) {
+        console.log("🔍 [audioService] Audio 객체 생성");
         this.backgroundMusic = new Audio("/sounds/background.mp3");
         this.backgroundMusic.loop = true;
         this.backgroundMusic.volume = this.volume;
@@ -344,10 +360,28 @@ class AudioService {
       // 음소거 상태이면 볼륨 0으로 설정
       this.backgroundMusic.volume = this.isMuted ? 0 : this.volume;
 
-      await this.backgroundMusic.play();
-      console.log("🎵 배경음악 재생 시작");
+      try {
+        console.log("🔍 [audioService] 재생 시도 중...");
+        const playPromise = this.backgroundMusic.play();
+        if (playPromise !== undefined) {
+          await playPromise;
+        }
+        console.log("✅ [audioService] 배경음악 재생 시작 성공");
+      } catch (playError: unknown) {
+        // AbortError와 NotAllowedError는 정상적인 중단이므로 무시
+        if (playError instanceof Error) {
+          const isAbortError = playError.name === 'AbortError';
+          const isNotAllowedError = playError.name === 'NotAllowedError';
+          
+          if (!isAbortError && !isNotAllowedError) {
+            console.error("❌ [audioService] 배경음악 재생 실패:", playError);
+          } else {
+            console.log("🔍 [audioService] 재생 에러 무시:", playError.name);
+          }
+        }
+      }
     } catch (error) {
-      console.error("배경음악 재생 실패:", error);
+      console.error("❌ [audioService] 배경음악 초기화 실패:", error);
     }
   }
 
