@@ -38,6 +38,21 @@ function QuizPageContent() {
     getLevelInfo,
   } = useGameStore();
 
+  // 화면 크기 감지
+  const [screenHeight, setScreenHeight] = useState(0);
+
+  // 화면 크기 감지
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setScreenHeight(window.innerHeight);
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
+
   // 오디오 훅
   const {
     playQuizRightSound,
@@ -152,6 +167,44 @@ function QuizPageContent() {
 
     return { score, exp };
   };
+
+  // 반응형 스타일 계산
+  const getResponsiveStyle = () => {
+    if (screenHeight === 0) {
+      return {
+        chalkboardScale: 1,
+        choiceHeight: 1,
+        marginTop: 60,
+      };
+    }
+
+    // iPhone SE (667px) 이하의 작은 화면
+    if (screenHeight <= 667) {
+      return {
+        chalkboardScale: 0.8, // 20% 축소
+        choiceHeight: 0.8, // 20% 높이 축소
+        marginTop: 90, // 상단 마진 축소
+      };
+    }
+
+    // 중간 화면 (667-750px)
+    if (screenHeight <= 750) {
+      return {
+        chalkboardScale: 0.9, // 10% 축소
+        choiceHeight: 0.9, // 10% 높이 축소
+        marginTop: 50,
+      };
+    }
+
+    // 정상 화면 (750px 이상)
+    return {
+      chalkboardScale: 1,
+      choiceHeight: 1,
+      marginTop: 60,
+    };
+  };
+
+  const responsiveStyle = getResponsiveStyle();
 
   // 텍스트 길이에 따른 동적 폰트 크기 계산
   const getDynamicFontSize = (text: string): string => {
@@ -829,7 +882,10 @@ function QuizPageContent() {
       </div>
 
       {/* 메인 콘텐츠 영역 */}
-      <div className="relative z-10 pt-[120px] px-4">
+      <div 
+        className="relative z-10 px-4"
+        style={{ paddingTop: `${responsiveStyle.marginTop}px` }}
+      >
         {/* 퀴즈 로딩 중 */}
         {quizLoading && (
           <div className="flex justify-center items-center min-h-[400px]">
@@ -850,17 +906,24 @@ function QuizPageContent() {
         {!quizLoading && !quizError && currentQuestion && !showResult && (
           <div className="flex flex-col items-center">
             {/* 칠판 */}
-            <div className="relative mb-6">
+            <div
+              className="relative"
+              style={{ marginBottom: `8px` }}
+            >
               <Image
                 src="/images/items/blackboard.png"
                 alt="칠판"
                 width={342}
                 height={282}
                 className="object-cover"
+                style={{
+                  transform: `scale(${responsiveStyle.chalkboardScale})`,
+                  transformOrigin: "center",
+                }}
               />
 
               {/* 문제 및 토픽 텍스트 컨테이너 */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-1">
                 {/* 토픽 텍스트 */}
                 <p
                   className={`text-white text-stroke text-center font-normal leading-relaxed w-[245px] mb-2 ${getDynamicFontSize(
@@ -881,18 +944,31 @@ function QuizPageContent() {
             </div>
 
             {/* 선택지 버튼들 */}
-            <div className="flex flex-col gap-4 mb-[120px]">
+            <div
+              className="flex flex-col"
+              style={{
+                gap: `4px`,
+                marginBottom: `40px`,
+              }}
+            >
               {currentQuestion.choices
                 .map((choice, index) => ({ choice, index }))
                 .filter(({ index }) => !removedChoices.includes(index))
                 .map(({ choice, index }) => (
-                  <QuizChoiceButton
+                  <div
                     key={index}
-                    choice={choice}
-                    isSelected={selectedAnswer === index}
-                    isDisabled={selectedAnswer !== null && selectedAnswer !== index}
-                    onClick={() => handleChoiceClick(index)}
-                  />
+                    style={{
+                      transform: `scale(${responsiveStyle.choiceHeight})`,
+                      transformOrigin: "top center",
+                    }}
+                  >
+                    <QuizChoiceButton
+                      choice={choice}
+                      isSelected={selectedAnswer === index}
+                      isDisabled={selectedAnswer !== null && selectedAnswer !== index}
+                      onClick={() => handleChoiceClick(index)}
+                    />
+                  </div>
                 ))}
             </div>
           </div>
@@ -902,13 +978,20 @@ function QuizPageContent() {
         {!quizLoading && !quizError && currentQuestion && showResult && (
           <div className="flex flex-col items-center">
             {/* 칠판 */}
-            <div className="relative mb-2">
+            <div
+              className="relative"
+              style={{ marginBottom: `8px` }}
+            >
               <Image
                 src="/images/items/blackboard.png"
                 alt="칠판"
                 width={342}
                 height={282}
                 className="object-cover"
+                style={{
+                  transform: `scale(${responsiveStyle.chalkboardScale})`,
+                  transformOrigin: "center",
+                }}
               />
 
               {/* 결과 텍스트 컨테이너 */}

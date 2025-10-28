@@ -18,12 +18,12 @@ export default function GamePage() {
   const { playBackgroundMusic, stopBackgroundMusic } = useAudio();
 
   // 화면 높이 감지
-  const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [screenHeight, setScreenHeight] = useState(0);
 
   // 화면 크기 감지
   useEffect(() => {
     const checkScreenSize = () => {
-      setIsSmallScreen(window.innerHeight < 700); // 700px 미만을 작은 화면으로 판단
+      setScreenHeight(window.innerHeight);
     };
 
     checkScreenSize();
@@ -74,43 +74,43 @@ export default function GamePage() {
     return () => clearInterval(interval);
   }, [isAuthenticated, user?.id, hearts, updateHearts]);
 
-  // 스크롤을 하단에 고정하는 useEffect
-  // 스크롤 위치 조정 (작은 화면에서만)
-  useEffect(() => {
-    if (!isSmallScreen) return; // 작은 화면이 아니면 스크롤 로직 실행하지 않음
+  // 반응형 스타일 계산
+  const getResponsiveStyle = () => {
+    const baseHeight = 700; // 기준 화면 높이 (700px 이상)
 
-    const scrollToBottom = () => {
-      const scrollContainer = document.querySelector(
-        ".overflow-y-auto"
-      ) as HTMLElement;
-      if (scrollContainer) {
-        // 스크롤을 맨 아래로 이동 (페이즈 1이 보이도록)
-        scrollContainer.scrollTop = scrollContainer.scrollHeight;
-      }
+    if (screenHeight === 0) {
+      return {
+        isSmall: false,
+        scale: 1,
+        spacing: 1,
+        blockSize: 1,
+      };
+    }
+
+    // 화면이 700px 이상이면 정상 크기
+    if (screenHeight >= 700) {
+      return {
+        isSmall: false,
+        scale: 1,
+        spacing: 1,
+        blockSize: 1,
+      };
+    }
+
+    // 화면이 700px 미만이면 축소
+    const scale = Math.max(0.7, screenHeight / baseHeight);
+    const spacing = screenHeight < 600 ? 0.8 : 0.9;
+    const blockSize = screenHeight < 600 ? 0.85 : 0.95;
+
+    return {
+      isSmall: true,
+      scale,
+      spacing,
+      blockSize,
     };
+  };
 
-    // 즉시 실행
-    scrollToBottom();
-
-    // 이미지 로딩 완료 후에도 실행 (여러 번 시도)
-    const timeoutIds = [
-      setTimeout(scrollToBottom, 100),
-      setTimeout(scrollToBottom, 500),
-      setTimeout(scrollToBottom, 1000),
-    ];
-
-    // 윈도우 리사이즈 시에도 실행
-    window.addEventListener("resize", scrollToBottom);
-
-    // 페이지 로드 완료 후에도 실행
-    window.addEventListener("load", scrollToBottom);
-
-    return () => {
-      timeoutIds.forEach((id) => clearTimeout(id));
-      window.removeEventListener("resize", scrollToBottom);
-      window.removeEventListener("load", scrollToBottom);
-    };
-  }, [isLoading, isSmallScreen]); // isSmallScreen 의존성 추가
+  const responsiveStyle = getResponsiveStyle();
 
   // 페이즈 상태에 따른 이미지 경로 반환
   const getPhaseImage = (phaseNumber: number): string => {
@@ -216,28 +216,30 @@ export default function GamePage() {
       <GameHeader pageType="main" />
 
       {/* 메인 콘텐츠 */}
-      <div
-        className={`relative z-10 w-full h-screen pt-[60px] pb-4 ${
-          isSmallScreen ? "overflow-y-auto" : "overflow-hidden"
-        }`}
-      >
+      <div className="relative z-10 w-full h-screen pt-[60px] pb-4 overflow-hidden">
         {/* 페이즈 블록들 */}
         <div
-          className="relative w-full"
+          className="relative w-full flex items-center justify-center"
           style={{
-            height: isSmallScreen ? "calc(100vh + 40px)" : "90vh",
+            height: "100%",
           }}
         >
           {/* 페이즈 1 - 우측 하단 */}
           <Clickable
             as="div"
-            className={`absolute bottom-[20px] right-[24px] w-[150px] h-[160px] rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${
+            className={`absolute rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${
               currentPhase === 1
                 ? "cursor-pointer hover:opacity-80 transition-opacity"
                 : "cursor-not-allowed"
             }`}
             onClick={() => handlePhaseClick(1)}
             playClickSound={currentPhase === 1}
+            style={{
+              bottom: `${20 * responsiveStyle.spacing}px`,
+              right: `${24 * responsiveStyle.blockSize}px`,
+              width: `${150 * responsiveStyle.blockSize}px`,
+              height: `${160 * responsiveStyle.blockSize}px`,
+            }}
           >
             <div className="w-full h-full flex flex-col items-center justify-center relative">
               <Image
@@ -245,7 +247,10 @@ export default function GamePage() {
                 alt="페이즈 1"
                 width={120}
                 height={120}
-                className={`mb-2 ${currentPhase > 1 ? "blur-sm" : ""}`}
+                className={`${currentPhase > 1 ? "blur-sm" : ""}`}
+                style={{
+                  transform: `scale(${responsiveStyle.blockSize})`,
+                }}
               />
               {/* 클리어 체크 아이콘 */}
               {currentPhase > 1 && (
@@ -264,13 +269,19 @@ export default function GamePage() {
           {/* 페이즈 2 - 좌측 중앙 */}
           <Clickable
             as="div"
-            className={`absolute bottom-[180px] left-[24px] w-[150px] h-[160px] rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${
+            className={`absolute rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${
               currentPhase === 2
                 ? "cursor-pointer hover:opacity-80 transition-opacity"
                 : "cursor-not-allowed"
             }`}
             onClick={() => handlePhaseClick(2)}
             playClickSound={currentPhase === 2} // 현재 페이즈인 경우에만 클릭 사운드 재생
+            style={{
+              bottom: `${180 * responsiveStyle.spacing}px`,
+              left: `${24 * responsiveStyle.blockSize}px`,
+              width: `${150 * responsiveStyle.blockSize}px`,
+              height: `${160 * responsiveStyle.blockSize}px`,
+            }}
           >
             <div className="w-full h-full flex flex-col items-center justify-center relative">
               <Image
@@ -278,7 +289,10 @@ export default function GamePage() {
                 alt="페이즈 2"
                 width={120}
                 height={120}
-                className={`mb-2 ${currentPhase > 2 ? "blur-sm" : ""}`}
+                className={`${currentPhase > 2 ? "blur-sm" : ""}`}
+                style={{
+                  transform: `scale(${responsiveStyle.blockSize})`,
+                }}
               />
               {/* 클리어 체크 아이콘 */}
               {currentPhase > 2 && (
@@ -297,13 +311,19 @@ export default function GamePage() {
           {/* 페이즈 3 - 우측 상단 */}
           <Clickable
             as="div"
-            className={`absolute bottom-[340px] right-[24px] w-[150px] h-[160px] rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${
+            className={`absolute rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${
               currentPhase === 3
                 ? "cursor-pointer hover:opacity-80 transition-opacity"
                 : "cursor-not-allowed"
             }`}
             onClick={() => handlePhaseClick(3)}
             playClickSound={currentPhase === 3} // 현재 페이즈인 경우에만 클릭 사운드 재생
+            style={{
+              bottom: `${340 * responsiveStyle.spacing}px`,
+              right: `${24 * responsiveStyle.blockSize}px`,
+              width: `${150 * responsiveStyle.blockSize}px`,
+              height: `${160 * responsiveStyle.blockSize}px`,
+            }}
           >
             <div className="w-full h-full flex flex-col items-center justify-center relative">
               <Image
@@ -311,7 +331,10 @@ export default function GamePage() {
                 alt="페이즈 3"
                 width={120}
                 height={120}
-                className={`mb-2 ${currentPhase > 3 ? "blur-sm" : ""}`}
+                className={`${currentPhase > 3 ? "blur-sm" : ""}`}
+                style={{
+                  transform: `scale(${responsiveStyle.blockSize})`,
+                }}
               />
               {/* 클리어 체크 아이콘 */}
               {currentPhase > 3 && (
@@ -330,13 +353,19 @@ export default function GamePage() {
           {/* 페이즈 4 - 좌측 상단 */}
           <Clickable
             as="div"
-            className={`absolute bottom-[500px] left-[24px] w-[150px] h-[160px] rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${
+            className={`absolute rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${
               currentPhase === 4
                 ? "cursor-pointer hover:opacity-80 transition-opacity"
                 : "cursor-not-allowed"
             }`}
             onClick={() => handlePhaseClick(4)}
             playClickSound={currentPhase === 4} // 현재 페이즈인 경우에만 클릭 사운드 재생
+            style={{
+              bottom: `${500 * responsiveStyle.spacing}px`,
+              left: `${24 * responsiveStyle.blockSize}px`,
+              width: `${150 * responsiveStyle.blockSize}px`,
+              height: `${160 * responsiveStyle.blockSize}px`,
+            }}
           >
             <div className="w-full h-full flex flex-col items-center justify-center relative">
               <Image
@@ -344,7 +373,10 @@ export default function GamePage() {
                 alt="페이즈 4"
                 width={120}
                 height={120}
-                className={`mb-2 ${currentPhase > 4 ? "blur-sm" : ""}`}
+                className={`${currentPhase > 4 ? "blur-sm" : ""}`}
+                style={{
+                  transform: `scale(${responsiveStyle.blockSize})`,
+                }}
               />
               {/* 클리어 체크 아이콘 */}
               {currentPhase > 4 && (
@@ -362,35 +394,59 @@ export default function GamePage() {
 
           {/* 페이즈 간 연결선 */}
           {/* 페이즈 1 → 페이즈 2 */}
-          <div className="absolute bottom-[120px] left-1/2 transform -translate-x-1/2 z-0">
+          <div
+            className="absolute left-1/2 transform -translate-x-1/2 z-0"
+            style={{
+              bottom: `${120 * responsiveStyle.spacing}px`,
+            }}
+          >
             <Image
               src="/images/ui/vector1.png"
               alt="페이즈 연결선"
               width={170}
               height={60}
               className="opacity-80"
+              style={{
+                transform: `scale(${responsiveStyle.blockSize})`,
+              }}
             />
           </div>
 
           {/* 페이즈 2 → 페이즈 3 */}
-          <div className="absolute bottom-[280px] left-1/2 transform -translate-x-1/2 z-0">
+          <div
+            className="absolute left-1/2 transform -translate-x-1/2 z-0"
+            style={{
+              bottom: `${280 * responsiveStyle.spacing}px`,
+            }}
+          >
             <Image
               src="/images/ui/vector2.png"
               alt="페이즈 연결선"
               width={170}
               height={60}
               className="opacity-80"
+              style={{
+                transform: `scale(${responsiveStyle.blockSize})`,
+              }}
             />
           </div>
 
           {/* 페이즈 3 → 페이즈 4 */}
-          <div className="absolute bottom-[440px] left-1/2 transform -translate-x-1/2 z-0">
+          <div
+            className="absolute left-1/2 transform -translate-x-1/2 z-0"
+            style={{
+              bottom: `${440 * responsiveStyle.spacing}px`,
+            }}
+          >
             <Image
               src="/images/ui/vector1.png"
               alt="페이즈 연결선"
               width={170}
               height={60}
               className="opacity-80"
+              style={{
+                transform: `scale(${responsiveStyle.blockSize})`,
+              }}
             />
           </div>
         </div>
