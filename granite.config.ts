@@ -18,4 +18,7 @@ export default defineConfig({
   },
   permissions: [],  // 광고 SDK는 자동으로 로드됨 (permissions 불필요)
   outdir: 'dist',
+  webViewProps: {
+    type: 'game'
+  }
 });

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { SoundButton } from "./SoundButton";
+import { audioService } from "@/services/audioService";
 
 export default function GuestLoginButton() {
   const [loading, setLoading] = useState(false);
@@ -11,6 +12,15 @@ export default function GuestLoginButton() {
   const router = useRouter();
 
   const handleGuestLogin = async () => {
+    // 배경음악 재생 시작 (사용자 클릭이므로 브라우저 자동 재생 정책 통과)
+    console.log("🎵 [GuestLogin] 배경음악 재생 시작");
+    try {
+      await audioService.playBackgroundMusic();
+      console.log("✅ [GuestLogin] 배경음악 재생 성공");
+    } catch (error) {
+      console.log("⚠️ [GuestLogin] 배경음악 재생 실패 (무시):", error);
+    }
+    
     try {
       setLoading(true);
       setIsNavigating(true);

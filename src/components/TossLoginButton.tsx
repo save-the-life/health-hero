@@ -7,6 +7,7 @@ import { useTossAuth } from "@/hooks/useTossAuth";
 import { TossAuthService } from "@/services/tossAuthService";
 import { useAuthStore } from "@/store/authStore";
 import { SoundButton } from "./SoundButton";
+import { audioService } from "@/services/audioService";
 
 // 앱인토스 환경 확인을 위한 타입 선언
 declare global {
@@ -29,6 +30,16 @@ export default function TossLoginButton() {
 
   const handleLogin = async () => {
     console.log("🚀 [TossLogin] 로그인 시작");
+    
+    // 배경음악 재생 시작 (사용자 클릭이므로 브라우저 자동 재생 정책 통과)
+    console.log("🎵 [TossLogin] 배경음악 재생 시작");
+    try {
+      await audioService.playBackgroundMusic();
+      console.log("✅ [TossLogin] 배경음악 재생 성공");
+    } catch (error) {
+      console.log("⚠️ [TossLogin] 배경음악 재생 실패 (무시):", error);
+    }
+    
     setLocalError(null);
     setError(null);
     setLoading(true);

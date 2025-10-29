@@ -29,11 +29,16 @@
   }
 }
 
+html,
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: 'ONE Mobile POP', Arial, Helvetica, sans-serif;
-  touch-action: pan-x pan-y;
+  overflow: hidden; /* 스크롤 완전 차단 */
+  height: 100%; /* 고정 높이 */
+  position: fixed; /* 스크롤 방지 */
+  width: 100%; /* 전체 너비 고정 */
+  touch-action: manipulation; /* 핀치 줌 방지, 탭만 허용 */
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;

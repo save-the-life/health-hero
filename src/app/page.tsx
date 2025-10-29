@@ -4,7 +4,7 @@ import GuestLoginButton from "@/components/GuestLoginButton";
 
 export default function Home() {
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="relative h-screen overflow-hidden" style={{ height: '100vh', overflow: 'hidden' }}>
       {/* 배경 이미지 */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -63,7 +63,7 @@ export default function Home() {
         {/* 로그인 버튼 */}
         <div className="w-full max-w-sm px-4 space-y-3 -mt-10 mb-10 z-10">
           <TossLoginButton />
-          <GuestLoginButton />
+          {/* <GuestLoginButton /> */}
         </div>
       </div>
     </div>

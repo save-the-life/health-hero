@@ -28,8 +28,62 @@ class AudioService {
     // 서버 사이드에서는 초기화하지 않음
     if (typeof window !== "undefined") {
       this.initializeAudioInstances();
-      this.loadMuteState();
+      this.loadMuteState(); // 먼저 음소거 상태 로드
+      
+      console.log("🎵 [audioService] 초기화 시작", {
+        isMuted: this.isMuted,
+        volume: this.volume
+      });
+      
+      // 배경음악 미리 생성
+      this.backgroundMusic = new Audio("/sounds/background.mp3");
+      this.backgroundMusic.loop = true;
+      this.backgroundMusic.volume = this.isMuted ? 0 : this.volume;
+      // 브라우저 자동 재생 정책 대응
+      this.backgroundMusic.setAttribute('preload', 'auto');
+      this.backgroundMusic.setAttribute('playsinline', '');
+      
+      console.log("🎵 [audioService] 배경음악 초기화 완료", {
+        isMuted: this.isMuted,
+        volume: this.volume,
+        backgroundMusicVolume: this.backgroundMusic.volume,
+        hasBackgroundMusic: !!this.backgroundMusic
+      });
+      
+      // 백그라운드 감지 이벤트 리스너 등록
+      this.setupVisibilityListener();
     }
+  }
+  
+  // 백그라운드 감지 및 배경음악 제어
+  private setupVisibilityListener() {
+    if (typeof window === "undefined") return;
+    
+    document.addEventListener("visibilitychange", () => {
+      const isHidden = document.hidden;
+      
+      if (isHidden) {
+        // 백그라운드로 이동: 배경음악 일시정지
+        if (this.backgroundMusic && !this.backgroundMusic.paused) {
+          this.backgroundMusic.pause();
+          console.log("🔇 [audioService] 백그라운드 - 배경음악 일시정지");
+        }
+      } else {
+        // 포그라운드로 복귀: 배경음악 재개 (음소거 상태가 아닐 때만)
+        if (this.backgroundMusic && this.backgroundMusic.paused && !this.isMuted) {
+          try {
+            this.backgroundMusic.play().catch(() => {
+              console.log("⚠️ [audioService] 배경음악 재개 실패");
+            });
+            console.log("🔊 [audioService] 포그라운드 - 배경음악 재개");
+          } catch (error) {
+            console.log("⚠️ [audioService] 배경음악 재개 실패:", error);
+          }
+        } else if (this.backgroundMusic) {
+          console.log("🔊 [audioService] 포그라운드 복귀 (재생 상태 유지)");
+        }
+      }
+    });
   }
 
   // 오디오 인스턴스 초기화
@@ -139,11 +193,12 @@ class AudioService {
   }
 
   // 음소거 상태 저장 (로컬 스토리지 사용)
-  private saveMuteState() {
+  private async saveMuteState(): Promise<void> {
     if (typeof window === "undefined") return;
 
     try {
       localStorage.setItem('audio_muted', this.isMuted.toString());
+      console.log("💾 [audioService] 음소거 상태 저장:", this.isMuted);
     } catch (error) {
       console.error("음소거 상태 저장 실패:", error);
     }
@@ -155,22 +210,58 @@ class AudioService {
     await this.ensureWebAudioInitialized();
     this.isMuted = !this.isMuted;
     
+    console.log("🔇 [audioService] 음소거 토글 시작:", {
+      isMuted: this.isMuted,
+      hasBackgroundMusic: !!this.backgroundMusic,
+      audioInstances: this.audioInstances.size,
+      volume: this.volume
+    });
+    
     // Web Audio API 볼륨 조정
     if (this.gainNode) {
       this.gainNode.gain.value = this.isMuted ? 0 : this.volume;
+      console.log("🔇 [audioService] Web Audio API 볼륨 조정:", this.gainNode.gain.value);
     }
     
-    // 기존 HTML Audio 볼륨도 조정
-    this.audioInstances.forEach((audio) => {
+    // 기존 HTML Audio 볼륨 조정 (효과음)
+    this.audioInstances.forEach((audio, key) => {
       audio.volume = this.isMuted ? 0 : this.volume;
+      console.log(`🔇 [audioService] ${key} 볼륨 조정:`, audio.volume);
     });
 
-    // 배경음악 볼륨도 조정
+    // 배경음악은 pause/play로 제어 (앱인토스 환경 호환성)
     if (this.backgroundMusic) {
-      this.backgroundMusic.volume = this.isMuted ? 0 : this.volume;
+      try {
+        if (this.isMuted) {
+          // 음소거: 일시정지
+          this.backgroundMusic.pause();
+          console.log("🔇 [audioService] 배경음악 일시정지:", {
+            isMuted: this.isMuted,
+            paused: this.backgroundMusic.paused,
+            currentTime: this.backgroundMusic.currentTime
+          });
+        } else {
+          // 음소거 해제: 재생 재개 (이미 재생 중이면 아무 효과 없음)
+          if (this.backgroundMusic.paused) {
+            await this.backgroundMusic.play();
+            console.log("🔊 [audioService] 배경음악 재개:", {
+              isMuted: this.isMuted,
+              paused: this.backgroundMusic.paused,
+              currentTime: this.backgroundMusic.currentTime
+            });
+          } else {
+            console.log("🔊 [audioService] 배경음악 이미 재생 중");
+          }
+        }
+      } catch (error) {
+        console.log("⚠️ [audioService] 배경음악 제어 실패 (무시):", error);
+      }
+    } else {
+      console.warn("🔇 [audioService] 배경음악 객체가 없습니다!");
     }
 
     await this.saveMuteState();
+    console.log("🔇 [audioService] 음소거 상태 저장 완료:", this.isMuted);
     return this.isMuted;
   }
 
@@ -184,19 +275,26 @@ class AudioService {
     this.ensureInitialized();
     this.volume = Math.max(0, Math.min(1, volume)); // 0-1 범위로 제한
     
+    console.log("🔊 [audioService] 볼륨 설정:", {
+      volume: this.volume,
+      isMuted: this.isMuted,
+      hasBackgroundMusic: !!this.backgroundMusic
+    });
+    
     // Web Audio API 볼륨 설정
     if (this.gainNode) {
       this.gainNode.gain.value = this.isMuted ? 0 : this.volume;
     }
     
     // 기존 HTML Audio 볼륨도 설정
-    this.audioInstances.forEach((audio) => {
+    this.audioInstances.forEach((audio, key) => {
       audio.volume = this.isMuted ? 0 : this.volume;
     });
 
     // 배경음악 볼륨도 설정
     if (this.backgroundMusic) {
       this.backgroundMusic.volume = this.isMuted ? 0 : this.volume;
+      console.log("🔊 [audioService] 배경음악 볼륨 설정:", this.backgroundMusic.volume);
     }
   }
 
@@ -329,59 +427,67 @@ class AudioService {
 
   // 배경음악 재생
   async playBackgroundMusic(): Promise<void> {
-    console.log("🔍 [audioService] playBackgroundMusic 호출", {
-      isWindow: typeof window !== "undefined",
-      isMuted: this.isMuted,
-      hasBackgroundMusic: !!this.backgroundMusic,
-      isAlreadyPlaying: this.backgroundMusic && !this.backgroundMusic.paused
-    });
+    console.log("🔍 [audioService] playBackgroundMusic 호출");
+    console.log("  - typeof window:", typeof window !== "undefined");
+    console.log("  - isMuted:", this.isMuted);
+    console.log("  - hasBackgroundMusic:", !!this.backgroundMusic);
+    console.log("  - isAlreadyPlaying:", this.backgroundMusic ? !this.backgroundMusic.paused : false);
 
     if (typeof window === "undefined") {
       console.log("🔍 [audioService] window 없음 - 리턴");
       return;
     }
-    // 음소거 상태에서는 리턴하지 않음 - 재생은 하지만 볼륨을 0으로 설정
 
-    try {
-      // 기존 배경음악이 재생 중이면 재생하지 않음
-      if (this.backgroundMusic && !this.backgroundMusic.paused) {
-        console.log("🔍 [audioService] 이미 재생 중 - 리턴");
+    // 배경음악이 없으면 생성
+    if (!this.backgroundMusic) {
+      console.log("🔍 [audioService] Audio 객체 생성");
+      this.backgroundMusic = new Audio("/sounds/background.mp3");
+      this.backgroundMusic.loop = true;
+      this.backgroundMusic.setAttribute('preload', 'auto');
+      this.backgroundMusic.setAttribute('playsinline', '');
+      // 초기 볼륨 설정
+      this.backgroundMusic.volume = this.isMuted ? 0 : this.volume;
+      console.log("  - 초기 볼륨 설정:", this.backgroundMusic.volume);
+    }
+
+    // 이미 재생 중이면 리턴 (음소거 상태는 토글 버튼에서만 제어)
+    if (!this.backgroundMusic.paused) {
+      console.log("🔍 [audioService] 이미 재생 중 - 리턴");
+      return;
+    }
+    
+    // 일시정지된 상태일 때만 재생 시작 (음소거 상태 확인)
+    if (this.backgroundMusic.paused) {
+      // 음소거 상태가 아니어야 재생 시작
+      if (this.isMuted) {
+        console.log("🔍 [audioService] 음소거 상태 - 재생하지 않음");
         return;
       }
+    }
 
-      // 새로 재생
-      if (!this.backgroundMusic) {
-        console.log("🔍 [audioService] Audio 객체 생성");
-        this.backgroundMusic = new Audio("/sounds/background.mp3");
-        this.backgroundMusic.loop = true;
-        this.backgroundMusic.volume = this.volume;
+    // 재생 시작 전 볼륨 설정
+    this.backgroundMusic.volume = this.volume; // 음소거 상태가 아니므로 정상 볼륨
+    console.log("  - 재생 전 볼륨 설정:", this.backgroundMusic.volume);
+
+    try {
+      console.log("🔍 [audioService] 배경음악 재생 시도...");
+      console.log("  - Audio 상태: paused=" + this.backgroundMusic.paused, 
+                  "readyState=" + this.backgroundMusic.readyState);
+      
+      const playPromise = this.backgroundMusic.play();
+      if (playPromise !== undefined) {
+        await playPromise;
       }
-
-      // 음소거 상태이면 볼륨 0으로 설정
-      this.backgroundMusic.volume = this.isMuted ? 0 : this.volume;
-
-      try {
-        console.log("🔍 [audioService] 재생 시도 중...");
-        const playPromise = this.backgroundMusic.play();
-        if (playPromise !== undefined) {
-          await playPromise;
-        }
-        console.log("✅ [audioService] 배경음악 재생 시작 성공");
-      } catch (playError: unknown) {
-        // AbortError와 NotAllowedError는 정상적인 중단이므로 무시
-        if (playError instanceof Error) {
-          const isAbortError = playError.name === 'AbortError';
-          const isNotAllowedError = playError.name === 'NotAllowedError';
-          
-          if (!isAbortError && !isNotAllowedError) {
-            console.error("❌ [audioService] 배경음악 재생 실패:", playError);
-          } else {
-            console.log("🔍 [audioService] 재생 에러 무시:", playError.name);
-          }
-        }
+      
+      console.log("✅ [audioService] 배경음악 재생 시작 성공");
+      console.log("  - 재생 후 Audio 상태: paused=" + this.backgroundMusic.paused,
+                  "currentTime=" + this.backgroundMusic.currentTime);
+    } catch (playError: unknown) {
+      console.error("❌ [audioService] 배경음악 재생 실패:", playError);
+      if (playError instanceof Error) {
+        console.error("  - 에러 이름:", playError.name);
+        console.error("  - 에러 메시지:", playError.message);
       }
-    } catch (error) {
-      console.error("❌ [audioService] 배경음악 초기화 실패:", error);
     }
   }
 

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { useGameStore } from "@/store/gameStore";
 import GameHeader from "@/components/GameHeader";
@@ -47,18 +47,19 @@ export default function GamePage() {
     }
   }, [isAuthenticated, user?.id, loadUserData]);
 
-  // 배경음악 재생 (메인 페이지에서만)
-  const hasPlayedMusic = useRef(false);
-
-  // isAuthenticated가 true가 되면 배경음악 재생
+  // 배경음악 재생 (메인 페이지 진입 시 - 이미 재생 중이면 스킵)
   useEffect(() => {
-    if (isAuthenticated && !hasPlayedMusic.current) {
-      console.log("🎵 [배경음악] 인증 완료 - 재생 시작");
-      hasPlayedMusic.current = true;
-      playBackgroundMusic();
-    }
+    // 배경음악이 이미 재생 중인지 확인 (로그인 버튼 클릭 시 이미 재생됨)
+    const checkAndPlay = async () => {
+      // AudioService의 배경음악 상태 확인은 내부에서 처리하므로
+      // 여기서는 재생 시도만 함 (재생 중이면 자동으로 스킵됨)
+      console.log("🎵 [게임페이지] 배경음악 상태 확인 및 재생 시도");
+      await playBackgroundMusic();
+    };
+    
+    checkAndPlay();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated]);
+  }, []);
 
   // 하트 타이머 업데이트 (30초마다)
   useEffect(() => {
@@ -200,7 +201,7 @@ export default function GamePage() {
   // 로딩 중이거나 에러가 있으면 표시
   if (isLoading) {
     return (
-      <div className="relative min-h-screen overflow-hidden">
+      <div className="relative h-screen overflow-hidden" style={{ height: '100vh', overflow: 'hidden' }}>
         {/* 배경 이미지 */}
         <div className="absolute inset-0 z-0">
           <Image
@@ -222,7 +223,7 @@ export default function GamePage() {
 
   if (error) {
     return (
-      <div className="relative min-h-screen overflow-hidden">
+      <div className="relative h-screen overflow-hidden" style={{ height: '100vh', overflow: 'hidden' }}>
         {/* 배경 이미지 */}
         <div className="absolute inset-0 z-0">
           <Image
@@ -244,7 +245,7 @@ export default function GamePage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="relative min-h-screen overflow-hidden flex items-center justify-center">
+      <div className="relative h-screen overflow-hidden flex items-center justify-center" style={{ height: '100vh', overflow: 'hidden' }}>
         <div className="text-center">
           <div className="text-white text-xl mb-4">로그인이 필요합니다</div>
           <Link href="/">
@@ -257,7 +258,7 @@ export default function GamePage() {
     );
   }
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="relative h-screen overflow-hidden" style={{ height: '100vh', overflow: 'hidden' }}>
       {/* 배경 이미지 */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -273,7 +274,7 @@ export default function GamePage() {
       <GameHeader pageType="main" />
 
       {/* 메인 콘텐츠 */}
-      <div className="relative z-10 w-full h-screen pt-[60px] pb-4 overflow-hidden">
+      <div className="relative z-10 w-full h-screen pt-[20px] pb-4 overflow-hidden">
         {/* 페이즈 블록들 */}
         <div
           className="relative w-full flex items-center justify-center"

@@ -111,7 +111,7 @@ export default function GameHeader({
   };
 
   return (
-    <div className="fixed top-6 left-0 right-0 z-30 bg-transparent">
+    <div className="fixed top-20 left-0 right-0 z-30 bg-transparent">
       <div className="flex items-center justify-between px-6 py-3 h-[60px]">
         {/* 캐릭터 & 레벨 */}
         <div className="flex items-center gap-5">

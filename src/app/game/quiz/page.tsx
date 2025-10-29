@@ -830,7 +830,7 @@ function QuizPageContent() {
   // 로딩 중
   if (isLoading) {
     return (
-      <div className="relative min-h-screen overflow-hidden">
+      <div className="relative h-screen overflow-hidden" style={{ height: '100vh', overflow: 'hidden' }}>
         {/* 배경 이미지 */}
         <div className="absolute inset-0 z-0">
           <Image
@@ -853,7 +853,7 @@ function QuizPageContent() {
   // 에러 상태
   if (error) {
     return (
-      <div className="relative min-h-screen overflow-hidden">
+      <div className="relative h-screen overflow-hidden" style={{ height: '100vh', overflow: 'hidden' }}>
         {/* 배경 이미지 */}
         <div className="absolute inset-0 z-0">
           <Image
@@ -876,7 +876,7 @@ function QuizPageContent() {
   // 인증되지 않은 경우 로딩 표시
   if (!isAuthenticated) {
     return (
-      <div className="relative min-h-screen overflow-hidden">
+      <div className="relative h-screen overflow-hidden" style={{ height: '100vh', overflow: 'hidden' }}>
         <div className="absolute inset-0 z-0">
           <Image
             src="/images/backgrounds/background-quiz.png"
@@ -894,7 +894,7 @@ function QuizPageContent() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="relative h-screen overflow-hidden" style={{ height: '100vh', overflow: 'hidden' }}>
       {/* 배경 이미지 */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -917,7 +917,7 @@ function QuizPageContent() {
       <GameHeader pageType="quiz" />
 
       {/* 스테이지 진행 프로그래스바 */}
-      <div className="fixed top-[84px] left-0 right-0 z-10 flex justify-center">
+      <div className="fixed top-[140px] left-0 right-0 z-10 flex justify-center">
         <div className="relative">
           {/* 프로그래스바 테두리 */}
           <Image
@@ -965,7 +965,7 @@ function QuizPageContent() {
 
       {/* 메인 콘텐츠 영역 */}
       <div
-        className="relative z-10 px-4"
+        className="relative z-10 px-4 mt-[50px]"
         style={{ paddingTop: `${responsiveStyle.marginTop}px` }}
       >
         {/* 퀴즈 로딩 중 */}

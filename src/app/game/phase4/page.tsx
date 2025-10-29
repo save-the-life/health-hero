@@ -109,7 +109,7 @@ export default function Phase4Page() {
   // 로딩 중이거나 에러가 있으면 표시
   if (isLoading) {
     return (
-      <div className="relative min-h-screen overflow-hidden">
+      <div className="relative h-screen overflow-hidden" style={{ height: '100vh', overflow: 'hidden' }}>
         {/* 배경 이미지 */}
         <div className="absolute inset-0 z-0">
           <Image
@@ -131,7 +131,7 @@ export default function Phase4Page() {
 
   if (error) {
     return (
-      <div className="relative min-h-screen overflow-hidden">
+      <div className="relative h-screen overflow-hidden" style={{ height: '100vh', overflow: 'hidden' }}>
         {/* 배경 이미지 */}
         <div className="absolute inset-0 z-0">
           <Image
@@ -160,7 +160,7 @@ export default function Phase4Page() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="relative h-screen overflow-hidden" style={{ height: '100vh', overflow: 'hidden' }}>
       {/* 배경 이미지 */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -175,7 +175,7 @@ export default function Phase4Page() {
       {/* 메인 콘텐츠 */}
       <div className="relative z-10 w-full h-screen">
         {/* 뒤로가기 버튼 */}
-        <div className="absolute top-4 left-4 z-20">
+        <div className="absolute top-[60px] left-4 z-20">
           <SoundButton
             onClick={() => router.push("/game")}
             className="flex items-center gap-2 text-white hover:opacity-80 transition-opacity px-3 py-2 rounded-lg"
