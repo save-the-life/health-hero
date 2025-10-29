@@ -274,8 +274,8 @@ function QuizPageContent() {
       nextButton: {
         size: { width: 160, height: 48 }, // 85% 축소
       },
-      spacingBetween: 12, // 중간 간격
-      choiceGap: 12,
+      spacingBetween: 8, // 중간 간격
+      choiceGap: 8,
       marginTop: 120,
     };
   };

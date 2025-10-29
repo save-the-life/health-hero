@@ -9,6 +9,8 @@ import { useState, useEffect, useRef } from "react";
 import { SoundButton } from "./SoundButton";
 import { AdErrorBoundary } from "@/components/ErrorBoundary";
 import { adLogger } from "@/utils/adLogger";
+import { AdRewardDialog } from "./AdRewardDialog";
+import { TDSProvider } from "./TDSProvider";
 
 interface HeartShortageModalProps {
   isOpen: boolean;
@@ -45,6 +47,11 @@ function HeartShortageModalContent({
   // 중복 호출 방지를 위한 ref
   const isProcessingRef = useRef(false);
   const hasUpdatedHeartsRef = useRef(false);
+  
+  // TDS 다이얼로그 상태
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMessage, setDialogMessage] = useState("");
+  const [dialogSuccess, setDialogSuccess] = useState(false);
 
   // 타이머 자동 업데이트 (1초마다)
   useEffect(() => {
@@ -202,9 +209,6 @@ function HeartShortageModalContent({
         if (!hasUpdatedHeartsRef.current) {
           hasUpdatedHeartsRef.current = true;
 
-          // 하트 충전 성공
-          alert("하트를 획득했습니다!");
-
           // 하트 상태 업데이트 (한 번만)
           adLogger.log("info", "💖 하트 상태 업데이트 중...");
           console.log("💖 하트 상태 업데이트 중...");
@@ -218,12 +222,12 @@ function HeartShortageModalContent({
           console.log("⚠️ 하트 업데이트 이미 완료됨");
         }
 
-        // 모달 닫기
-        adLogger.log("info", "🚪 모달 닫기");
-        console.log("🚪 모달 닫기");
-        onClose();
-
-        // 광고 재로드
+        // 하트 충전 성공 - TDS 다이얼로그 표시 (HeartShortageModal은 닫지 않음)
+        setDialogSuccess(true);
+        setDialogMessage("하트를 획득했습니다!");
+        setDialogOpen(true);
+        
+        // 광고 재로드 예약
         adLogger.log("info", "🔄 광고 재로드 예약");
         console.log("🔄 광고 재로드 예약");
         setTimeout(() => {
@@ -232,7 +236,9 @@ function HeartShortageModalContent({
       } else {
         adLogger.log("error", "❌ 하트 획득 실패", { message: result.message });
         console.log("❌ 하트 획득 실패:", result.message);
-        alert(result.message || "하트 획득에 실패했습니다.");
+        setDialogSuccess(false);
+        setDialogMessage(result.message || "하트 획득에 실패했습니다.");
+        setDialogOpen(true);
       }
     } catch (error: unknown) {
       adLogger.log("error", "💥 광고 시청 에러", { error });
@@ -270,35 +276,37 @@ function HeartShortageModalContent({
 
       // 사용자에게 안전한 메시지 표시
       try {
+        setDialogSuccess(false);
         if (errorMessage.includes("간격이 너무 짧습니다")) {
           adLogger.log("warning", "⏰ 광고 시청 간격이 너무 짧음");
           console.log("⏰ 광고 시청 간격이 너무 짧음");
-          alert("광고 시청 간격이 너무 짧습니다. 잠시 후 다시 시도해주세요.");
+          setDialogMessage("광고 시청 간격이 너무 짧습니다. 잠시 후 다시 시도해주세요.");
         } else if (errorMessage.includes("광고가 로드되지 않았습니다")) {
           adLogger.log("warning", "📡 광고가 로드되지 않음");
           console.log("📡 광고가 로드되지 않음");
-          alert("광고를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
+          setDialogMessage("광고를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
         } else if (errorMessage.includes("로그인")) {
           adLogger.log("warning", "🔐 로그인 필요");
           console.log("🔐 로그인 필요");
-          alert("로그인이 필요합니다. 다시 로그인해주세요.");
+          setDialogMessage("로그인이 필요합니다. 다시 로그인해주세요.");
         } else if (errorMessage.includes("세션")) {
           adLogger.log("warning", "🔐 세션 만료");
           console.log("🔐 세션 만료");
-          alert("로그인 세션이 만료되었습니다. 다시 로그인해주세요.");
+          setDialogMessage("로그인 세션이 만료되었습니다. 다시 로그인해주세요.");
         } else if (errorMessage.includes("Auth session missing")) {
           adLogger.log("warning", "🔐 인증 세션 없음");
           console.log("🔐 인증 세션 없음");
-          alert("인증 세션이 없습니다. 다시 로그인해주세요.");
+          setDialogMessage("인증 세션이 없습니다. 다시 로그인해주세요.");
         } else if (errorMessage.includes("timeout")) {
           adLogger.log("warning", "⏰ 광고 시청 시간 초과");
           console.log("⏰ 광고 시청 시간 초과");
-          alert("광고 시청 시간이 초과되었습니다. 다시 시도해주세요.");
+          setDialogMessage("광고 시청 시간이 초과되었습니다. 다시 시도해주세요.");
         } else {
           adLogger.log("error", "❌ 기타 광고 시청 실패", { errorMessage });
           console.log("❌ 기타 광고 시청 실패");
-          alert("광고 시청에 실패했습니다. 잠시 후 다시 시도해주세요.");
+          setDialogMessage("광고 시청에 실패했습니다. 잠시 후 다시 시도해주세요.");
         }
+        setDialogOpen(true);
       } catch (alertError) {
         adLogger.log("error", "❌ 알림 표시 실패", { alertError });
         console.error("❌ 알림 표시 실패:", alertError);
@@ -350,11 +358,12 @@ function HeartShortageModalContent({
             {/* 텍스트 */}
             <div className="text-center mb-2">
               <p
-                className="text-white text-stroke text-center font-normal leading-relaxed"
+                className="text-white text-center font-normal leading-relaxed"
                 style={{
                   fontSize: "18px",
-                  fontWeight: "400",
+                  fontWeight: "600",
                   lineHeight: "1.4",
+                  WebkitTextStroke: "1px #000000",
                 }}
               >
                 이런,
@@ -379,8 +388,8 @@ function HeartShortageModalContent({
                 style={{
                   color: "#FFFFFF",
                   fontSize: "32px",
-                  fontWeight: "bold",
-                  textShadow: "2px 2px 0px #000000",
+                  fontWeight: "600",
+  WebkitTextStroke: "1px #000000"
                 }}
               >
                 0
@@ -427,17 +436,18 @@ function HeartShortageModalContent({
           {/* 500 포인트 버튼 또는 나가기 버튼 */}
           {canBuyHeart ? (
             <SoundButton
-              className="font-medium h-[56px] w-[160px] rounded-[10px] relative cursor-pointer hover:opacity-80 transition-opacity"
+              className="font-medium h-[56px] w-[160px] rounded-[16px] relative cursor-pointer hover:opacity-80 transition-opacity"
               style={{
                 background:
                   "linear-gradient(180deg, #50B0FF 0%, #50B0FF 50%, #008DFF 50%, #008DFF 100%)",
                 border: "2px solid #76C1FF",
-                outline: "2px solid #000000",
+                borderRadius: "16px",
+                overflow: "hidden",
                 boxShadow:
-                  "0px 4px 4px 0px rgba(0, 0, 0, 0.25), inset 0px 3px 0px 0px rgba(0, 0, 0, 0.1)",
+                  "0px 0px 0px 2px #000000, 0px 4px 4px 0px rgba(0, 0, 0, 0.25), inset 0px 3px 0px 0px rgba(0, 0, 0, 0.1)",
                 color: "#FFFFFF",
-                fontSize: "16px",
-                fontWeight: "400",
+                fontSize: "18px",
+                fontWeight: "600",
                 WebkitTextStroke: "1px #000000",
               }}
               onClick={handleBuyHeart}
@@ -468,7 +478,7 @@ function HeartShortageModalContent({
                   style={{
                     color: "#FFFFFF",
                     fontSize: "16px",
-                    fontWeight: "400",
+                    fontWeight: "600",
                     WebkitTextStroke: "1px #000000",
                     lineHeight: "1.2",
                   }}
@@ -479,16 +489,17 @@ function HeartShortageModalContent({
             </SoundButton>
           ) : (
             <SoundButton
-              className="font-medium h-[56px] w-[160px] rounded-[10px] relative cursor-pointer hover:opacity-80 transition-opacity"
+              className="font-medium h-[56px] w-[160px] rounded-[16px] relative cursor-pointer hover:opacity-80 transition-opacity"
               style={{
                 background:
                   "linear-gradient(180deg, #FF6B6B 0%, #FF6B6B 50%, #E53E3E 50%, #E53E3E 100%)",
                 border: "2px solid #FF8E8E",
-                outline: "2px solid #000000",
+                borderRadius: "16px",
+                overflow: "hidden",
                 boxShadow:
-                  "0px 4px 4px 0px rgba(0, 0, 0, 0.25), inset 0px 3px 0px 0px rgba(0, 0, 0, 0.1)",
+                  "0px 0px 0px 2px #000000, 0px 4px 4px 0px rgba(0, 0, 0, 0.25), inset 0px 3px 0px 0px rgba(0, 0, 0, 0.1)",
                 color: "#FFFFFF",
-                fontSize: "16px",
+                fontSize: "18px",
                 fontWeight: "400",
                 WebkitTextStroke: "1px #000000",
               }}
@@ -513,8 +524,8 @@ function HeartShortageModalContent({
                 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
                 style={{
                   color: "#FFFFFF",
-                  fontSize: "16px",
-                  fontWeight: "400",
+                  fontSize: "18px",
+                  fontWeight: "600",
                   WebkitTextStroke: "1px #000000",
                   lineHeight: "1.2",
                 }}
@@ -526,7 +537,7 @@ function HeartShortageModalContent({
 
           {/* 광고 버튼 */}
           <SoundButton
-            className={`font-medium h-[56px] w-[160px] rounded-[10px] relative transition-opacity ${
+            className={`font-medium h-[56px] w-[160px] rounded-[16px] relative transition-opacity ${
               !isSupported || adStatus === "loading" || isWatchingAd
                 ? "cursor-not-allowed opacity-60"
                 : "cursor-pointer hover:opacity-80"
@@ -540,12 +551,13 @@ function HeartShortageModalContent({
                 !isSupported || adStatus === "loading" || isWatchingAd
                   ? "2px solid #D1D5DB"
                   : "2px solid #76C1FF",
-              outline: "2px solid #000000",
+              borderRadius: "16px",
+              overflow: "hidden",
               boxShadow:
-                "0px 4px 4px 0px rgba(0, 0, 0, 0.25), inset 0px 3px 0px 0px rgba(0, 0, 0, 0.1)",
+                "0px 0px 0px 2px #000000, 0px 4px 4px 0px rgba(0, 0, 0, 0.25), inset 0px 3px 0px 0px rgba(0, 0, 0, 0.1)",
               color: "#FFFFFF",
               fontSize: "16px",
-              fontWeight: "400",
+              fontWeight: "600",
               WebkitTextStroke: "1px #000000",
             }}
             onClick={handleAdClick}
@@ -580,7 +592,7 @@ function HeartShortageModalContent({
                 style={{
                   color: "#FFFFFF",
                   fontSize: "16px",
-                  fontWeight: "400",
+                  fontWeight: "600",
                   WebkitTextStroke: "1px #000000",
                   lineHeight: "1.2",
                 }}
@@ -597,6 +609,20 @@ function HeartShortageModalContent({
           </SoundButton>
         </div>
       </div>
+      
+      {/* TDS 광고 결과 다이얼로그 - TDS Provider로 격리 */}
+      <TDSProvider>
+        <AdRewardDialog
+          open={dialogOpen}
+          onClose={() => {
+            setDialogOpen(false);
+            // 다이얼로그를 닫을 때 HeartShortageModal도 함께 닫기
+            onClose();
+          }}
+          success={dialogSuccess}
+          message={dialogMessage}
+        />
+      </TDSProvider>
     </div>
   );
 }

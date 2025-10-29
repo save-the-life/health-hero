@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS user_hearts (
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
   current_hearts INTEGER DEFAULT 5 CHECK (current_hearts >= 0 AND current_hearts <= 5),
   last_refill_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  ad_views_today INTEGER DEFAULT 0 CHECK (ad_views_today >= 0 AND ad_views_today <= 10),
+  ad_views_today INTEGER DEFAULT 0 CHECK (ad_views_today >= 0 AND ad_views_today <= 100),
   ad_reset_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -300,7 +300,7 @@ BEGIN
   END IF;
 
   -- 일일 광고 시청 제한 확인 (10회)
-  IF v_ad_views_today >= 10 THEN
+  IF v_ad_views_today >= 100 THEN
     RETURN QUERY SELECT FALSE, v_current_hearts, v_ad_views_today;
     RETURN;
   END IF;

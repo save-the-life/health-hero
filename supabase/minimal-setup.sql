@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS user_hearts (
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
   current_hearts INTEGER DEFAULT 5 CHECK (current_hearts >= 0 AND current_hearts <= 5),
   last_refill_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  ad_views_today INTEGER DEFAULT 0 CHECK (ad_views_today >= 0 AND ad_views_today <= 10),
+  ad_views_today INTEGER DEFAULT 0 CHECK (ad_views_today >= 0 AND ad_views_today <= 100),
   ad_reset_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS user_hearts (
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
   current_hearts INTEGER DEFAULT 5 CHECK (current_hearts >= 0 AND current_hearts <= 5),
   last_refill_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  ad_views_today INTEGER DEFAULT 0, -- 오늘 본 광고 횟수
+  ad_views_today INTEGER DEFAULT 0 CHECK (ad_views_today >= 0 AND ad_views_today <= 100), -- 오늘 본 광고 횟수
   ad_reset_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(), -- 광고 횟수 리셋 시간
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -359,8 +359,8 @@ BEGIN
     v_ad_views := 0;
   END IF;
 
-  -- 일일 광고 시청 제한 확인 (5회)
-  IF v_ad_views >= 5 THEN
+  -- 일일 광고 시청 제한 확인 (100회)
+  IF v_ad_views >= 100 THEN
     RETURN QUERY
     SELECT FALSE, v_hearts, v_ad_views, '오늘의 광고 시청 횟수를 모두 사용했습니다.'::TEXT;
     RETURN;

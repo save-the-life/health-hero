@@ -1,6 +1,5 @@
 import Image from "next/image";
 import TossLoginButton from "@/components/TossLoginButton";
-import GuestLoginButton from "@/components/GuestLoginButton";
 
 export default function Home() {
   return (

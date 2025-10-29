@@ -35,6 +35,7 @@
 - **Phase 4.24**: UI/UX 개선 ✅ **100%** (완료)
 - **Phase 4.25**: 모바일 반응형 UI 최적화 ✅ **100%** (완료)
 - **Phase 4.26**: 배경음악 및 음소거 기능 개선 ✅ **100%** (완료)
+- **Phase 4.27**: TDS 모달 통합 및 광고 시스템 개선 ✅ **100%** (완료)
 
 ---
 
@@ -1457,6 +1458,115 @@ marginTop: 90; // 상단 여백 90px
 - ✅ 페이즈 페이지 이동 시 배경음악 계속 재생
 - ✅ 퀴즈 페이지 이동 시 배경음악 계속 재생
 - ✅ 음소거 버튼으로 배경음악 볼륨 조절
+
+---
+
+## 📱 TDS 모달 통합 및 광고 시스템 개선 (2025-10-29)
+
+### Phase 4.27: TDS 모달 통합 및 광고 시스템 개선 ✅ **100%** (완료)
+
+#### 구현 내용
+
+1. **TDS 광고 결과 모달 구현**
+   - 기존 OS 기본 `alert()` → TDS Mobile `AlertDialog` 변경
+   - 일관된 토스 디자인 시스템 적용
+   - 하트 획득 성공/실패 시 TDS 모달 표시
+   - 커스텀 `AdRewardDialog` 컴포넌트 생성
+
+2. **광고 시청 완료 즉시 피드백**
+   - 광고 시청 완료 직후 즉시 모달 표시
+   - 기존: 다음 문제 풀이 후 결과 확인 → 개선: 광고 완료 즉시 결과 확인
+   - 하트 업데이트 즉시 반영 및 모달 표시 순서 최적화
+
+3. **광고 시청 횟수 제한 대폭 증가**
+   - **일일 제한**: 5회 → **100회**
+   - 테스트 및 실사용 편의성 향상
+   - Supabase 함수 및 테이블 CHECK 제약 조건 업데이트
+   - 다음 파일 수정:
+     - `supabase/add-heart-by-ad.sql`
+     - `supabase/quiz-schema.sql`
+     - `supabase/complete-setup.sql`
+     - `supabase/minimal-setup.sql`
+     - `supabase/missing-tables.sql`
+     - `supabase/security-policies.sql`
+
+4. **TDS Provider 격리로 CSS 충돌 해결**
+   - 전체 앱에 TDS Provider 적용 시 기존 스타일 덮어쓰기 문제 발생
+   - **해결**: `AdRewardDialog` 컴포넌트에만 `TDSProvider` 적용
+   - 기존 UI 스타일 유지하면서 TDS 모달만 선택적으로 사용
+   - `TDSProvider` 컴포넌트 생성 (client-side only rendering)
+
+5. **UI 스타일 개선**
+   - **버튼 둥글게 만들기**:
+     - AdRewardDialog 확인 버튼: `borderRadius: 12px`
+     - HeartShortageModal 버튼들: `borderRadius: 16px`, `overflow: hidden`
+     - 500 포인트, 나가기, 광고 하트 받기 버튼 모두 적용
+   - **버튼 텍스트 크기 증가**: 16px → **18px**
+   - **텍스트 가독성 개선**: `WebkitTextStroke` 유지로 명확한 테두리 효과
+
+#### 수정된 파일
+
+**프론트엔드**:
+- `src/components/AdRewardDialog.tsx` (신규 생성): TDS 광고 결과 모달
+- `src/components/TDSProvider.tsx` (신규 생성): Client-side TDS Provider 래퍼
+- `src/components/HeartShortageModal.tsx`: 
+  - TDS 모달 통합
+  - 광고 완료 즉시 모달 표시 로직
+  - 버튼 스타일 개선 (둥글게, 텍스트 크기 증가)
+- `package.json`: TDS Mobile 패키지 추가
+
+**백엔드 (Supabase)**:
+- `supabase/add-heart-by-ad.sql`: 광고 제한 5 → 100, DROP POLICY 추가
+- `supabase/quiz-schema.sql`: 광고 제한 5 → 100, CHECK 제약 추가
+- `supabase/complete-setup.sql`: 광고 제한 10 → 100
+- `supabase/minimal-setup.sql`: 광고 제한 10 → 100
+- `supabase/missing-tables.sql`: 광고 제한 10 → 100
+- `supabase/security-policies.sql`: 광고 제한 10 → 100
+
+#### 기술 스택
+
+- **TDS Mobile**: `@toss/tds-mobile`, `@toss/tds-mobile-ait`
+- **Emotion**: `@emotion/react@^11` (TDS 의존성)
+- **React 18**: TDS 호환성
+
+#### 문제 해결
+
+1. **문제**: 광고 결과가 다음 퀴즈 풀이 후에 표시됨
+   - **원인**: `onClose()` 호출로 HeartShortageModal이 즉시 닫힘
+   - **해결**: 하트 업데이트 후 모달 표시, 다이얼로그 확인 시에만 모달 닫기
+
+2. **문제**: TDS 전역 스타일이 기존 UI를 덮어씀
+   - **원인**: 앱 전체에 `TDSMobileAITProvider` 적용
+   - **해결**: `AdRewardDialog`에만 `TDSProvider` 격리 적용
+
+3. **문제**: 버튼이 각지게 표시됨
+   - **원인**: `outline` 속성과 `borderRadius` 불일치
+   - **해결**: `outline` 제거, `boxShadow`로 대체, `overflow: hidden` 추가
+
+4. **문제**: Supabase 정책 중복 에러
+   - **원인**: 기존 정책이 존재한 상태에서 재생성 시도
+   - **해결**: `DROP POLICY IF EXISTS` 추가
+
+#### 테스트 상태
+
+- ✅ 광고 시청 완료 즉시 TDS 모달 표시
+- ✅ 하트 획득 성공/실패 메시지 표시
+- ✅ TDS 디자인 시스템 적용
+- ✅ 기존 UI 스타일 유지
+- ✅ 일일 100회 광고 시청 제한 적용
+- ✅ 버튼 둥글게 표시
+- ✅ 버튼 텍스트 크기 18px 적용
+
+#### 알려진 이슈 및 제한사항
+
+1. **광고 로드 에러**: `PLACEMENT_ID_FETCH_FAILED`
+   - **원인**: 토스 내부 광고 시스템(Bedrock Module) 일시적 문제
+   - **영향**: 광고 인벤토리 부족 또는 서버 장애 시 발생
+   - **대응**: 토스 측 문제이므로 재시도 또는 대기 필요
+
+2. **TDS SSR 호환성**
+   - **문제**: `TDSMobileAITProvider`는 client-side only
+   - **해결**: `useEffect`로 클라이언트 감지 후 렌더링
 
 ---
 

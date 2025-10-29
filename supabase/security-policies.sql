@@ -46,7 +46,7 @@ CREATE POLICY "Users can update own hearts safely" ON user_hearts
     current_hearts >= 0 AND
     current_hearts <= 5 AND
     ad_views_today >= 0 AND
-    ad_views_today <= 10  -- 일일 광고 시청 제한
+    ad_views_today <= 100  -- 일일 광고 시청 제한
   );
 
 -- ============================================

@@ -38,8 +38,8 @@ BEGIN
         v_ad_reset_at := DATE_TRUNC('day', v_now);
     END IF;
     
-    -- 일일 광고 시청 제한 체크 (5회)
-    IF v_ad_views_today >= 5 THEN
+    -- 일일 광고 시청 제한 체크 (100회)
+    IF v_ad_views_today >= 100 THEN
         v_result := json_build_object(
             'success', false,
             'current_hearts', v_current_hearts,
@@ -101,6 +101,9 @@ END;
 $$;
 
 -- RLS 정책 설정 (모든 사용자가 실행 가능)
+-- 기존 정책이 있으면 삭제
+DROP POLICY IF EXISTS "Allow all users to call add_heart_by_ad" ON user_hearts;
+
 CREATE POLICY "Allow all users to call add_heart_by_ad" ON user_hearts
     FOR ALL USING (true);
 

@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { UserProfile } from '@/types/database'
 import { supabase } from '@/lib/supabase'
+import { TokenManager } from '@/utils/tokenManager'
 
 interface AuthState {
   user: UserProfile | null
@@ -38,18 +39,32 @@ export const useAuthStore = create<AuthState>()(
 
       logout: async () => {
         try {
-          // Supabase 로그아웃
-          await supabase.auth.signOut()
+          console.log('🔓 [authStore] 로그아웃 시작')
           
-          // 상태 초기화
+          // 1. 토스 토큰 삭제 (재로그인 시 약관 동의 화면 표시를 위해 필수)
+          TokenManager.clearTokens()
+          console.log('✅ [authStore] 토스 토큰 삭제 완료')
+          
+          // 2. Supabase 로그아웃
+          await supabase.auth.signOut()
+          console.log('✅ [authStore] Supabase 세션 종료 완료')
+          
+          // 3. 상태 초기화 (zustand persist가 자동으로 localStorage에서 제거)
           set({
             user: null,
             isAuthenticated: false,
             error: null
           })
+          console.log('✅ [authStore] 로그아웃 완료')
         } catch (error) {
-          console.error('로그아웃 실패:', error)
-          set({ error: '로그아웃에 실패했습니다.' })
+          console.error('❌ [authStore] 로그아웃 실패:', error)
+          // 에러가 발생해도 상태는 초기화
+          TokenManager.clearTokens()
+          set({
+            user: null,
+            isAuthenticated: false,
+            error: '로그아웃에 실패했습니다.'
+          })
         }
       },
 

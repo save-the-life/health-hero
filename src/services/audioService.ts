@@ -59,31 +59,60 @@ class AudioService {
   private setupVisibilityListener() {
     if (typeof window === "undefined") return;
     
-    document.addEventListener("visibilitychange", () => {
-      const isHidden = document.hidden;
-      
-      if (isHidden) {
-        // 백그라운드로 이동: 배경음악 일시정지
-        if (this.backgroundMusic && !this.backgroundMusic.paused) {
-          this.backgroundMusic.pause();
-          console.log("🔇 [audioService] 백그라운드 - 배경음악 일시정지");
-        }
-      } else {
-        // 포그라운드로 복귀: 배경음악 재개 (음소거 상태가 아닐 때만)
-        if (this.backgroundMusic && this.backgroundMusic.paused && !this.isMuted) {
-          try {
-            this.backgroundMusic.play().catch(() => {
-              console.log("⚠️ [audioService] 배경음악 재개 실패");
-            });
-            console.log("🔊 [audioService] 포그라운드 - 배경음악 재개");
-          } catch (error) {
-            console.log("⚠️ [audioService] 배경음악 재개 실패:", error);
-          }
-        } else if (this.backgroundMusic) {
-          console.log("🔊 [audioService] 포그라운드 복귀 (재생 상태 유지)");
+    const toBackground = () => {
+      // 배경음악 일시정지
+      if (this.backgroundMusic && !this.backgroundMusic.paused) {
+        this.backgroundMusic.pause();
+        console.log("🔇 [audioService] 백그라운드 - 배경음악 일시정지");
+      }
+      // Web Audio 일시정지
+      if (this.audioContext && this.audioContext.state === "running") {
+        this.audioContext.suspend().catch(() => {
+          /* noop */
+        });
+        console.log("🔇 [audioService] 백그라운드 - WebAudio suspend");
+      }
+    };
+
+    const toForeground = () => {
+      // Web Audio 재개
+      if (this.audioContext && this.audioContext.state === "suspended") {
+        this.audioContext.resume().catch(() => {
+          /* noop */
+        });
+        console.log("🔊 [audioService] 포그라운드 - WebAudio resume");
+      }
+      // 음소거가 아니면 배경음 재개
+      if (this.backgroundMusic && this.backgroundMusic.paused && !this.isMuted) {
+        try {
+          this.backgroundMusic.play().catch(() => {
+            console.log("⚠️ [audioService] 배경음악 재개 실패");
+          });
+          console.log("🔊 [audioService] 포그라운드 - 배경음악 재개");
+        } catch (error) {
+          console.log("⚠️ [audioService] 배경음악 재개 실패:", error);
         }
       }
+    };
+
+    // 표준 가시성 이벤트
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        toBackground();
+      } else {
+        toForeground();
+      }
     });
+
+    // Android/WebView 호환을 위한 보강 이벤트들
+    window.addEventListener("pagehide", toBackground);
+    // 일부 환경에서 blur 시에도 백그라운드 전환이 발생
+    window.addEventListener("blur", toBackground);
+    // bfcache 복귀
+    window.addEventListener("pageshow", toForeground);
+    window.addEventListener("focus", toForeground);
+    // freezing 이벤트 (Chrome, 실험적)
+    window.addEventListener("freeze", toBackground as EventListener);
   }
 
   // 오디오 인스턴스 초기화
@@ -287,7 +316,7 @@ class AudioService {
     }
     
     // 기존 HTML Audio 볼륨도 설정
-    this.audioInstances.forEach((audio, key) => {
+    this.audioInstances.forEach((audio) => {
       audio.volume = this.isMuted ? 0 : this.volume;
     });
 
