@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useGameStore } from "@/store/gameStore";
@@ -8,6 +7,7 @@ import SettingsDropdown from "./SettingsDropdown";
 import ItemInfoModal from "./ItemInfoModal";
 import ItemUseModal from "./ItemUseModal";
 import { SoundButton } from "./SoundButton";
+import { SafeImage } from "./SafeImage";
 
 interface GameHeaderProps {
   pageType?: "main" | "quiz"; // 페이지 타입 추가
@@ -117,24 +117,26 @@ export default function GameHeader({
         <div className="flex items-center gap-5">
           <div className="relative">
             {/* 캐릭터 원형 배경 */}
-            <Image
+            <SafeImage
               src="/images/ui/block02.png"
               alt="캐릭터 배경"
               width={40}
               height={40}
               className="relative z-10"
+              priority
             />
             {/* 캐릭터 이미지 */}
-            <Image
+            <SafeImage
               key={`character-${level}`}
               src={getCharacterImage(level)}
               alt="캐릭터"
               width={30}
               height={30}
               className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20"
+              priority
             />
             {/* 레벨 블록 */}
-            <Image
+            <SafeImage
               src="/images/ui/block01.png"
               alt="레벨 배경"
               width={70}
@@ -146,6 +148,7 @@ export default function GameHeader({
                 minWidth: "70px",
                 minHeight: "24px",
               }}
+              priority
             />
             {/* 레벨 텍스트 */}
             <span 
@@ -161,12 +164,13 @@ export default function GameHeader({
         <div className="flex items-center gap-5">
           <div className="relative">
             {/* 하트 아이콘 */}
-            <Image
+            <SafeImage
               src="/images/items/icon-heart.png"
               alt="하트"
               width={48}
               height={48}
               className="relative z-10"
+              priority
             />
             {/* 하트 내부 숫자 */}
             <span 
@@ -176,15 +180,15 @@ export default function GameHeader({
               {hearts?.current_hearts ?? 0}
             </span>
             {/* 광고 버튼 */}
-            <Image
+            {/* <SafeImage
               src="/images/items/button-ad.png"
               alt="광고 버튼"
               width={16}
               height={16}
               className="absolute bottom-1 right-1 z-20"
-            />
+            /> */}
             {/* 타이머 블록 */}
-            <Image
+            <SafeImage
               src="/images/ui/block01.png"
               alt="타이머 배경"
               width={70}
@@ -196,6 +200,7 @@ export default function GameHeader({
                 minWidth: "70px",
                 minHeight: "24px",
               }}
+              priority
             />
             {/* 타이머 텍스트 */}
             <span 
@@ -211,15 +216,16 @@ export default function GameHeader({
         <div className="flex items-center gap-5">
           <div className="relative">
             {/* 별 아이콘 */}
-            <Image
+            <SafeImage
               src="/images/items/Icon-star.png"
               alt="별"
               width={40}
               height={40}
               className="relative z-10"
+              priority
             />
             {/* 점수 블록 */}
-            <Image
+            <SafeImage
               src="/images/ui/block01.png"
               alt="점수 배경"
               width={70}
@@ -231,6 +237,7 @@ export default function GameHeader({
                 minWidth: "70px",
                 minHeight: "24px",
               }}
+              priority
             />
             {/* 점수 텍스트 */}
             <span 
@@ -249,7 +256,7 @@ export default function GameHeader({
               onClick={() => setShowSettingsMenu(!showSettingsMenu)}
               className="hover:opacity-80 transition-opacity"
             >
-              <Image
+              <SafeImage
                 src="/images/items/button-setting.png"
                 alt="설정"
                 width={24}
@@ -278,13 +285,22 @@ export default function GameHeader({
 
           {/* 모달 컨테이너 */}
           <div className="relative z-10">
-            <Image
+            <SafeImage
               src="/images/ui/popup-failed.png"
               alt="나가기 확인"
               width={324}
               height={440}
               className="object-cover"
+              priority
             />
+
+            {/* X 닫기 버튼 - 우측 상단 */}
+            <SoundButton
+              onClick={() => setShowExitModal(false)}
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center hover:opacity-80 transition-opacity"
+            >
+              <span className="text-white text-xl font-bold">×</span>
+            </SoundButton>
 
             {/* 종료할까요? 텍스트 - 상단으로부터 38px */}
             <div className="absolute top-[38px] left-1/2 transform -translate-x-1/2">
@@ -296,12 +312,13 @@ export default function GameHeader({
             {/* 하트 아이콘과 -1 텍스트 - 종료할까요? 텍스트로부터 80px 아래 */}
             <div className="absolute top-[150px] left-1/2 transform -translate-x-1/2">
               <div className="relative">
-                <Image
+                <SafeImage
                   src="/images/items/icon-heart.png"
                   alt="하트"
                   width={100}
                   height={100}
                   className="relative z-10"
+                  priority
                 />
                 <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 text-white text-2xl font-bold" style={{ textShadow: 'none' }}>
                   -1
@@ -340,7 +357,7 @@ export default function GameHeader({
                 }}
               >
                 {/* 버튼 포인트 이미지 */}
-                <Image
+                <SafeImage
                   src="/images/items/button-point-blue.png"
                   alt="button-point-blue"
                   width={8.47}

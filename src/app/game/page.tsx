@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { SafeImage } from "@/components/SafeImage";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -204,7 +204,7 @@ export default function GamePage() {
       <div className="relative h-screen overflow-hidden" style={{ height: '100vh', overflow: 'hidden' }}>
         {/* 배경 이미지 */}
         <div className="absolute inset-0 z-0">
-          <Image
+          <SafeImage
             src="/images/backgrounds/background-main.png"
             alt="헬스 히어로 메인 배경"
             fill
@@ -226,7 +226,7 @@ export default function GamePage() {
       <div className="relative h-screen overflow-hidden" style={{ height: '100vh', overflow: 'hidden' }}>
         {/* 배경 이미지 */}
         <div className="absolute inset-0 z-0">
-          <Image
+          <SafeImage
             src="/images/backgrounds/background-main.png"
             alt="헬스 히어로 메인 배경"
             fill
@@ -261,7 +261,7 @@ export default function GamePage() {
     <div className="relative h-screen overflow-hidden" style={{ height: '100vh', overflow: 'hidden' }}>
       {/* 배경 이미지 */}
       <div className="absolute inset-0 z-0">
-        <Image
+        <SafeImage
           src="/images/backgrounds/background-main.png"
           alt="헬스 히어로 메인 배경"
           fill
@@ -300,7 +300,7 @@ export default function GamePage() {
             }}
           >
             <div className="w-full h-full flex flex-col items-center justify-center relative">
-              <Image
+              <SafeImage
                 src={getPhaseImage(1)}
                 alt="페이즈 1"
                 width={120}
@@ -313,7 +313,7 @@ export default function GamePage() {
               {/* 클리어 체크 아이콘 */}
               {currentPhase > 1 && (
                 <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-                  <Image
+                  <SafeImage
                     src="/images/items/icon-check.png"
                     alt="클리어"
                     width={40}
@@ -342,7 +342,7 @@ export default function GamePage() {
             }}
           >
             <div className="w-full h-full flex flex-col items-center justify-center relative">
-              <Image
+              <SafeImage
                 src={getPhaseImage(2)}
                 alt="페이즈 2"
                 width={120}
@@ -355,7 +355,7 @@ export default function GamePage() {
               {/* 클리어 체크 아이콘 */}
               {currentPhase > 2 && (
                 <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-                  <Image
+                  <SafeImage
                     src="/images/items/icon-check.png"
                     alt="클리어"
                     width={40}
@@ -384,7 +384,7 @@ export default function GamePage() {
             }}
           >
             <div className="w-full h-full flex flex-col items-center justify-center relative">
-              <Image
+              <SafeImage
                 src={getPhaseImage(3)}
                 alt="페이즈 3"
                 width={120}
@@ -397,7 +397,7 @@ export default function GamePage() {
               {/* 클리어 체크 아이콘 */}
               {currentPhase > 3 && (
                 <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-                  <Image
+                  <SafeImage
                     src="/images/items/icon-check.png"
                     alt="클리어"
                     width={40}
@@ -426,7 +426,7 @@ export default function GamePage() {
             }}
           >
             <div className="w-full h-full flex flex-col items-center justify-center relative">
-              <Image
+              <SafeImage
                 src={getPhaseImage(4)}
                 alt="페이즈 4"
                 width={120}
@@ -439,7 +439,7 @@ export default function GamePage() {
               {/* 클리어 체크 아이콘 */}
               {currentPhase > 4 && (
                 <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-                  <Image
+                  <SafeImage
                     src="/images/items/icon-check.png"
                     alt="클리어"
                     width={40}
@@ -458,7 +458,7 @@ export default function GamePage() {
               bottom: `${120 * responsiveStyle.spacing}px`,
             }}
           >
-            <Image
+            <SafeImage
               src="/images/ui/vector1.png"
               alt="페이즈 연결선"
               width={170}
@@ -477,7 +477,7 @@ export default function GamePage() {
               bottom: `${280 * responsiveStyle.spacing}px`,
             }}
           >
-            <Image
+            <SafeImage
               src="/images/ui/vector2.png"
               alt="페이즈 연결선"
               width={170}
@@ -496,7 +496,7 @@ export default function GamePage() {
               bottom: `${440 * responsiveStyle.spacing}px`,
             }}
           >
-            <Image
+            <SafeImage
               src="/images/ui/vector1.png"
               alt="페이즈 연결선"
               width={170}

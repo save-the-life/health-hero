@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { SafeImage } from "./SafeImage";
 import { useState, useEffect } from "react";
 import { SoundButton } from "./SoundButton";
 
@@ -89,7 +89,7 @@ export default function ItemUseModal({
 
       {/* 모달 컨테이너 */}
       <div className="relative z-10">
-        <Image
+        <SafeImage
           src="/images/ui/popup-success.png"
           alt="아이템 사용 배경"
           width={324}
@@ -125,7 +125,7 @@ export default function ItemUseModal({
               borderRadius: "10px",
             }}
           >
-            <Image
+            <SafeImage
               src={currentItem.icon}
               alt={currentItem.name}
               width={60}
@@ -161,7 +161,7 @@ export default function ItemUseModal({
             }}
           >
             {/* 버튼 포인트 이미지 */}
-            <Image
+            <SafeImage
               src="/images/items/button-point-blue.png"
               alt="버튼 포인트"
               width={8.47}
@@ -171,7 +171,7 @@ export default function ItemUseModal({
 
             {/* 텍스트와 별 아이콘 */}
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
-              <Image
+              <SafeImage
                 src="/images/items/Icon-star.png"
                 alt="별"
                 width={20}

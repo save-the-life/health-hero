@@ -1,11 +1,9 @@
 "use client";
 
-import Image from "next/image";
+import { SafeImage } from "./SafeImage";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useAudio } from "@/hooks/useAudio";
 import { audioService } from "@/services/audioService";
-import { useAuthStore } from "@/store/authStore";
 import { SoundButton } from "./SoundButton";
 
 interface SettingsDropdownProps {
@@ -23,8 +21,6 @@ export default function SettingsDropdown({
   onShowItemInfoModal,
   pageType = "quiz", // 기본값은 quiz
 }: SettingsDropdownProps) {
-  const router = useRouter();
-  const { logout } = useAuthStore();
   const [isClosing, setIsClosing] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const { toggleMute } = useAudio();
@@ -108,27 +104,13 @@ export default function SettingsDropdown({
     }, 500); // 애니메이션 지속 시간과 동일
   };
 
-  const handleLogoutClick = async () => {
-    console.log("🔓 [SettingsDropdown] 로그아웃 버튼 클릭");
-    handleClose();
-    
-    try {
-      await logout();
-      console.log("✅ [SettingsDropdown] 로그아웃 완료, 시작 페이지로 이동");
-      // 로그아웃 후 시작 페이지로 이동
-      router.push("/");
-    } catch (error) {
-      console.error("❌ [SettingsDropdown] 로그아웃 실패:", error);
-    }
-  };
-
   return (
     <>
       {/* 배경 블러 오버레이 */}
       <div className="fixed inset-0 backdrop-blur-md z-30" />
 
       {/* 설정 버튼과 드롭다운 메뉴 */}
-      <div className="fixed top-[48px] right-6 z-40" data-menu-container>
+      <div className="fixed top-[96px] right-6 z-40" data-menu-container>
         {/* 설정 버튼 */}
         <div className="flex justify-end mb-2">
           <SoundButton
@@ -138,7 +120,7 @@ export default function SettingsDropdown({
               isClosing ? "animate-button-shrink" : "animate-button-expand"
             }`}
           >
-            <Image
+            <SafeImage
               src="/images/items/button-setting.png"
               alt="설정"
               width={36}
@@ -165,7 +147,7 @@ export default function SettingsDropdown({
             }`}
             style={{ animationDelay: isClosing ? "0.2s" : "0.1s" }}
           >
-            <Image
+            <SafeImage
               src={
                 isMuted
                   ? "/images/items/button-mute-off.png"
@@ -187,7 +169,7 @@ export default function SettingsDropdown({
               }`}
               style={{ animationDelay: isClosing ? "0.1s" : "0.2s" }}
             >
-              <Image
+              <SafeImage
                 src="/images/items/button-info.png"
                 alt="아이템 정보"
                 width={36}
@@ -206,7 +188,7 @@ export default function SettingsDropdown({
               }`}
               style={{ animationDelay: isClosing ? "0s" : "0.3s" }}
             >
-              <Image
+              <SafeImage
                 src="/images/items/button-exit.png"
                 alt="나가기"
                 width={36}
@@ -215,17 +197,6 @@ export default function SettingsDropdown({
               />
             </SoundButton>
           )}
-
-          {/* 로그아웃 버튼 - 모든 페이지에서 표시 */}
-          <SoundButton
-            onClick={handleLogoutClick}
-            className={`w-9 h-9 flex items-center justify-center hover:opacity-80 transition-opacity bg-red-500 rounded-lg ${
-              isClosing ? "animate-fade-out" : "animate-fade-in"
-            }`}
-            style={{ animationDelay: isClosing ? "0s" : pageType === "quiz" ? "0.4s" : "0.3s" }}
-          >
-            <span className="text-white text-xs font-bold">로그아웃</span>
-          </SoundButton>
         </div>
       </div>
     </>

@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { SafeImage } from "./SafeImage";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { useGameStore } from "@/store/gameStore";
@@ -60,7 +60,7 @@ export default function StageResultModal({
       {/* 모달 컨테이너 */}
       <div className="relative z-10">
         {/* 모달 배경 이미지 */}
-        <Image
+        <SafeImage
           src={
             isSuccess
               ? "/images/ui/popup-success.png"
@@ -118,7 +118,7 @@ export default function StageResultModal({
               }}
             >
               {/* 경험치 아이콘 */}
-              <Image
+              <SafeImage
                 src="/images/items/icon-exp.png"
                 alt="경험치"
                 width={40}
@@ -157,7 +157,7 @@ export default function StageResultModal({
               }}
             >
               {/* 점수 아이콘 */}
-              <Image
+              <SafeImage
                 src="/images/items/Icon-star.png"
                 alt="점수"
                 width={40}
@@ -199,7 +199,7 @@ export default function StageResultModal({
             onClick={handleRewardClick}
           >
             {/* 버튼 포인트 이미지 */}
-            <Image
+            <SafeImage
               src="/images/items/button-point-blue.png"
               alt="button-point-blue"
               width={8.47}

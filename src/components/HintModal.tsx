@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { SafeImage } from "./SafeImage";
 import { SoundButton } from "./SoundButton";
 
 interface HintModalProps {
@@ -19,7 +19,7 @@ export default function HintModal({ isOpen, onClose, hint }: HintModalProps) {
 
       {/* 모달 컨테이너 */}
       <div className="relative z-10">
-        <Image
+        <SafeImage
           src="/images/ui/popup-success.png"
           alt="힌트 배경"
           width={324}

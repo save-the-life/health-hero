@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { SafeImage } from "./SafeImage";
 import { SoundButton } from "./SoundButton";
 
 interface QuizChoiceButtonProps {
@@ -47,7 +47,7 @@ export default function QuizChoiceButton({
       disabled={isDisabled}
     >
       {/* 버튼 포인트 이미지 */}
-      <Image
+      <SafeImage
         src="/images/items/button-point-blue.png"
         alt="button-point-blue"
         width={8.47}

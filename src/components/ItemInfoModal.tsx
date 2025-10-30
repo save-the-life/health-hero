@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { SafeImage } from "./SafeImage";
 import { useState } from "react";
 import { SoundButton } from "./SoundButton";
 
@@ -70,7 +70,7 @@ export default function ItemInfoModal({ isOpen, onClose }: ItemInfoModalProps) {
 
       {/* 모달 컨테이너 */}
       <div className="relative z-10">
-        <Image
+        <SafeImage
           src="/images/ui/popup-success.png"
           alt="아이템 사용법"
           width={324}
@@ -100,14 +100,14 @@ export default function ItemInfoModal({ isOpen, onClose }: ItemInfoModalProps) {
             onClick={handlePrevious}
             className="w-[32px] h-[32px] flex items-center justify-center hover:opacity-80 transition-opacity"
           >
-            <Image
+            <SafeImage
               src="/images/ui/block02.png"
               alt="이전"
               width={32}
               height={32}
               className="absolute"
             />
-            <Image
+            <SafeImage
               src="/images/items/icon-left.png"
               alt="왼쪽"
               width={20}
@@ -123,7 +123,7 @@ export default function ItemInfoModal({ isOpen, onClose }: ItemInfoModalProps) {
               boxShadow: "inset 0px 2px 4px rgba(0, 0, 0, 0.1)",
             }}
           >
-            <Image
+            <SafeImage
               src={currentItem.icon}
               alt={currentItem.name}
               width={60}
@@ -137,14 +137,14 @@ export default function ItemInfoModal({ isOpen, onClose }: ItemInfoModalProps) {
             onClick={handleNext}
             className="w-[32px] h-[32px] flex items-center justify-center hover:opacity-80 transition-opacity"
           >
-            <Image
+            <SafeImage
               src="/images/ui/block02.png"
               alt="다음"
               width={32}
               height={32}
               className="absolute"
             />
-            <Image
+            <SafeImage
               src="/images/items/icon-right.png"
               alt="오른쪽"
               width={20}
@@ -179,7 +179,7 @@ export default function ItemInfoModal({ isOpen, onClose }: ItemInfoModalProps) {
             }}
           >
             {/* 버튼 포인트 이미지 */}
-            <Image
+            <SafeImage
               src="/images/items/button-point-blue.png"
               alt="버튼 포인트"
               width={8.47}
@@ -189,7 +189,7 @@ export default function ItemInfoModal({ isOpen, onClose }: ItemInfoModalProps) {
 
             {/* 텍스트와 별 아이콘 */}
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
-              <Image
+              <SafeImage
                 src="/images/items/Icon-star.png"
                 alt="별"
                 width={20}

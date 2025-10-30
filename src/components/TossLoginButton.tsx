@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+import { SafeImage } from "./SafeImage";
 import { useTossAuth } from "@/hooks/useTossAuth";
 import { TossAuthService } from "@/services/tossAuthService";
 import { useAuthStore } from "@/store/authStore";
@@ -131,7 +131,7 @@ export default function TossLoginButton() {
             pointerEvents: "none",
           }}
         >
-          <Image
+          <SafeImage
             src="/images/items/button-point-blue.png"
             alt="button-point-blue"
             width={8.47}

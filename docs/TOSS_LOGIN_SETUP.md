@@ -302,6 +302,62 @@ npm run build
 
 ---
 
-**Last Updated**: 2024-01-20  
-**Version**: 1.0.0
+## 🔧 인증 시스템 개선 (2025-01-30)
+
+### 자동 에러 복구
+
+`TossAuthService`가 다양한 인증 에러를 자동으로 처리합니다:
+
+#### 1. user_already_exists 에러 자동 처리
+
+```typescript
+if (signUpError.message.includes('already')) {
+  // 기존 Auth 사용자로 자동 signIn 시도
+  const { data: signInData } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  })
+  userId = signInData.user.id
+}
+```
+
+#### 2. auth.users/user_profiles 불일치 자동 복구
+
+```typescript
+if (signInError.message.includes('Invalid') || signInError.message.includes('credentials')) {
+  // auth.users 없고 user_profiles만 남은 경우
+  // 1. 기존 프로필 삭제
+  await supabase.from('user_profiles').delete().eq('id', existingProfile.id)
+  // 관련 데이터도 함께 삭제
+  
+  // 2. 새로운 Auth 사용자 생성
+  const { data: signUpData } = await supabase.auth.signUp({ ... })
+}
+```
+
+#### 3. 비밀번호 일관성 확보
+
+```typescript
+// 고정 비밀번호 사용으로 일관성 확보
+const password = `toss_${user.userKey}_permanent`
+```
+
+### 인증 상태별 자동 처리
+
+| auth.users | user_profiles | 자동 처리 |
+|------------|---------------|-----------|
+| ✅ 있음 | ✅ 있음 | 기존 세션으로 로그인 |
+| ❌ 없음 | ✅ 있음 | 프로필 삭제 → 신규 생성 |
+| ✅ 있음 | ❌ 없음 | signIn → 프로필 생성 |
+| ❌ 없음 | ❌ 없음 | 완전 신규 사용자 생성 |
+
+### 개발자를 위한 팁
+
+개발 중 테스트 데이터를 완전히 삭제하려면 `TROUBLESHOOTING.md`의 "테스트 데이터 완전 삭제" 섹션을 참고하세요.
+
+---
+
+**Last Updated**: 2025-01-30  
+**Version**: 1.1.0  
+**Status**: ✅ 인증 시스템 자동 복구 완료
 

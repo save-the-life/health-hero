@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { SafeImage } from "@/components/SafeImage";
 import Link from "next/link";
 
 export default function IntroPage() {
@@ -6,7 +6,7 @@ export default function IntroPage() {
     <div className="relative min-h-screen">
       {/* 배경 이미지 */}
       <div className="absolute inset-0 z-0">
-        <Image
+        <SafeImage
           src="/images/backgrounds/background-start.png"
           alt="헬스 히어로 시작 배경"
           fill
@@ -35,7 +35,7 @@ export default function IntroPage() {
           className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-0"
           style={{ width: "450px", height: "450px" }}
         >
-          <Image
+          <SafeImage
             src="/images/characters/level-20.png"
             alt="헬스 히어로"
             width={450}

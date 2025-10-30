@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { SafeImage } from "@/components/SafeImage";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/authStore";
@@ -112,7 +112,7 @@ export default function Phase3Page() {
       <div className="relative h-screen overflow-hidden" style={{ height: '100vh', overflow: 'hidden' }}>
         {/* 배경 이미지 */}
         <div className="absolute inset-0 z-0">
-          <Image
+          <SafeImage
             src="/images/backgrounds/background-phase3.png"
             alt="페이즈 3 배경"
             fill
@@ -134,7 +134,7 @@ export default function Phase3Page() {
       <div className="relative h-screen overflow-hidden" style={{ height: '100vh', overflow: 'hidden' }}>
         {/* 배경 이미지 */}
         <div className="absolute inset-0 z-0">
-          <Image
+          <SafeImage
             src="/images/backgrounds/background-phase3.png"
             alt="페이즈 3 배경"
             fill
@@ -163,7 +163,7 @@ export default function Phase3Page() {
     <div className="relative h-screen overflow-hidden" style={{ height: '100vh', overflow: 'hidden' }}>
       {/* 배경 이미지 */}
       <div className="absolute inset-0 z-0">
-        <Image
+        <SafeImage
           src="/images/backgrounds/background-phase3.png"
           alt="페이즈 3 배경"
           fill
@@ -180,7 +180,7 @@ export default function Phase3Page() {
             onClick={() => router.push("/game")}
             className="flex items-center gap-2 text-white hover:opacity-80 transition-opacity px-3 py-2 rounded-lg"
           >
-            <Image
+            <SafeImage
               src="/images/items/icon-backspace.png"
               alt="뒤로가기"
               width={24}

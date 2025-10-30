@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { SafeImage } from "@/components/SafeImage";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useRef, Suspense, lazy } from "react";
 import { useAuthStore } from "@/store/authStore";
@@ -833,7 +833,7 @@ function QuizPageContent() {
       <div className="relative h-screen overflow-hidden" style={{ height: '100vh', overflow: 'hidden' }}>
         {/* 배경 이미지 */}
         <div className="absolute inset-0 z-0">
-          <Image
+          <SafeImage
             src="/images/backgrounds/background-quiz.png"
             alt="퀴즈 배경"
             fill
@@ -856,7 +856,7 @@ function QuizPageContent() {
       <div className="relative h-screen overflow-hidden" style={{ height: '100vh', overflow: 'hidden' }}>
         {/* 배경 이미지 */}
         <div className="absolute inset-0 z-0">
-          <Image
+          <SafeImage
             src="/images/backgrounds/background-quiz.png"
             alt="퀴즈 배경"
             fill
@@ -878,7 +878,7 @@ function QuizPageContent() {
     return (
       <div className="relative h-screen overflow-hidden" style={{ height: '100vh', overflow: 'hidden' }}>
         <div className="absolute inset-0 z-0">
-          <Image
+          <SafeImage
             src="/images/backgrounds/background-quiz.png"
             alt="퀴즈 페이지 배경"
             fill
@@ -897,7 +897,7 @@ function QuizPageContent() {
     <div className="relative h-screen overflow-hidden" style={{ height: '100vh', overflow: 'hidden' }}>
       {/* 배경 이미지 */}
       <div className="absolute inset-0 z-0">
-        <Image
+        <SafeImage
           src={
             showResult
               ? isCorrect
@@ -920,7 +920,7 @@ function QuizPageContent() {
       <div className="fixed top-[140px] left-0 right-0 z-10 flex justify-center">
         <div className="relative">
           {/* 프로그래스바 테두리 */}
-          <Image
+          <SafeImage
             src="/images/ui/progressbar01.png"
             alt="프로그래스바 테두리"
             width={310}
@@ -930,7 +930,7 @@ function QuizPageContent() {
 
           {/* 프로그래스바 내부 */}
           <div className="absolute top-1 left-1">
-            <Image
+            <SafeImage
               src="/images/ui/progressbar02.png"
               alt="프로그래스바 내부"
               width={300}
@@ -996,7 +996,7 @@ function QuizPageContent() {
                 height: `${responsiveStyle.chalkboard.size.height}px`,
               }}
             >
-              <Image
+              <SafeImage
                 src="/images/items/blackboard.png"
                 alt="칠판"
                 width={responsiveStyle.chalkboard.size.width}
@@ -1069,7 +1069,7 @@ function QuizPageContent() {
                 height: `${responsiveStyle.chalkboard.size.height}px`,
               }}
             >
-              <Image
+              <SafeImage
                 src="/images/items/blackboard.png"
                 alt="칠판"
                 width={responsiveStyle.chalkboard.size.width}
@@ -1129,7 +1129,7 @@ function QuizPageContent() {
                   onClick={handleNextQuestion}
                 >
                   {/* 버튼 포인트 이미지 */}
-                  <Image
+                  <SafeImage
                     src="/images/items/button-point-blue.png"
                     alt="button-point-blue"
                     width={8.47}
@@ -1162,7 +1162,7 @@ function QuizPageContent() {
                         ? "다음 문제"
                         : "결과 보기"}
                     </span>
-                    <Image
+                    <SafeImage
                       src="/images/items/icon-next.png"
                       alt="다음"
                       width={24}
@@ -1183,7 +1183,7 @@ function QuizPageContent() {
                 marginTop: `${responsiveStyle.resultCharacter.marginTop}px`,
               }}
             >
-              <Image
+              <SafeImage
                 src={getCharacterImage(level || 1)}
                 alt="캐릭터"
                 width={responsiveStyle.resultCharacter.size.width}
@@ -1214,7 +1214,7 @@ function QuizPageContent() {
                 }}
               >
                 {/* 버튼 포인트 이미지 */}
-                <Image
+                <SafeImage
                   src={
                     isCorrect
                       ? "/images/items/button-point-blue.png"
@@ -1276,7 +1276,7 @@ function QuizPageContent() {
                 )
               } // 사용 가능한 경우에만 클릭 사운드 재생
             >
-              <Image
+              <SafeImage
                 src={
                   totalScore &&
                   totalScore >= 50 &&
@@ -1310,7 +1310,7 @@ function QuizPageContent() {
                 )
               } // 사용 가능한 경우에만 클릭 사운드 재생
             >
-              <Image
+              <SafeImage
                 src={
                   totalScore &&
                   totalScore >= 80 &&
@@ -1344,7 +1344,7 @@ function QuizPageContent() {
                 )
               } // 사용 가능한 경우에만 클릭 사운드 재생
             >
-              <Image
+              <SafeImage
                 src={
                   totalScore &&
                   totalScore >= 100 &&
@@ -1378,7 +1378,7 @@ function QuizPageContent() {
                 )
               } // 사용 가능한 경우에만 클릭 사운드 재생
             >
-              <Image
+              <SafeImage
                 src={
                   totalScore &&
                   totalScore >= 200 &&

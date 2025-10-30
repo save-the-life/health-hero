@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { SafeImage } from "@/components/SafeImage";
 import TossLoginButton from "@/components/TossLoginButton";
 
 export default function Home() {
@@ -6,7 +6,7 @@ export default function Home() {
     <div className="relative h-screen overflow-hidden" style={{ height: '100vh', overflow: 'hidden' }}>
       {/* 배경 이미지 */}
       <div className="absolute inset-0 z-0">
-        <Image
+        <SafeImage
           src="/images/backgrounds/background-start.png"
           alt="헬스 히어로 시작 배경"
           fill
@@ -17,7 +17,7 @@ export default function Home() {
 
       {/* 게임 등급 이미지 (우측 상단) */}
       <div className="absolute top-4 right-4 z-20">
-        <Image
+        <SafeImage
           src="/images/ui/game-rating.png"
           alt="게임 등급"
           width={60}
@@ -47,7 +47,7 @@ export default function Home() {
         {/* 캐릭터 이미지 */}
         <div className="flex items-center justify-center">
           <div style={{ width: "420px", height: "420px" }}>
-            <Image
+            <SafeImage
               src="/images/characters/level-20.png"
               alt="헬스 히어로"
               width={450}

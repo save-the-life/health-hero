@@ -1,7 +1,7 @@
 # 🚀 헬스 히어로 구현 현황
 
-**최종 업데이트**: 2025-01-28 (최신 업데이트)  
-**현재 단계**: Phase 4 완료 + 폰트/스타일 최적화 + UI/UX 개선 + 모바일 반응형 최적화 + 배경음악 시스템 개선 완료
+**최종 업데이트**: 2025-01-30 (최신 업데이트)  
+**현재 단계**: Phase 4 완료 + 이미지 로딩 최적화 + 인증 시스템 개선 완료
 
 ---
 
@@ -36,6 +36,7 @@
 - **Phase 4.25**: 모바일 반응형 UI 최적화 ✅ **100%** (완료)
 - **Phase 4.26**: 배경음악 및 음소거 기능 개선 ✅ **100%** (완료)
 - **Phase 4.27**: TDS 모달 통합 및 광고 시스템 개선 ✅ **100%** (완료)
+- **Phase 4.28**: 이미지 로딩 최적화 및 인증 시스템 개선 ✅ **100%** (완료)
 
 ---
 
@@ -1567,6 +1568,206 @@ marginTop: 90; // 상단 여백 90px
 2. **TDS SSR 호환성**
    - **문제**: `TDSMobileAITProvider`는 client-side only
    - **해결**: `useEffect`로 클라이언트 감지 후 렌더링
+
+---
+
+### Phase 4.28: 이미지 로딩 최적화 및 인증 시스템 개선 (2025-01-30 완료)
+
+**목표**: 간헐적인 이미지 로딩 실패 방지 및 사용자 인증 에러 해결
+
+#### 구현 내용
+
+##### 1. SafeImage 컴포넌트 생성
+
+**파일**: `src/components/SafeImage.tsx`
+
+이미지 로딩 실패 시 자동 재시도 및 에러 핸들링 기능을 가진 컴포넌트 생성:
+
+```typescript
+interface SafeImageProps extends Omit<ImageProps, "onError"> {
+  fallbackSrc?: string;      // 로딩 실패 시 표시할 대체 이미지
+  maxRetries?: number;        // 최대 재시도 횟수 (기본값: 3)
+  retryDelay?: number;        // 재시도 간격 (기본값: 1000ms)
+}
+```
+
+**핵심 기능**:
+- ✅ 로딩 실패 시 최대 3회 자동 재시도
+- ✅ 캐시 우회를 위한 timestamp 추가
+- ✅ 재시도 실패 시 fallback 이미지 표시
+- ✅ 콘솔에 상세한 로딩 상태 로깅
+- ✅ priority 속성 지원으로 중요 이미지 즉시 로딩
+
+##### 2. 전체 프로젝트 SafeImage 적용
+
+**적용 파일 (총 18개)**:
+
+**컴포넌트 (11개)**:
+- ✅ `GameHeader.tsx` - 헤더 UI 요소 (캐릭터, 하트, 별, 설정 아이콘)
+- ✅ `HeartShortageModal.tsx` - 하트 부족 모달 (칠판, 하트, 타이머, 버튼 아이콘)
+- ✅ `AdRewardDialog.tsx` - 광고 보상 다이얼로그
+- ✅ `ItemInfoModal.tsx` - 아이템 정보 모달
+- ✅ `ItemUseModal.tsx` - 아이템 사용 모달
+- ✅ `StageResultModal.tsx` - 스테이지 결과 모달
+- ✅ `HintModal.tsx` - 힌트 모달
+- ✅ `SettingsDropdown.tsx` - 설정 드롭다운
+- ✅ `StageButton.tsx` - 스테이지 버튼
+- ✅ `QuizChoiceButton.tsx` - 퀴즈 선택 버튼
+- ✅ `TossLoginButton.tsx` - 토스 로그인 버튼
+
+**페이지 (7개)**:
+- ✅ `src/app/page.tsx` - 메인 페이지
+- ✅ `src/app/intro/page.tsx` - 인트로 페이지
+- ✅ `src/app/game/page.tsx` - 게임 메인 페이지
+- ✅ `src/app/game/phase1/page.tsx` - 페이즈 1
+- ✅ `src/app/game/phase2/page.tsx` - 페이즈 2
+- ✅ `src/app/game/phase3/page.tsx` - 페이즈 3
+- ✅ `src/app/game/phase4/page.tsx` - 페이즈 4
+- ✅ `src/app/game/quiz/page.tsx` - 퀴즈 페이지
+
+**변경 방법**:
+```typescript
+// 변경 전
+import Image from "next/image";
+<Image src="/images/..." alt="..." width={100} height={100} />
+
+// 변경 후
+import { SafeImage } from "@/components/SafeImage";
+<SafeImage src="/images/..." alt="..." width={100} height={100} priority />
+```
+
+##### 3. TossAuthService 인증 시스템 개선
+
+**파일**: `src/services/tossAuthService.ts`
+
+**개선 내용**:
+
+1. **비밀번호 고정**:
+```typescript
+// 변경 전: 매번 다른 비밀번호
+const password = `toss_${user.userKey}_${Date.now()}`
+
+// 변경 후: 고정 비밀번호로 일관성 확보
+const password = `toss_${user.userKey}_permanent`
+```
+
+2. **user_already_exists 에러 자동 처리**:
+```typescript
+if (signUpError.message.includes('already') || signUpError.message.includes('exists')) {
+  // 기존 Auth 사용자로 자동 signIn 시도
+  const { data: signInData } = await supabase.auth.signInWithPassword({ email, password })
+  userId = signInData.user.id
+}
+```
+
+3. **auth.users와 user_profiles 동기화 처리**:
+```typescript
+if (signInError.message.includes('Invalid') || signInError.message.includes('credentials')) {
+  // auth.users 없고 user_profiles만 남은 경우
+  // 1. 기존 프로필 및 관련 데이터 삭제
+  await supabase.from('user_quiz_records').delete().eq('user_id', existingProfile.id)
+  await supabase.from('user_progress').delete().eq('user_id', existingProfile.id)
+  await supabase.from('user_hearts').delete().eq('user_id', existingProfile.id)
+  await supabase.from('user_profiles').delete().eq('id', existingProfile.id)
+  
+  // 2. 새로운 Auth 사용자 생성
+  const { data: signUpData } = await supabase.auth.signUp({ ... })
+}
+```
+
+##### 4. 사용자 데이터 관리 가이드 추가
+
+**문제 상황별 해결책**:
+
+| 상황 | `auth.users` | `user_profiles` | 자동 처리 |
+|------|--------------|-----------------|-----------|
+| 정상 케이스 | ✅ 있음 | ✅ 있음 | 기존 세션으로 로그인 |
+| Auth만 삭제 | ❌ 없음 | ✅ 있음 | 프로필 삭제 → 신규 생성 |
+| 프로필만 삭제 | ✅ 있음 | ❌ 없음 | 기존 Auth로 signIn → 프로필 생성 |
+| 완전 삭제 | ❌ 없음 | ❌ 없음 | 완전히 신규 사용자 생성 |
+
+**테스트 데이터 완전 삭제 SQL**:
+```sql
+-- toss_user_key로 한 번에 삭제
+DO $$
+DECLARE
+  target_user_id UUID;
+BEGIN
+  SELECT id INTO target_user_id 
+  FROM user_profiles 
+  WHERE toss_user_key = YOUR_TOSS_USER_KEY;
+  
+  IF target_user_id IS NOT NULL THEN
+    DELETE FROM user_quiz_records WHERE user_id = target_user_id;
+    DELETE FROM user_progress WHERE user_id = target_user_id;
+    DELETE FROM user_hearts WHERE user_id = target_user_id;
+    DELETE FROM user_profiles WHERE id = target_user_id;
+    DELETE FROM auth.users WHERE id = target_user_id;
+    
+    RAISE NOTICE '✅ 사용자 데이터 완전 삭제 완료';
+  END IF;
+END $$;
+```
+
+##### 5. 문서 업데이트
+
+- ✅ `IMAGE_LOADING_OPTIMIZATION.md` - SafeImage 사용 가이드 추가
+- ✅ `IMPLEMENTATION_STATUS.md` - Phase 4.28 추가
+- ✅ `TROUBLESHOOTING.md` - 인증 에러 트러블슈팅 추가
+
+#### 적용 효과
+
+1. **이미지 로딩 안정성 향상**:
+   - ✅ 네트워크 불안정 환경에서도 안정적인 이미지 표시
+   - ✅ 자동 재시도로 사용자 경험 개선
+   - ✅ 전체 프로젝트 일관성 확보
+
+2. **인증 시스템 안정성 향상**:
+   - ✅ 사용자 삭제 후 재로그인 시 자동 복구
+   - ✅ auth.users와 user_profiles 불일치 자동 해결
+   - ✅ user_already_exists 에러 자동 처리
+
+3. **개발 편의성 향상**:
+   - ✅ 테스트 데이터 쉽게 삭제 가능
+   - ✅ 다양한 엣지 케이스 자동 처리
+   - ✅ 콘솔 로그로 상세한 디버깅 정보 제공
+
+#### 기술적 개선사항
+
+1. **SafeImage 재시도 로직**:
+   - 최대 3회 재시도
+   - 1초 간격으로 재시도
+   - 타임스탬프 추가로 캐시 우회
+   - 재시도 실패 시 fallback 이미지
+
+2. **인증 에러 자동 복구**:
+   - 4가지 케이스 모두 자동 처리
+   - 데이터 정합성 자동 유지
+   - 에러 로그로 추적 가능
+
+3. **성능 최적화**:
+   - priority 속성으로 중요 이미지 즉시 로딩
+   - lazy loading으로 스크롤 시 이미지 로딩
+   - 이미지 preload 지원
+
+#### 테스트 상태
+
+- ✅ SafeImage 전체 페이지 적용 완료
+- ✅ 이미지 로딩 실패 시 자동 재시도 확인
+- ✅ user_already_exists 에러 자동 처리 확인
+- ✅ auth.users/user_profiles 불일치 자동 복구 확인
+- ✅ 테스트 데이터 삭제 SQL 스크립트 검증
+- ✅ 모든 케이스 자동 복구 동작 확인
+
+#### 알려진 이슈 및 제한사항
+
+1. **이미지 캐싱**:
+   - 브라우저 캐시 정책에 따라 재시도 효과가 제한될 수 있음
+   - timestamp 추가로 캐시 우회 구현
+
+2. **인증 복구 시간**:
+   - 프로필 삭제 및 재생성 시 약간의 지연 발생 가능
+   - 사용자에게는 투명하게 처리됨
 
 ---
 

@@ -687,8 +687,160 @@ const handleExitClick = () => {
 
 ---
 
-**Last Updated**: 2025-01-27  
+## 🖼️ 이미지 로딩 문제
+
+### 1. 간헐적인 이미지 로딩 실패
+
+**증상**: 네트워크가 불안정한 환경에서 일부 이미지가 표시되지 않음
+
+**원인**: 
+- 네트워크 타임아웃
+- 브라우저 캐시 문제
+- CDN 응답 지연
+
+**해결**: `SafeImage` 컴포넌트 사용
+
+```typescript
+// 변경 전
+import Image from "next/image";
+<Image src="/images/icon.png" alt="아이콘" width={100} height={100} />
+
+// 변경 후
+import { SafeImage } from "@/components/SafeImage";
+<SafeImage 
+  src="/images/icon.png" 
+  alt="아이콘" 
+  width={100} 
+  height={100}
+  priority              // 중요 이미지는 즉시 로딩
+  maxRetries={3}        // 최대 3회 재시도
+  retryDelay={1000}     // 1초 간격
+  fallbackSrc="/placeholder.png"  // 실패 시 대체 이미지
+/>
+```
+
+**SafeImage 기능**:
+- ✅ 로딩 실패 시 자동 재시도 (최대 3회)
+- ✅ 타임스탬프로 캐시 우회
+- ✅ Fallback 이미지 지원
+- ✅ 콘솔에 상세 로그 출력
+
+---
+
+## 🔐 인증 에러
+
+### 1. user_already_exists 에러
+
+**에러 메시지**:
+```
+AuthApiError: User already exists
+code: "user_already_exists"
+```
+
+**원인**: 
+- `user_profiles`는 삭제했지만 `auth.users`에 사용자 정보가 남아있음
+- 또는 이전 로그인 시도에서 생성된 사용자 정보
+
+**해결**: 
+코드가 자동으로 처리합니다. `TossAuthService`에서 다음과 같이 동작:
+
+```typescript
+// 자동 처리 로직
+if (signUpError.message.includes('already')) {
+  // 기존 사용자로 자동 로그인 시도
+  await supabase.auth.signInWithPassword({ email, password })
+}
+```
+
+**수동 해결** (자동 처리 실패 시):
+```sql
+-- auth.users에서 삭제
+DELETE FROM auth.users WHERE email = 'user529047996@health-hero.app';
+```
+
+### 2. Invalid login credentials 에러
+
+**에러 메시지**:
+```
+AuthApiError: Invalid login credentials
+code: "invalid_credentials"
+status: 400
+```
+
+**원인**: 
+- `auth.users`는 삭제되었지만 `user_profiles`가 남아있음
+- 비밀번호 불일치
+
+**해결**:
+코드가 자동으로 처리합니다:
+
+```typescript
+// 자동 처리 로직
+if (signInError.message.includes('Invalid') || signInError.message.includes('credentials')) {
+  // 1. 기존 프로필 삭제
+  await supabase.from('user_profiles').delete().eq('id', existingProfile.id)
+  // 관련 데이터도 함께 삭제
+  
+  // 2. 새로운 Auth 사용자 생성
+  await supabase.auth.signUp({ ... })
+}
+```
+
+### 3. 테스트 데이터 완전 삭제
+
+개발 중 테스트 데이터를 완전히 삭제하려면:
+
+```sql
+-- toss_user_key로 한 번에 삭제
+DO $$
+DECLARE
+  target_user_id UUID;
+BEGIN
+  -- 본인의 toss_user_key로 변경
+  SELECT id INTO target_user_id 
+  FROM user_profiles 
+  WHERE toss_user_key = 529047996;
+  
+  IF target_user_id IS NOT NULL THEN
+    -- 관련 데이터 모두 삭제
+    DELETE FROM user_quiz_records WHERE user_id = target_user_id;
+    DELETE FROM user_progress WHERE user_id = target_user_id;
+    DELETE FROM user_hearts WHERE user_id = target_user_id;
+    DELETE FROM toss_login_logs WHERE user_id = target_user_id;
+    DELETE FROM user_profiles WHERE id = target_user_id;
+    
+    -- auth.users에서도 삭제
+    DELETE FROM auth.users WHERE id = target_user_id;
+    
+    RAISE NOTICE '✅ 사용자 데이터 완전 삭제 완료';
+  ELSE
+    RAISE NOTICE '⚠️ 해당 사용자를 찾을 수 없습니다.';
+  END IF;
+END $$;
+```
+
+**또는 Supabase Dashboard에서**:
+1. **Authentication** → **Users** 메뉴
+2. 본인 계정 찾기
+3. 우측 메뉴(`...`) → **Delete user** 클릭
+
+### 4. 인증 상태별 자동 처리
+
+| auth.users | user_profiles | 자동 처리 동작 |
+|------------|---------------|----------------|
+| ✅ 있음 | ✅ 있음 | 기존 세션으로 로그인 |
+| ❌ 없음 | ✅ 있음 | 프로필 삭제 → 신규 생성 |
+| ✅ 있음 | ❌ 없음 | signIn → 프로필 생성 |
+| ❌ 없음 | ❌ 없음 | 완전 신규 사용자 생성 |
+
+**모든 케이스가 자동으로 처리되므로** 특별한 조치가 필요 없습니다.
+
+---
+
+**Last Updated**: 2025-01-30  
 **Status**: Living Document  
 **토스 로그인**: ✅ 완전 해결  
-**성능 최적화**: ✅ 완전 해결
+**성능 최적화**: ✅ 완전 해결  
+**이미지 로딩**: ✅ SafeImage 적용 완료  
+**인증 시스템**: ✅ 자동 복구 완료
 

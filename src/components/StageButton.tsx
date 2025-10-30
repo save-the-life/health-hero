@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { SafeImage } from "./SafeImage";
 import { SoundButton } from "./SoundButton";
 
 interface StageButtonProps {
@@ -38,7 +38,7 @@ export default function StageButton({
       playClickSound={!isLocked} // 잠금 해제된 경우에만 클릭 사운드 재생
     >
       {/* 버튼 포인트 이미지 */}
-      <Image
+      <SafeImage
         src="/images/items/button-point-blue.png"
         alt="button-point-blue"
         width={8.47}
@@ -53,7 +53,7 @@ export default function StageButton({
 
       {/* 잠금 아이콘 또는 스테이지 번호 */}
       {isLocked ? (
-        <Image
+        <SafeImage
           src="/images/items/icon-lock.png"
           alt="잠금"
           width={40}

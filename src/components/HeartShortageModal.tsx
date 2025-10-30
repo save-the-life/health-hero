@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useGameStore } from "@/store/gameStore";
 import { useAdMob } from "@/hooks/useAdMob";
@@ -10,7 +9,8 @@ import { SoundButton } from "./SoundButton";
 import { AdErrorBoundary } from "@/components/ErrorBoundary";
 import { adLogger } from "@/utils/adLogger";
 import { AdRewardDialog } from "./AdRewardDialog";
-import { TDSProvider } from "./TDSProvider";
+import { SafeImage } from "./SafeImage";
+// import { TDSProvider } from "./TDSProvider";
 
 interface HeartShortageModalProps {
   isOpen: boolean;
@@ -345,12 +345,13 @@ function HeartShortageModalContent({
       <div className="relative z-10">
         {/* 칠판 배경 */}
         <div className="relative">
-          <Image
+          <SafeImage
             src="/images/items/blackboard.png"
             alt="칠판"
             width={342}
             height={282}
             className="object-cover"
+            priority
           />
 
           {/* 칠판 내용 */}
@@ -374,12 +375,13 @@ function HeartShortageModalContent({
 
             {/* 하트 이미지 */}
             <div className="relative mb-2">
-              <Image
+              <SafeImage
                 src="/images/items/icon-heart.png"
                 alt="하트"
                 width={100}
                 height={100}
                 className="object-cover"
+                priority
               />
 
               {/* 하트 중앙의 0 텍스트 */}
@@ -399,15 +401,16 @@ function HeartShortageModalContent({
             {/* 타이머 영역 */}
             <div className="relative mb-6" style={{ width: '90px' }}>
               {/* 타이머 아이콘 */}
-              <Image
+              <SafeImage
                 src="/images/items/icon-timer.png"
                 alt="타이머"
                 width={44}
                 height={44}
                 className="relative z-10"
+                priority
               />
               {/* 타이머 블록 */}
-              <Image
+              <SafeImage
                 src="/images/ui/block01.png"
                 alt="타이머 배경"
                 width={70}
@@ -419,6 +422,7 @@ function HeartShortageModalContent({
                   minWidth: "70px",
                   minHeight: "24px",
                 }}
+                priority
               />
               {/* 타이머 텍스트 */}
               <span 
@@ -447,13 +451,13 @@ function HeartShortageModalContent({
                   "0px 0px 0px 2px #000000, 0px 4px 4px 0px rgba(0, 0, 0, 0.25), inset 0px 3px 0px 0px rgba(0, 0, 0, 0.1)",
                 color: "#FFFFFF",
                 fontSize: "18px",
-                fontWeight: "600",
+                fontWeight: "400",
                 WebkitTextStroke: "1px #000000",
               }}
               onClick={handleBuyHeart}
             >
               {/* 버튼 포인트 이미지 */}
-              <Image
+              <SafeImage
                 src="/images/items/button-point-blue.png"
                 alt="button-point-blue"
                 width={8.47}
@@ -468,17 +472,17 @@ function HeartShortageModalContent({
 
               {/* 별 아이콘과 텍스트 */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center gap-1">
-                <Image
+                <SafeImage
                   src="/images/items/Icon-star.png"
                   alt="별"
-                  width={20}
-                  height={20}
+                  width={32}
+                  height={32}
                 />
                 <span
                   style={{
                     color: "#FFFFFF",
-                    fontSize: "16px",
-                    fontWeight: "600",
+                    fontSize: "18px",
+                    fontWeight: "400",
                     WebkitTextStroke: "1px #000000",
                     lineHeight: "1.2",
                   }}
@@ -506,7 +510,7 @@ function HeartShortageModalContent({
               onClick={handleExit}
             >
               {/* 버튼 포인트 이미지 */}
-              <Image
+              <SafeImage
                 src="/images/items/button-point-blue.png"
                 alt="button-point-blue"
                 width={8.47}
@@ -567,7 +571,7 @@ function HeartShortageModalContent({
             } // 광고 버튼은 준비된 상태에서만 클릭 사운드 재생
           >
             {/* 버튼 포인트 이미지 */}
-            <Image
+            <SafeImage
               src="/images/items/button-point-blue.png"
               alt="button-point-blue"
               width={8.47}
@@ -582,17 +586,17 @@ function HeartShortageModalContent({
 
             {/* 플레이 아이콘과 텍스트 */}
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center gap-2 whitespace-nowrap">
-              <Image
+              <SafeImage
                 src="/images/items/button-ad.png"
                 alt="광고"
-                width={16}
-                height={16}
+                width={32}
+                height={32}
               />
               <span
                 style={{
                   color: "#FFFFFF",
-                  fontSize: "16px",
-                  fontWeight: "600",
+                  fontSize: "18px",
+                  fontWeight: "400",
                   WebkitTextStroke: "1px #000000",
                   lineHeight: "1.2",
                 }}
@@ -611,7 +615,7 @@ function HeartShortageModalContent({
       </div>
       
       {/* TDS 광고 결과 다이얼로그 - TDS Provider로 격리 */}
-      <TDSProvider>
+      {/* <TDSProvider> */}
         <AdRewardDialog
           open={dialogOpen}
           onClose={() => {
@@ -622,7 +626,7 @@ function HeartShortageModalContent({
           success={dialogSuccess}
           message={dialogMessage}
         />
-      </TDSProvider>
+      {/* </TDSProvider> */}
     </div>
   );
 }
