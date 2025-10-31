@@ -202,11 +202,11 @@ function QuizPageContent() {
       return {
         chalkboard: {
           scale: 1,
-          size: { width: 291, height: 240 },
+          size: { width: 260, height: 215 },
         },
         choices: {
           scale: 1,
-          size: { width: 280, height: 45 },
+          size: { width: 260, height: 35 },
         },
         resultCharacter: {
           size: { width: 293, height: 293 }, // 75% 축소
@@ -219,14 +219,44 @@ function QuizPageContent() {
         nextButton: {
           size: { width: 120, height: 42 }, // 75% 축소
         },
-        spacingBetween: 12, // 축소된 간격
+        spacingBetween: 8, // 축소된 간격
         choiceGap: 8, // 축소된 간격
         marginTop: 120,
       };
     }
 
-    // 중간 화면 (667-750px)
-    if (screenHeight <= 750) {
+    // 중간 화면 (667-725px)
+    if (screenHeight <= 725) {
+      return {
+        chalkboard: {
+          scale: 1,
+          size: { width: 260, height: 215 },
+        },
+        choices: {
+          scale: 0.85,
+          size: { width: 260, height: 35 },
+        },
+        resultCharacter: {
+          size: { width: 332, height: 332 }, // 85% 축소
+          marginTop: -28, // 중간 캐릭터 상단 마진
+        },
+        resultButton: {
+          size: { width: 255, height: 48 }, // 85% 축소
+          marginTop: -8, // 중간 버튼 상단 마진
+        },
+        nextButton: {
+          size: { width: 136, height: 48 }, // 85% 축소
+        },
+        spacingBetween: 12, // 중간 간격
+        choiceGap: 12,
+        marginTop: 120,
+      };
+    }
+
+    
+
+    // 중간 화면 (725-780px)
+    if (screenHeight <= 780) {
       return {
         chalkboard: {
           scale: 1,
@@ -248,7 +278,7 @@ function QuizPageContent() {
           size: { width: 136, height: 48 }, // 85% 축소
         },
         spacingBetween: 12, // 중간 간격
-        choiceGap: 12,
+        choiceGap: 8,
         marginTop: 120,
       };
     }

@@ -108,7 +108,7 @@ export default function GamePage() {
     }
 
     // 화면이 700px 이상이면 정상 크기
-    if (screenHeight >= 700) {
+    if (screenHeight >= 815) {
       return {
         phase1: {
           bottom: 20,

@@ -36,6 +36,21 @@ export default function GameHeader({
   const [showItemInfoModal, setShowItemInfoModal] = useState(false);
   const [showItemUseModal, setShowItemUseModal] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string>("");
+  
+  // 화면 너비 감지
+  const [screenWidth, setScreenWidth] = useState(0);
+
+  // 화면 크기 감지
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setScreenWidth(window.innerWidth);
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
 
   // 아이템 사용 핸들러
   const handleItemUse = (itemId: string) => {
@@ -110,19 +125,149 @@ export default function GameHeader({
     return currentTimer;
   };
 
+  // 반응형 스타일 계산 (너비 기반)
+  const getResponsiveStyle = () => {
+    if (screenWidth === 0) {
+      return {
+        container: {
+          padding: "px-6",
+          height: "h-[60px]",
+        },
+        character: {
+          background: { width: 40, height: 40 },
+          image: { width: 30, height: 30 },
+          levelBlock: { width: 70, height: 24, left: "left-6" },
+          levelText: { fontSize: "text-[10px]", width: "w-[70px]", left: "left-6" },
+        },
+        heart: {
+          icon: { width: 48, height: 48 },
+          number: { fontSize: "text-base" },
+          timerBlock: { width: 70, height: 24, left: "left-6" },
+          timerText: { fontSize: "text-[10px]", width: "w-[70px]", left: "left-6" },
+        },
+        score: {
+          icon: { width: 40, height: 40 },
+          block: { width: 70, height: 24, left: "left-4" },
+          text: { fontSize: "text-[10px]", width: "w-[70px]", left: "left-4" },
+        },
+        settings: {
+          button: { width: 24, height: 24 },
+        },
+        gap: "gap-5",
+      };
+    }
+
+    // 작은 화면 (320px ~ 375px): iPhone SE, 작은 모바일
+    if (screenWidth <= 360) {
+      return {
+        container: {
+          padding: "px-4",
+          height: "h-[50px]",
+        },
+        character: {
+          background: { width: 34, height: 34 },
+          image: { width: 26, height: 26 },
+          levelBlock: { width: 55, height: 20, left: "left-[20px]" },
+          levelText: { fontSize: "text-[9px]", width: "w-[55px]", left: "left-[22px]" },
+        },
+        heart: {
+          icon: { width: 38, height: 38 },
+          number: { fontSize: "text-sm" },
+          timerBlock: { width: 55, height: 20, left: "left-[20px]" },
+          timerText: { fontSize: "text-[9px]", width: "w-[55px]", left: "left-[20px]" },
+        },
+        score: {
+          icon: { width: 34, height: 34 },
+          block: { width: 55, height: 20, left: "left-[18px]" },
+          text: { fontSize: "text-[9px]", width: "w-[55px]", left: "left-[18px]" },
+        },
+        settings: {
+          button: { width: 20, height: 20 },
+        },
+        gap: "gap-2",
+      };
+    }
+
+    // 중간 화면 (375px ~ 640px): 일반 모바일
+    if (screenWidth <= 640) {
+      return {
+        container: {
+          padding: "px-6",
+          height: "h-[55px]",
+        },
+        character: {
+          background: { width: 40, height: 40 },
+          image: { width: 30, height: 30 },
+          levelBlock: { width: 70, height: 24, left: "left-6" },
+          levelText: { fontSize: "text-[10px]", width: "w-[70px]", left: "left-6" },
+        },
+        heart: {
+          icon: { width: 48, height: 48 },
+          number: { fontSize: "text-[15px]" },
+          timerBlock: { width: 70, height: 24, left: "left-6" },
+          timerText: { fontSize: "text-[10px]", width: "w-[70px]", left: "left-6" },
+        },
+        score: {
+          icon: { width: 40, height: 40 },
+          block: { width: 70, height: 24, left: "left-4" },
+          text: { fontSize: "text-[10px]", width: "w-[70px]", left: "left-4" },
+        },
+        settings: {
+          button: { width: 24, height: 24 },
+        },
+        gap: "gap-5",
+      };
+    }
+
+    // 큰 화면 (640px 이상): 태블릿, 데스크탑
+    return {
+      container: {
+        padding: "px-6",
+        height: "h-[60px]",
+      },
+      character: {
+        background: { width: 40, height: 40 },
+        image: { width: 30, height: 30 },
+        levelBlock: { width: 70, height: 24, left: "left-6" },
+        levelText: { fontSize: "text-[10px]", width: "w-[70px]", left: "left-6" },
+      },
+      heart: {
+        icon: { width: 48, height: 48 },
+        number: { fontSize: "text-base" },
+        timerBlock: { width: 70, height: 24, left: "left-6" },
+        timerText: { fontSize: "text-[10px]", width: "w-[70px]", left: "left-6" },
+      },
+      score: {
+        icon: { width: 40, height: 40 },
+        block: { width: 70, height: 24, left: "left-4" },
+        text: { fontSize: "text-[10px]", width: "w-[70px]", left: "left-4" },
+      },
+      settings: {
+        button: { width: 24, height: 24 },
+      },
+      gap: "gap-5",
+    };
+  };
+
+  const responsiveStyle = getResponsiveStyle();
+
   return (
     <div className="fixed top-20 left-0 right-0 z-30 bg-transparent">
-      <div className="flex items-center justify-between px-6 py-3 h-[60px]">
+      <div className={`flex items-center justify-between ${responsiveStyle.container.padding} py-3 ${responsiveStyle.container.height}`}>
         {/* 캐릭터 & 레벨 */}
-        <div className="flex items-center gap-5">
+        <div className={`flex items-center ${responsiveStyle.gap}`}>
           <div className="relative">
             {/* 캐릭터 원형 배경 */}
             <SafeImage
               src="/images/ui/block02.png"
               alt="캐릭터 배경"
-              width={40}
-              height={40}
+              width={responsiveStyle.character.background.width}
+              height={responsiveStyle.character.background.height}
               className="relative z-10"
+              style={{
+                width: `${responsiveStyle.character.background.width}px`,
+                height: `${responsiveStyle.character.background.height}px`,
+              }}
               priority
             />
             {/* 캐릭터 이미지 */}
@@ -130,29 +275,33 @@ export default function GameHeader({
               key={`character-${level}`}
               src={getCharacterImage(level)}
               alt="캐릭터"
-              width={30}
-              height={30}
+              width={responsiveStyle.character.image.width}
+              height={responsiveStyle.character.image.height}
               className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20"
+              style={{
+                width: `${responsiveStyle.character.image.width}px`,
+                height: `${responsiveStyle.character.image.height}px`,
+              }}
               priority
             />
             {/* 레벨 블록 */}
             <SafeImage
               src="/images/ui/block01.png"
               alt="레벨 배경"
-              width={70}
-              height={24}
-              className="absolute top-1/2 left-6 transform -translate-y-1/2 z-0"
+              width={responsiveStyle.character.levelBlock.width}
+              height={responsiveStyle.character.levelBlock.height}
+              className={`absolute top-1/2 ${responsiveStyle.character.levelBlock.left} transform -translate-y-1/2 z-0`}
               style={{
-                width: "70px",
-                height: "24px",
-                minWidth: "70px",
-                minHeight: "24px",
+                width: `${responsiveStyle.character.levelBlock.width}px`,
+                height: `${responsiveStyle.character.levelBlock.height}px`,
+                minWidth: `${responsiveStyle.character.levelBlock.width}px`,
+                minHeight: `${responsiveStyle.character.levelBlock.height}px`,
               }}
               priority
             />
             {/* 레벨 텍스트 */}
             <span 
-              className="no-text-stroke absolute top-1/2 left-6 transform -translate-y-1/2 z-10 text-[10px] font-bold whitespace-nowrap flex items-center justify-center w-[70px] ml-1"
+              className={`no-text-stroke absolute top-1/2 ${responsiveStyle.character.levelText.left} transform -translate-y-1/2 z-10 ${responsiveStyle.character.levelText.fontSize} font-bold whitespace-nowrap flex items-center justify-center ${responsiveStyle.character.levelText.width} ml-1`}
               style={{ color: '#683A11' }}
             >
               Lv.{level}
@@ -161,20 +310,24 @@ export default function GameHeader({
         </div>
 
         {/* 하트 */}
-        <div className="flex items-center gap-5">
+        <div className={`flex items-center ${responsiveStyle.gap}`}>
           <div className="relative">
             {/* 하트 아이콘 */}
             <SafeImage
               src="/images/items/icon-heart.png"
               alt="하트"
-              width={48}
-              height={48}
+              width={responsiveStyle.heart.icon.width}
+              height={responsiveStyle.heart.icon.height}
               className="relative z-10"
+              style={{
+                width: `${responsiveStyle.heart.icon.width}px`,
+                height: `${responsiveStyle.heart.icon.height}px`,
+              }}
               priority
             />
             {/* 하트 내부 숫자 */}
             <span 
-              className="no-text-stroke absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 text-base font-normal"
+              className={`no-text-stroke absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 ${responsiveStyle.heart.number.fontSize} font-normal`}
               style={{ color: '#ffffff' }}
             >
               {hearts?.current_hearts ?? 0}
@@ -191,20 +344,20 @@ export default function GameHeader({
             <SafeImage
               src="/images/ui/block01.png"
               alt="타이머 배경"
-              width={70}
-              height={24}
-              className="absolute top-1/2 left-6 transform -translate-y-1/2 z-0"
+              width={responsiveStyle.heart.timerBlock.width}
+              height={responsiveStyle.heart.timerBlock.height}
+              className={`absolute top-1/2 ${responsiveStyle.heart.timerBlock.left} transform -translate-y-1/2 z-0`}
               style={{
-                width: "70px",
-                height: "24px",
-                minWidth: "70px",
-                minHeight: "24px",
+                width: `${responsiveStyle.heart.timerBlock.width}px`,
+                height: `${responsiveStyle.heart.timerBlock.height}px`,
+                minWidth: `${responsiveStyle.heart.timerBlock.width}px`,
+                minHeight: `${responsiveStyle.heart.timerBlock.height}px`,
               }}
               priority
             />
             {/* 타이머 텍스트 */}
             <span 
-              className="no-text-stroke absolute top-1/2 left-6 transform -translate-y-1/2 z-10 text-[10px] font-bold whitespace-nowrap flex items-center justify-center w-[70px] ml-1"
+              className={`no-text-stroke absolute top-1/2 ${responsiveStyle.heart.timerText.left} transform -translate-y-1/2 z-10 ${responsiveStyle.heart.timerText.fontSize} font-bold whitespace-nowrap flex items-center justify-center ${responsiveStyle.heart.timerText.width} ml-1`}
               style={{ color: '#683A11' }}
             >
               {getHeartTimerText()}
@@ -213,35 +366,39 @@ export default function GameHeader({
         </div>
 
         {/* 점수 */}
-        <div className="flex items-center gap-5">
+        <div className={`flex items-center ${responsiveStyle.gap}`}>
           <div className="relative">
             {/* 별 아이콘 */}
             <SafeImage
               src="/images/items/Icon-star.png"
               alt="별"
-              width={40}
-              height={40}
+              width={responsiveStyle.score.icon.width}
+              height={responsiveStyle.score.icon.height}
               className="relative z-10"
+              style={{
+                width: `${responsiveStyle.score.icon.width}px`,
+                height: `${responsiveStyle.score.icon.height}px`,
+              }}
               priority
             />
             {/* 점수 블록 */}
             <SafeImage
               src="/images/ui/block01.png"
               alt="점수 배경"
-              width={70}
-              height={24}
-              className="absolute top-1/2 left-4 transform -translate-y-1/2 z-0"
+              width={responsiveStyle.score.block.width}
+              height={responsiveStyle.score.block.height}
+              className={`absolute top-1/2 ${responsiveStyle.score.block.left} transform -translate-y-1/2 z-0`}
               style={{
-                width: "70px",
-                height: "24px",
-                minWidth: "70px",
-                minHeight: "24px",
+                width: `${responsiveStyle.score.block.width}px`,
+                height: `${responsiveStyle.score.block.height}px`,
+                minWidth: `${responsiveStyle.score.block.width}px`,
+                minHeight: `${responsiveStyle.score.block.height}px`,
               }}
               priority
             />
             {/* 점수 텍스트 */}
             <span 
-              className="no-text-stroke absolute top-1/2 left-4 transform -translate-y-1/2 z-10 text-[10px] font-bold whitespace-nowrap flex items-center justify-center w-[70px] ml-1"
+              className={`no-text-stroke absolute top-1/2 ${responsiveStyle.score.text.left} transform -translate-y-1/2 z-10 ${responsiveStyle.score.text.fontSize} font-bold whitespace-nowrap flex items-center justify-center ${responsiveStyle.score.text.width} ml-1`}
               style={{ color: '#683A11' }}
             >
               {totalScore.toLocaleString()}
@@ -259,9 +416,13 @@ export default function GameHeader({
               <SafeImage
                 src="/images/items/button-setting.png"
                 alt="설정"
-                width={24}
-                height={24}
+                width={responsiveStyle.settings.button.width}
+                height={responsiveStyle.settings.button.height}
                 className="cursor-pointer"
+                style={{
+                  width: `${responsiveStyle.settings.button.width}px`,
+                  height: `${responsiveStyle.settings.button.height}px`,
+                }}
               />
             </SoundButton>
           </div>
