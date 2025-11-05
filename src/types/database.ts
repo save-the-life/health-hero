@@ -12,6 +12,9 @@ export interface UserProfile {
   toss_token_expires_at: string | null
   toss_referrer: string | null
   
+  // 게임 유저 키 (getUserKeyForGame으로 획득, 프로모션용)
+  game_user_hash: string | null
+  
   // 게임 관련 필드
   level: number
   current_exp: number

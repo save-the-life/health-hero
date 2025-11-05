@@ -41,7 +41,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* <ErudaScript /> */}
+        <ErudaScript />
         {children}
       </body>
     </html>

@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { SafeImage } from "./SafeImage";
 import { useTossAuth } from "@/hooks/useTossAuth";
 import { TossAuthService } from "@/services/tossAuthService";
+import { GameAuthService } from "@/services/gameAuthService";
+import { promotionService, PROMOTION_CONFIGS } from "@/services/promotionService";
 import { useAuthStore } from "@/store/authStore";
 import { SoundButton } from "./SoundButton";
 import { audioService } from "@/services/audioService";
@@ -66,7 +68,139 @@ export default function TossLoginButton() {
         tossUserKey: supabaseResult.profile?.toss_user_key,
       });
 
-      // 3. 사용자 정보 저장
+      // 3. 게임 유저 키 획득 및 저장 (프로모션 대비)
+      if (supabaseResult.userId) {
+        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        console.log("🎮 [TossLogin] 게임 유저 키 획득 단계 시작");
+        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        console.log("👤 [TossLogin] 대상 사용자 ID:", supabaseResult.userId);
+        console.log("🔧 [TossLogin] GameAuthService.getGameUserKey() 호출...");
+        
+        const gameKeyResult = await GameAuthService.getGameUserKey();
+        
+        if (gameKeyResult.success) {
+          console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          console.log("✅ [TossLogin] 게임 유저 키 획득 성공!");
+          console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          console.log("🔑 [TossLogin] 게임 해시 획득 완료");
+          console.log("💾 [TossLogin] Supabase 저장 시도...");
+          
+          const saved = await GameAuthService.saveGameUserKey(
+            supabaseResult.userId,
+            gameKeyResult.hash
+          );
+          
+          if (saved) {
+            console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            console.log("🎉 [TossLogin] 게임 로그인 완전 성공!");
+            console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            console.log("✅ [TossLogin] 토스 로그인 완료");
+            console.log("✅ [TossLogin] 게임 유저 키 저장 완료");
+            console.log("✅ [TossLogin] 프로모션 기능 준비 완료");
+            console.log("🚀 [TossLogin] 게임 플레이 가능!");
+            console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+            // 프로모션 플래그 확인 (혜택 탭에서 진입한 경우에만)
+            const shouldGrantPromotion = localStorage.getItem('shouldGrantPromotion') === 'true';
+            
+            if (shouldGrantPromotion) {
+              console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+              console.log("🎁 [TossLogin] 혜택 탭 진입 감지!");
+              console.log("🎁 [TossLogin] 첫 퀴즈 프로모션 자동 지급 시작");
+              console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+              
+              // 플래그 제거 (재사용 방지)
+              localStorage.removeItem('shouldGrantPromotion');
+              
+              try {
+                const promotionResult = await promotionService.grantReward(
+                  supabaseResult.userId,
+                  gameKeyResult.hash,
+                  'FIRST_QUIZ',
+                  true // 테스트 모드
+                );
+
+                const config = PROMOTION_CONFIGS['FIRST_QUIZ'];
+
+                // 프로모션 결과를 로컬 스토리지에 저장
+                const resultData = {
+                  success: promotionResult.success,
+                  amount: config.amount,
+                  condition: config.description,
+                  message: promotionResult.success 
+                    ? `${config.description} 완료! 리워드 키: ${promotionResult.rewardKey?.substring(0, 15)}...`
+                    : promotionService.getErrorMessage(promotionResult.errorCode || ''),
+                  timestamp: Date.now(),
+                };
+
+                localStorage.setItem('promotionResult', JSON.stringify(resultData));
+
+                if (promotionResult.success) {
+                  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                  console.log("🎉 [TossLogin] 프로모션 지급 성공!");
+                  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                  console.log("💰 [TossLogin] 지급 금액:", config.amount, "원");
+                  console.log("🔑 [TossLogin] 리워드 키:", promotionResult.rewardKey?.substring(0, 20) + "...");
+                  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                } else {
+                  console.warn("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                  console.warn("⚠️ [TossLogin] 프로모션 지급 실패");
+                  console.warn("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                  console.warn("❌ [TossLogin] 에러 코드:", promotionResult.errorCode);
+                  console.warn("📝 [TossLogin] 메시지:", resultData.message);
+                  console.warn("💡 [TossLogin] 로그인은 정상 완료, 프로모션만 실패");
+                  console.warn("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                }
+              } catch (promotionError) {
+                console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                console.error("❌ [TossLogin] 프로모션 지급 예외 발생");
+                console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                console.error("🔥 [TossLogin] 에러:", promotionError);
+                console.error("💡 [TossLogin] 로그인은 정상 완료, 프로모션만 실패");
+                console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                
+                // 실패해도 로컬 스토리지에 저장
+                const errorResult = {
+                  success: false,
+                  message: promotionError instanceof Error ? promotionError.message : '프로모션 지급 중 오류',
+                  timestamp: Date.now(),
+                };
+                localStorage.setItem('promotionResult', JSON.stringify(errorResult));
+              }
+            } else {
+              console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+              console.log("ℹ️ [TossLogin] 일반 진입 (프로모션 없음)");
+              console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            }
+          } else {
+            console.warn("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            console.warn("⚠️ [TossLogin] 게임 유저 키 저장 실패");
+            console.warn("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            console.warn("⚠️ [TossLogin] DB 저장 실패 (무시)");
+            console.warn("✅ [TossLogin] 토스 로그인은 정상 완료");
+            console.warn("🎮 [TossLogin] 게임 플레이 가능 (프로모션 제외)");
+            console.warn("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          }
+        } else {
+          console.warn("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          console.warn("⚠️ [TossLogin] 게임 유저 키 획득 실패");
+          console.warn("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          console.warn("⚠️ [TossLogin] 에러 타입:", gameKeyResult.error);
+          console.warn("⚠️ [TossLogin] 에러 메시지:", GameAuthService.getErrorMessage(gameKeyResult.error));
+          console.warn("✅ [TossLogin] 토스 로그인은 정상 완료");
+          console.warn("🎮 [TossLogin] 게임 플레이 가능 (프로모션 제외)");
+          console.warn("💡 [TossLogin] 프로모션 기능 사용 불가");
+          console.warn("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        }
+      } else {
+        console.warn("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        console.warn("⚠️ [TossLogin] 사용자 ID 없음");
+        console.warn("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        console.warn("⚠️ [TossLogin] 게임 유저 키 획득 건너뜀");
+        console.warn("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+      }
+
+      // 4. 사용자 정보 저장
       if (supabaseResult.profile) {
         setUser(supabaseResult.profile);
         console.log("✅ [TossLogin] Zustand store 업데이트 완료");
@@ -78,7 +212,7 @@ export default function TossLoginButton() {
         }, 100);
       }
 
-      // 4. 게임 페이지로 이동 (로딩 상태 유지)
+      // 5. 게임 페이지로 이동 (로딩 상태 유지)
       console.log("🎮 [TossLogin] 게임 페이지로 이동");
       router.push("/game");
       // 페이지 이동이 완료될 때까지 로딩 상태 유지

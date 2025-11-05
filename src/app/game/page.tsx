@@ -509,6 +509,7 @@ export default function GamePage() {
           </div>
         </div>
       </div>
+
     </div>
   );
 }

@@ -26,13 +26,11 @@ export function SafeImage({
 }: SafeImageProps) {
   const [currentSrc, setCurrentSrc] = useState(src);
   const [retryCount, setRetryCount] = useState(0);
-  const [hasError, setHasError] = useState(false);
 
   // src가 변경되면 상태 초기화
   useEffect(() => {
     setCurrentSrc(src);
     setRetryCount(0);
-    setHasError(false);
   }, [src]);
 
   const handleError = () => {
@@ -51,7 +49,6 @@ export function SafeImage({
     } else {
       // 최대 재시도 횟수 초과 시 fallback 이미지 사용
       console.error(`이미지 로딩 최종 실패, fallback 사용:`, currentSrc);
-      setHasError(true);
       if (fallbackSrc) {
         setCurrentSrc(fallbackSrc);
       }
@@ -69,6 +66,7 @@ export function SafeImage({
     <Image
       {...props}
       src={currentSrc}
+      alt={props.alt || ""}
       onError={handleError}
       onLoad={handleLoad}
       priority={priority}

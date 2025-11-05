@@ -141,6 +141,7 @@ export class TossAuthService {
         toss_refresh_token: token.refreshToken,
         toss_token_expires_at: tokenExpiresAt,
         toss_referrer: auth.referrer,
+        game_user_hash: existingProfile?.game_user_hash || null, // 게임 유저 키 (나중에 업데이트됨)
         level: existingProfile?.level || 1,
         current_exp: existingProfile?.current_exp || 0,
         total_score: existingProfile?.total_score || 500, // 신규 사용자에게 500포인트 지급

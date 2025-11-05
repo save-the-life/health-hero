@@ -1,7 +1,7 @@
 # 🚀 헬스 히어로 구현 현황
 
 **최종 업데이트**: 2025-01-30 (최신 업데이트)  
-**현재 단계**: Phase 4 완료 + 이미지 로딩 최적화 + 인증 시스템 개선 완료
+**현재 단계**: Phase 4 완료 + 게임 유저 키 시스템 추가 (프로모션 준비 완료)
 
 ---
 
@@ -37,6 +37,7 @@
 - **Phase 4.26**: 배경음악 및 음소거 기능 개선 ✅ **100%** (완료)
 - **Phase 4.27**: TDS 모달 통합 및 광고 시스템 개선 ✅ **100%** (완료)
 - **Phase 4.28**: 이미지 로딩 최적화 및 인증 시스템 개선 ✅ **100%** (완료)
+- **Phase 4.29**: 게임 유저 키 시스템 (getUserKeyForGame) ✅ **100%** (완료)
 
 ---
 
@@ -1768,6 +1769,208 @@ END $$;
 2. **인증 복구 시간**:
    - 프로필 삭제 및 재생성 시 약간의 지연 발생 가능
    - 사용자에게는 투명하게 처리됨
+
+---
+
+## 🎮 Phase 4.29: 게임 유저 키 시스템 (2025-01-30 완료)
+
+### 목적
+
+**프로모션(토스 포인트) 기능 준비**
+
+### 배경
+
+앱인토스의 새로운 `getUserKeyForGame` 기능을 활용하여 프로모션 시스템을 위한 게임 유저 식별자를 추가 획득합니다.
+
+### 구현 방식: 병행 사용
+
+**기존 토스 로그인 + 게임 유저 키 추가 저장**
+
+| 항목 | 기존 토스 로그인 | getUserKeyForGame |
+|------|------------------|-------------------|
+| **플로우** | 5단계 | 1단계 |
+| **서버 필요** | ✅ Edge Function | ❌ 불필요 |
+| **사용자 정보** | ✅ 이름, 토큰 등 | ❌ hash만 |
+| **프로모션** | ❌ | ✅ 직접 지원 |
+
+### 구현 내용
+
+#### 1. 데이터베이스 스키마 추가
+
+**파일**: `supabase/add-game-user-hash.sql`
+
+```sql
+-- user_profiles 테이블에 game_user_hash 컬럼 추가
+ALTER TABLE user_profiles ADD COLUMN game_user_hash TEXT UNIQUE;
+
+-- 인덱스 생성
+CREATE INDEX idx_user_profiles_game_user_hash 
+ON user_profiles(game_user_hash) 
+WHERE game_user_hash IS NOT NULL;
+```
+
+**실행 완료**:
+- ✅ `game_user_hash` 컬럼 추가
+- ✅ UNIQUE 제약 조건 추가
+- ✅ 인덱스 생성 완료
+
+#### 2. GameAuthService 구현
+
+**파일**: `src/services/gameAuthService.ts` (신규 생성)
+
+```typescript
+export class GameAuthService {
+  // 게임 유저 키 획득
+  static async getGameUserKey(): Promise<GameUserKeyResult>
+  
+  // Supabase에 저장
+  static async saveGameUserKey(userId: string, gameHash: string): Promise<boolean>
+  
+  // 게임 해시로 사용자 조회
+  static async findUserByGameHash(gameHash: string)
+  
+  // 에러 메시지 변환
+  static getErrorMessage(error: string): string
+}
+```
+
+**핵심 기능**:
+- ✅ `getUserKeyForGame()` SDK 함수 호출
+- ✅ 4가지 에러 케이스 자동 처리:
+  - `UNSUPPORTED_VERSION`: 토스앱 5.232.0 미만
+  - `INVALID_CATEGORY`: 게임 카테고리 아님
+  - `ERROR`: 알 수 없는 오류
+  - `NO_HASH`: hash 값 없음
+- ✅ 상세한 로깅 (디버깅 용이)
+
+#### 3. 로그인 플로우 통합
+
+**파일**: `src/components/TossLoginButton.tsx` (수정)
+
+```typescript
+const handleLogin = async () => {
+  // 1. 기존 토스 로그인
+  const tossResult = await login();
+  const supabaseResult = await TossAuthService.createOrUpdateUser(tossResult);
+  
+  // 2. 게임 유저 키 추가 획득 (NEW!)
+  const gameKeyResult = await GameAuthService.getGameUserKey();
+  if (gameKeyResult.success) {
+    await GameAuthService.saveGameUserKey(
+      supabaseResult.userId,
+      gameKeyResult.hash
+    );
+    console.log('✅ 프로모션 준비 완료');
+  }
+  
+  // 3. 게임 페이지 이동
+  router.push('/game');
+}
+```
+
+**로직**:
+- ✅ 기존 로그인 플로우 유지
+- ✅ 게임 유저 키 추가 획득 (비동기)
+- ✅ 실패 시에도 게임 진행 가능 (에러 무시)
+- ✅ 성공 시 "프로모션 준비 완료" 로그
+
+#### 4. 타입 정의 추가
+
+**파일**: `src/types/database.ts` (수정)
+
+```typescript
+export interface UserProfile {
+  // 기존 필드들...
+  toss_user_key: number | null
+  
+  // 게임 유저 키 (NEW!)
+  game_user_hash: string | null
+  
+  // 게임 관련 필드들...
+}
+```
+
+### 로그 출력 예시
+
+#### 성공 케이스
+
+```
+🎮 [GameAuth] getUserKeyForGame 호출 시작...
+✅ [GameAuth] 게임 유저 키 획득 성공: abc123...
+💾 [GameAuth] 게임 유저 키 저장 시도...
+✅ [GameAuth] 게임 유저 키 저장 완료 (프로모션 준비 완료)
+```
+
+#### 실패 케이스 (버전 낮음)
+
+```
+🎮 [GameAuth] getUserKeyForGame 호출 시작...
+⚠️ [GameAuth] 지원하지 않는 앱 버전 (토스앱 5.232.0 이상 필요)
+⚠️ [GameAuth] 프로모션 기능은 사용할 수 없습니다 (게임 진행은 가능)
+```
+
+### 적용 효과
+
+#### 1. 프로모션 준비 완료
+
+- ✅ 게임 유저 식별자 확보
+- ✅ 향후 토스 포인트 지급 가능
+- ✅ 프로모션 API 연동 준비 완료
+
+#### 2. 안정성 확보
+
+- ✅ 게임 유저 키 실패 시에도 게임 정상 진행
+- ✅ 4가지 에러 케이스 모두 자동 처리
+- ✅ 기존 로그인 플로우 영향 없음
+
+#### 3. 개발 편의성
+
+- ✅ 상세한 로깅으로 디버깅 용이
+- ✅ 타입 안전성 확보
+- ✅ 에러 메시지 사용자 친화적
+
+### 테스트 상태
+
+- ✅ SQL 스크립트 실행 완료
+- ✅ GameAuthService 구현 완료
+- ✅ TossLoginButton 통합 완료
+- ✅ 타입 정의 추가 완료
+- ✅ 린트 에러 없음
+- [ ] 샌드박스 앱 테스트 (다음 단계)
+- [ ] 프로덕션 배포 (다음 단계)
+
+### 생성된 파일
+
+- ✅ `src/services/gameAuthService.ts` - 게임 인증 서비스
+- ✅ `supabase/add-game-user-hash.sql` - SQL 스크립트
+- ✅ `docs/GAME_USER_KEY_SETUP.md` - 상세 가이드
+
+### 수정된 파일
+
+- ✅ `src/components/TossLoginButton.tsx` - 로그인 통합
+- ✅ `src/types/database.ts` - 타입 추가
+- ✅ `docs/IMPLEMENTATION_STATUS.md` - 본 문서
+
+### 다음 단계
+
+1. **샌드박스 앱 테스트**
+   - 토스앱 5.232.0 이상 설치
+   - `.ait` 빌드 및 업로드
+   - 실제 게임 유저 키 획득 테스트
+
+2. **프로덕션 배포**
+   - 프로덕션 데이터베이스 스키마 업데이트
+   - 기존 사용자 자동 업데이트 확인
+
+3. **프로모션 기능 개발** (향후)
+   - 토스 프로모션 API 연동
+   - 리워드 지급 시스템
+   - 출석 체크 시스템
+
+### 참고 문서
+
+- [GAME_USER_KEY_SETUP.md](./GAME_USER_KEY_SETUP.md) - 상세 설정 가이드
+- [앱인토스 공식 문서](https://developers-apps-in-toss.toss.im/docs/game/login)
 
 ---
 
