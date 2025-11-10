@@ -117,7 +117,7 @@ export default function TossLoginButton() {
                   supabaseResult.userId,
                   gameKeyResult.hash,
                   'FIRST_QUIZ',
-                  true // 테스트 모드
+                  false // 운영 모드 (실제 프로모션 지급)
                 );
 
                 const config = PROMOTION_CONFIGS['FIRST_QUIZ'];
