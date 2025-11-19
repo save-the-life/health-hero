@@ -10,6 +10,16 @@ interface UserHearts {
   ad_reset_at: string
 }
 
+export interface CompleteStageResult {
+  success: boolean
+  stage_cleared: boolean
+  next_stage_unlocked: boolean
+  phase_cleared: boolean
+  message: string
+  newPhase?: number
+  newStage?: number
+}
+
 interface GameState {
   // 사용자 데이터
   level: number
@@ -40,7 +50,7 @@ interface GameState {
   updateExp: (exp: number) => void
   updateLevel: (level: number) => void
   addScoreAndExp: (score: number, exp: number) => Promise<boolean>
-  completeStage: (phase: number, stage: number, correctCount: number, score: number, exp: number) => Promise<boolean>
+  completeStage: (phase: number, stage: number, correctCount: number, score: number, exp: number) => Promise<CompleteStageResult | null>
   checkLevelUp: (currentExp: number) => { leveledUp: boolean; newLevel: number; expToNext: number }
   getLevelInfo: (level: number) => { totalExpRequired: number; expToNext: number; title: string }
   setError: (error: string | null) => void
@@ -500,12 +510,12 @@ export const useGameStore = create<GameState>()(
       // 스테이지 완료 처리
       completeStage: async (phase: number, stage: number, correctCount: number, score: number, exp: number) => {
         const hearts = get().hearts
-        if (!hearts) return false
+        if (!hearts) return null
 
         try {
           // 먼저 점수/경험치 추가
           const scoreExpSuccess = await get().addScoreAndExp(score, exp)
-          if (!scoreExpSuccess) return false
+          if (!scoreExpSuccess) return null
 
           // 스테이지 완료 처리
           const { data, error } = await supabase
@@ -520,12 +530,16 @@ export const useGameStore = create<GameState>()(
 
           if (error) {
             console.error('스테이지 완료 처리 실패:', error)
-            return false
+            return null
           }
 
           if (data && data.length > 0) {
             const result = data[0]
             console.log('스테이지 완료 결과:', result)
+            
+            // 다음 페이즈와 스테이지 계산
+            const newStage = result.next_stage_unlocked ? (stage === 5 ? 1 : stage + 1) : stage
+            const newPhase = result.phase_cleared ? phase + 1 : phase
             
             // 스테이지 완료 후 캐시 무효화하여 최신 데이터 반영
             if (result.success) {
@@ -533,10 +547,11 @@ export const useGameStore = create<GameState>()(
                 userDataCache: null, 
                 cacheTimestamp: null,
                 // 현재 스테이지 정보도 즉시 업데이트
-                currentStage: result.next_stage_unlocked ? stage + 1 : stage,
-                currentPhase: result.phase_cleared ? phase + 1 : phase
+                currentStage: newStage,
+                currentPhase: newPhase
               })
               console.log('스테이지 완료 후 강제 캐시 무효화 및 상태 업데이트 완료')
+              console.log(`새로운 진행 상황: Phase ${newPhase}, Stage ${newStage}`)
               
               // 로컬 스토리지 캐시도 삭제
               localStorage.removeItem(`userData_${hearts.user_id}_lastLoad`)
@@ -547,13 +562,18 @@ export const useGameStore = create<GameState>()(
               console.log('스테이지 완료 후 사용자 데이터 새로고침 완료')
             }
             
-            return result.success
+            // 전체 result 반환 (새로운 페이즈/스테이지 정보 포함)
+            return {
+              ...result,
+              newPhase,
+              newStage
+            }
           }
           
-          return false
+          return null
         } catch (error) {
           console.error('스테이지 완료 처리 실패:', error)
-          return false
+          return null
         }
       },
 

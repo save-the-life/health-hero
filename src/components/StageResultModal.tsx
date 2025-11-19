@@ -12,6 +12,8 @@ interface StageResultModalProps {
   earnedExp: number;
   earnedScore: number;
   currentPhase: number;
+  phaseCleared: boolean;
+  nextPhase: number;
   onClose: () => void;
 }
 
@@ -21,6 +23,8 @@ export default function StageResultModal({
   earnedExp,
   earnedScore,
   currentPhase,
+  phaseCleared,
+  nextPhase,
   onClose,
 }: StageResultModalProps) {
   const router = useRouter();
@@ -48,8 +52,16 @@ export default function StageResultModal({
       }
     }
 
-    // 현재 페이즈에 따라 해당 페이즈 페이지로 이동
-    router.push(`/game/phase${currentPhase}`);
+    // 페이즈가 클리어되었으면 다음 페이즈로, 아니면 현재 페이즈로 이동
+    const targetPhase = phaseCleared ? nextPhase : currentPhase;
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log(`🎯 [StageResult] 페이지 이동: Phase ${targetPhase}`);
+    if (phaseCleared) {
+      console.log(`🎊 [StageResult] 페이즈 ${currentPhase} 클리어! 다음 페이즈로 이동`);
+    }
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    
+    router.push(`/game/phase${targetPhase}`);
   };
 
   return (

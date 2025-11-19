@@ -3,7 +3,7 @@
  * intoss://lucky-dice/first-quiz 로 접근 시 실행
  * 
  * UI: 시작 페이지(/)와 완전히 동일
- * 동작: 프로모션 플래그만 자동 설정
+ * 동작: 프로모션 플래그 설정 + 자동 로그인
  */
 
 "use client";
@@ -21,7 +21,7 @@ export default function FirstQuizPage() {
     // 프로모션 지급 플래그 설정
     localStorage.setItem('shouldGrantPromotion', 'true');
     console.log('✅ [FirstQuiz] 프로모션 플래그 설정 완료');
-    console.log('💡 [FirstQuiz] 퀴즈 풀러가기 버튼 클릭 시 프로모션 지급됩니다');
+    console.log('💡 [FirstQuiz] 자동 로그인 및 프로모션 지급 시작됩니다');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   }, []);
 
@@ -79,9 +79,9 @@ export default function FirstQuizPage() {
           </div>
         </div>
 
-        {/* 로그인 버튼 */}
+        {/* 로그인 버튼 (자동 실행) */}
         <div className="w-full max-w-sm px-4 space-y-3 -mt-10 mb-10 z-10">
-          <TossLoginButton />
+          <TossLoginButton autoLogin />
         </div>
       </div>
     </div>

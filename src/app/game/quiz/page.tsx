@@ -116,6 +116,8 @@ function QuizPageContent() {
     correctCount: number;
     earnedExp: number;
     earnedScore: number;
+    phaseCleared: boolean;
+    nextPhase: number;
   } | null>(null);
 
   // 하트 부족 모달 상태
@@ -668,15 +670,17 @@ function QuizPageContent() {
       // 데이터베이스에 스테이지 완료 처리
       if (user?.id) {
         try {
-          const success = await completeStage(
+          const result = await completeStage(
             quizPhase,
             quizStage,
             correctCount,
             totalScore,
             totalExp
           );
-          if (success) {
+          if (result && result.success) {
             console.log("스테이지 완료 데이터 저장 성공");
+            console.log("페이즈 클리어:", result.phase_cleared);
+            console.log("다음 진행:", `Phase ${result.newPhase}, Stage ${result.newStage}`);
 
             // 레벨업 체크는 addScoreAndExp에서 이미 처리됨
             // 여기서는 UI 표시용으로만 체크
@@ -701,6 +705,8 @@ function QuizPageContent() {
               correctCount,
               earnedExp: totalExp,
               earnedScore: totalScore,
+              phaseCleared: result.phase_cleared,
+              nextPhase: result.newPhase || quizPhase,
             });
 
             // 스테이지 결과에 따른 사운드 재생
@@ -1441,6 +1447,8 @@ function QuizPageContent() {
             earnedExp={stageResultData.earnedExp}
             earnedScore={stageResultData.earnedScore}
             currentPhase={quizPhase}
+            phaseCleared={stageResultData.phaseCleared}
+            nextPhase={stageResultData.nextPhase}
             onClose={handleCloseStageResultModal}
           />
         </Suspense>

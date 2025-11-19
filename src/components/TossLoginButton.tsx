@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { SafeImage } from "./SafeImage";
 import { useTossAuth } from "@/hooks/useTossAuth";
@@ -18,7 +18,11 @@ declare global {
   }
 }
 
-export default function TossLoginButton() {
+interface TossLoginButtonProps {
+  autoLogin?: boolean; // 자동 로그인 여부 (혜택 탭 진입 시 사용)
+}
+
+export default function TossLoginButton({ autoLogin = false }: TossLoginButtonProps) {
   const router = useRouter();
   const { login, isLoading: tossLoading, error: tossError } = useTossAuth();
   const {
@@ -233,6 +237,26 @@ export default function TossLoginButton() {
     }
     // finally 블록 제거하여 에러가 아닌 경우 로딩 상태 유지
   };
+
+  // 자동 로그인 처리 (혜택 탭 진입 시)
+  useEffect(() => {
+    if (autoLogin) {
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🎁 [TossLogin] 자동 로그인 시작 (혜택 탭)');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      
+      // 프로모션 플래그가 설정되어 있는지 확인
+      const shouldGrant = localStorage.getItem('shouldGrantPromotion');
+      console.log('🎯 [TossLogin] 프로모션 플래그:', shouldGrant);
+      
+      // 약간의 지연 후 자동 로그인 (UI 로딩 완료 대기)
+      const timer = setTimeout(() => {
+        handleLogin();
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [autoLogin]);
 
   const displayError = tossError || localError;
 
