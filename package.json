@@ -10,7 +10,7 @@
     "deploy": "ait deploy"
   },
   "dependencies": {
-    "@apps-in-toss/web-framework": "^1.4.6",
+    "@apps-in-toss/web-framework": "^1.5.0",
     "@emotion/react": "^11.14.0",
     "@granite-js/cli": "^0.1.30",
     "@supabase/supabase-js": "^2.76.1",
