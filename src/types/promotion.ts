@@ -8,7 +8,7 @@
 export const PROMOTION_CODES = {
   // 테스트 프로모션
   TEST_FIRST_QUIZ: 'TEST_01K98ST5FF47JE9WMASGHF45D0',
-  
+
   // 실제 프로모션 (검토 승인 후 사용)
   FIRST_QUIZ: '01K98ST5FF47JE9WMASGHF45D0',
 } as const;
@@ -16,12 +16,13 @@ export const PROMOTION_CODES = {
 /**
  * 프로모션 지급 조건 타입
  */
-export type PromotionCondition = 
+export type PromotionCondition =
   | 'FIRST_LOGIN'      // 첫 로그인
   | 'FIRST_QUIZ'       // 첫 퀴즈 완료
   | 'TUTORIAL_COMPLETE' // 튜토리얼 완료
   | 'DAILY_MISSION'    // 일일 미션
-  | 'FRIEND_INVITE';   // 친구 초대
+  | 'FRIEND_INVITE'    // 친구 초대
+  | 'ATTENDANCE_3DAY'; // 3일 연속 출석
 
 /**
  * 프로모션 지급 결과 타입

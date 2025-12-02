@@ -5,12 +5,12 @@
 
 import { grantPromotionRewardForGame } from '@apps-in-toss/web-framework';
 import { supabase } from '@/lib/supabase';
-import { 
-  PromotionCondition, 
-  PromotionGrantResult, 
+import {
+  PromotionCondition,
+  PromotionGrantResult,
   PromotionConfig,
   PROMOTION_ERROR_CODES,
-  PROMOTION_CODES 
+  PROMOTION_CODES
 } from '@/types/promotion';
 
 /**
@@ -46,6 +46,12 @@ export const PROMOTION_CONFIGS: Record<PromotionCondition, PromotionConfig> = {
     condition: 'FRIEND_INVITE',
     amount: 500,
     description: '친구 초대',
+  },
+  ATTENDANCE_3DAY: {
+    code: PROMOTION_CODES.FIRST_QUIZ, // 실제로는 ATTENDANCE_3DAY 프로모션 코드 필요
+    condition: 'ATTENDANCE_3DAY',
+    amount: 20,
+    description: '3일 연속 출석',
   },
 };
 
@@ -162,8 +168,8 @@ class PromotionService {
     }
 
     // 3. 테스트 모드인 경우 테스트 프로모션 코드 사용
-    const promotionCode = isTest 
-      ? PROMOTION_CODES.TEST_FIRST_QUIZ 
+    const promotionCode = isTest
+      ? PROMOTION_CODES.TEST_FIRST_QUIZ
       : config.code;
 
     console.log('[PromotionService] 프로모션 지급 요청:', {

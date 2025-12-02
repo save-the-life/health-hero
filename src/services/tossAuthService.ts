@@ -6,11 +6,11 @@ export class TossAuthService {
   // 토스 정보로 Supabase 사용자 생성/로그인
   static async createOrUpdateUser(tossData: TossLoginResult) {
     const { user, token, auth } = tossData
-    
+
     if (!user || !token) {
       throw new Error('토스 사용자 정보가 없습니다.')
     }
-    
+
     // 토스 userKey를 고유 식별자로 사용 (유효한 이메일 형식)
     const email = `user${user.userKey}@health-hero.app`
     const password = `toss_${user.userKey}_permanent` // 고정 비밀번호 사용
@@ -18,26 +18,26 @@ export class TossAuthService {
     try {
       // 1. 기존 사용자 확인
       const existingProfile = await this.findUserByTossKey(user.userKey)
-      
+
       let userId: string
 
       if (existingProfile) {
         // 기존 사용자 - 기존 세션 사용
         userId = existingProfile.id
         console.log('✅ 기존 프로필 발견:', userId)
-        
+
         // Supabase Auth 세션 생성 시도
         try {
           const { error: signInError } = await supabase.auth.signInWithPassword({
             email: existingProfile.email || email,
             password
           })
-          
+
           if (signInError) {
             // auth.users에 사용자가 없는 경우 (프로필만 남아있음)
             if (signInError.message.includes('Invalid') || signInError.message.includes('credentials')) {
               console.log('⚠️ Auth 사용자 없음, 기존 프로필 삭제 후 재생성...')
-              
+
               // 기존 프로필 및 관련 데이터 삭제
               try {
                 await supabase.from('user_quiz_records').delete().eq('user_id', existingProfile.id)
@@ -48,7 +48,7 @@ export class TossAuthService {
               } catch (deleteError) {
                 console.log('⚠️ 프로필 삭제 중 오류 (무시):', deleteError)
               }
-              
+
               // Auth 사용자 재생성
               const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
                 email,
@@ -61,12 +61,12 @@ export class TossAuthService {
                   }
                 }
               })
-              
+
               if (signUpError) {
                 console.error('❌ Auth 사용자 재생성 실패:', signUpError)
                 throw new Error('인증 사용자 생성에 실패했습니다.')
               }
-              
+
               if (signUpData.user) {
                 userId = signUpData.user.id
                 console.log('✅ Auth 사용자 재생성 완료 (신규 userId):', userId)
@@ -98,21 +98,21 @@ export class TossAuthService {
           // user_already_exists 에러인 경우 signIn 시도
           if (signUpError.message.includes('already') || signUpError.message.includes('exists')) {
             console.log('⚠️ 이미 존재하는 사용자, signIn 시도...')
-            
+
             const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
               email,
               password: `toss_${user.userKey}_permanent`
             })
-            
+
             if (signInError) {
               console.error('❌ signIn도 실패:', signInError)
               throw new Error('사용자 인증에 실패했습니다. Supabase Dashboard에서 기존 사용자를 삭제해주세요.')
             }
-            
+
             if (!signInData.user) {
               throw new Error('사용자 정보를 가져올 수 없습니다.')
             }
-            
+
             userId = signInData.user.id
             console.log('✅ 기존 Auth 사용자로 로그인:', userId)
           } else {
@@ -131,7 +131,7 @@ export class TossAuthService {
 
       // 2. 사용자 프로필 업데이트/생성
       const tokenExpiresAt = new Date(Date.now() + token.expiresIn * 1000).toISOString()
-      
+
       const profileData: UserProfileInsert = {
         id: userId,
         email,
@@ -173,12 +173,30 @@ export class TossAuthService {
           user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null
         })
 
-      // 4. 토스 로그인 완료 로그
+      // 4. 출석 체크 (RPC 호출)
+      let attendanceResult = null
+      try {
+        const { data: attendanceData, error: attendanceError } = await supabase.rpc('check_daily_attendance', {
+          p_user_id: userId
+        })
+
+        if (attendanceError) {
+          console.error('출석 체크 실패:', attendanceError)
+        } else {
+          attendanceResult = attendanceData
+          console.log('✅ 출석 체크 완료:', attendanceResult)
+        }
+      } catch (rpcError) {
+        console.error('출석 체크 예외:', rpcError)
+      }
+
+      // 5. 토스 로그인 완료 로그
       console.log('✅ 토스 로그인 및 사용자 프로필 생성 완료')
 
       return {
         userId,
-        profile
+        profile,
+        attendance: attendanceResult
       }
     } catch (error) {
       console.error('Supabase 사용자 생성/업데이트 실패:', error)
@@ -214,7 +232,7 @@ export class TossAuthService {
   static async getCurrentUserProfile(): Promise<UserProfile | null> {
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      
+
       if (!user) {
         return null
       }

@@ -9,9 +9,12 @@ interface AuthState {
   isAuthenticated: boolean
   isLoading: boolean
   error: string | null
-  
+
+  attendance: any | null
+
   // Actions
   setUser: (user: UserProfile | null) => void
+  setAttendance: (attendance: any | null) => void
   setLoading: (isLoading: boolean) => void
   setError: (error: string | null) => void
   logout: () => Promise<void>
@@ -24,14 +27,17 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       user: null,
       isAuthenticated: false,
+      attendance: null,
       isLoading: false,
       error: null,
 
-      setUser: (user) => set({ 
-        user, 
+      setUser: (user) => set({
+        user,
         isAuthenticated: !!user,
-        error: null 
+        error: null
       }),
+
+      setAttendance: (attendance) => set({ attendance }),
 
       setLoading: (isLoading) => set({ isLoading }),
 
@@ -40,15 +46,15 @@ export const useAuthStore = create<AuthState>()(
       logout: async () => {
         try {
           console.log('🔓 [authStore] 로그아웃 시작')
-          
+
           // 1. 토스 토큰 삭제 (재로그인 시 약관 동의 화면 표시를 위해 필수)
           TokenManager.clearTokens()
           console.log('✅ [authStore] 토스 토큰 삭제 완료')
-          
+
           // 2. Supabase 로그아웃
           await supabase.auth.signOut()
           console.log('✅ [authStore] Supabase 세션 종료 완료')
-          
+
           // 3. 상태 초기화 (zustand persist가 자동으로 localStorage에서 제거)
           set({
             user: null,
@@ -70,7 +76,7 @@ export const useAuthStore = create<AuthState>()(
 
       initialize: async () => {
         set({ isLoading: true })
-        
+
         try {
           // 먼저 로컬 스토리지에서 사용자 정보 확인 (토스 로그인 후 즉시 반영)
           const currentState = get()
@@ -79,10 +85,10 @@ export const useAuthStore = create<AuthState>()(
             set({ isLoading: false })
             return
           }
-          
+
           // Supabase 세션 확인
           const { data: { session } } = await supabase.auth.getSession()
-          
+
           if (session?.user) {
             // 사용자 프로필 가져오기
             const { data: profile, error } = await supabase
@@ -102,9 +108,9 @@ export const useAuthStore = create<AuthState>()(
             const persistedState = JSON.parse(localStorage.getItem('auth-storage') || '{}')
             if (persistedState.state?.user && persistedState.state?.isAuthenticated) {
               console.log('🔧 로컬 스토리지에서 사용자 정보 복원:', persistedState.state.user.id)
-              set({ 
-                user: persistedState.state.user, 
-                isAuthenticated: true 
+              set({
+                user: persistedState.state.user,
+                isAuthenticated: true
               })
             } else {
               set({ isAuthenticated: false, user: null })
@@ -134,7 +140,8 @@ export const useAuthStore = create<AuthState>()(
       name: 'auth-storage',
       partialize: (state) => ({
         user: state.user,
-        isAuthenticated: state.isAuthenticated
+        isAuthenticated: state.isAuthenticated,
+        attendance: state.attendance
       })
     }
   )

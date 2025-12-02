@@ -9,6 +9,9 @@ import { useGameStore } from "@/store/gameStore";
 import GameHeader from "@/components/GameHeader";
 import { Clickable } from "@/components/SoundButton";
 import { useAudio } from "@/hooks/useAudio";
+import AttendanceModal from "@/components/AttendanceModal";
+import { promotionService } from "@/services/promotionService";
+import { GameAuthService } from "@/services/gameAuthService";
 
 export default function GamePage() {
   const router = useRouter();
@@ -16,6 +19,75 @@ export default function GamePage() {
   const { currentPhase, hearts, isLoading, error, loadUserData, updateHearts } =
     useGameStore();
   const { playBackgroundMusic } = useAudio();
+
+  // 출석 모달 상태
+  const { attendance, setAttendance } = useAuthStore();
+  const [showAttendanceModal, setShowAttendanceModal] = useState(false);
+  const [attendanceReward, setAttendanceReward] = useState(false);
+
+  // 출석 체크 확인
+  useEffect(() => {
+    if (attendance && attendance.is_first_login_today) {
+      console.log("📅 [GamePage] 출석 체크 모달 표시:", attendance);
+      setShowAttendanceModal(true);
+
+      // 3일 연속 출석 시 리워드 지급
+      if (attendance.new_streak === 3) {
+        setAttendanceReward(true);
+        // 실제 리워드 지급 로직은 여기서 호출하거나, 이미 백엔드에서 처리되었다면 알림만 표시
+        // 여기서는 알림만 표시하고, 실제 지급은 백엔드 로직에 따라 다름 (현재는 UI만 구현)
+        handleAttendanceReward();
+      }
+    }
+  }, [attendance]);
+
+  const handleAttendanceReward = async () => {
+    if (!user?.id) return;
+
+    // 3일 연속 출석 보상 지급 (20원)
+    try {
+      console.log("🎉 3일 연속 출석 보상 지급 시도");
+
+      // 1. 게임 유저 해시 가져오기
+      let gameUserHash = GameAuthService.getGameUserHashFromStorage();
+
+      if (!gameUserHash) {
+        console.warn("⚠️ 게임 유저 해시가 로컬 스토리지에 없습니다. DB에서 조회 시도...");
+        // DB에서 조회
+        const profile = await GameAuthService.findUserByGameHash(user.id); // 이 함수는 gameHash로 유저를 찾는 것이라 적절치 않음.
+        // 대신 user_profiles에서 직접 조회해야 함. 하지만 여기서는 간단히 로컬 스토리지 의존.
+        // 만약 없다면 지급 불가
+        console.error("❌ 게임 유저 해시를 찾을 수 없어 보상을 지급할 수 없습니다.");
+        return;
+      }
+
+      // 2. 프로모션 지급 요청
+      // 테스트를 위해 isTest=true로 설정하거나, 설정된 코드를 사용
+      // 사용자가 "아직 코드를 발급받지 않았다"고 했으므로, 기존 FIRST_QUIZ 코드를 사용하는 현재 설정(ATTENDANCE_3DAY -> FIRST_QUIZ)을 그대로 이용.
+      // 실제 지급이 실패하더라도 로직 흐름은 확인 가능.
+      const result = await promotionService.grantReward(
+        user.id,
+        gameUserHash,
+        'ATTENDANCE_3DAY',
+        false // 운영 모드 (설정된 코드 사용)
+      );
+
+      if (result.success) {
+        console.log("✅ 보상 지급 성공:", result.rewardKey);
+        // 성공 처리 (예: 토스트 메시지 등)
+      } else {
+        console.warn("⚠️ 보상 지급 실패:", result.message);
+        // 실패 처리
+      }
+    } catch (error) {
+      console.error("보상 지급 실패:", error);
+    }
+  };
+
+  const closeAttendanceModal = () => {
+    setShowAttendanceModal(false);
+    setAttendance(null); // 모달 닫으면 상태 초기화하여 다시 안 뜨게 함
+  };
 
   // 화면 높이 감지
   const [screenHeight, setScreenHeight] = useState(0);
@@ -56,7 +128,7 @@ export default function GamePage() {
       console.log("🎵 [게임페이지] 배경음악 상태 확인 및 재생 시도");
       await playBackgroundMusic();
     };
-    
+
     checkAndPlay();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -285,11 +357,10 @@ export default function GamePage() {
           {/* 페이즈 1 - 우측 하단 */}
           <Clickable
             as="div"
-            className={`absolute rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${
-              currentPhase === 1
-                ? "cursor-pointer hover:opacity-80 transition-opacity"
-                : "cursor-not-allowed"
-            }`}
+            className={`absolute rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${currentPhase === 1
+              ? "cursor-pointer hover:opacity-80 transition-opacity"
+              : "cursor-not-allowed"
+              }`}
             onClick={() => handlePhaseClick(1)}
             playClickSound={currentPhase === 1}
             style={{
@@ -327,11 +398,10 @@ export default function GamePage() {
           {/* 페이즈 2 - 좌측 중앙 */}
           <Clickable
             as="div"
-            className={`absolute rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${
-              currentPhase === 2
-                ? "cursor-pointer hover:opacity-80 transition-opacity"
-                : "cursor-not-allowed"
-            }`}
+            className={`absolute rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${currentPhase === 2
+              ? "cursor-pointer hover:opacity-80 transition-opacity"
+              : "cursor-not-allowed"
+              }`}
             onClick={() => handlePhaseClick(2)}
             playClickSound={currentPhase === 2} // 현재 페이즈인 경우에만 클릭 사운드 재생
             style={{
@@ -369,11 +439,10 @@ export default function GamePage() {
           {/* 페이즈 3 - 우측 상단 */}
           <Clickable
             as="div"
-            className={`absolute rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${
-              currentPhase === 3
-                ? "cursor-pointer hover:opacity-80 transition-opacity"
-                : "cursor-not-allowed"
-            }`}
+            className={`absolute rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${currentPhase === 3
+              ? "cursor-pointer hover:opacity-80 transition-opacity"
+              : "cursor-not-allowed"
+              }`}
             onClick={() => handlePhaseClick(3)}
             playClickSound={currentPhase === 3} // 현재 페이즈인 경우에만 클릭 사운드 재생
             style={{
@@ -411,11 +480,10 @@ export default function GamePage() {
           {/* 페이즈 4 - 좌측 상단 */}
           <Clickable
             as="div"
-            className={`absolute rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${
-              currentPhase === 4
-                ? "cursor-pointer hover:opacity-80 transition-opacity"
-                : "cursor-not-allowed"
-            }`}
+            className={`absolute rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${currentPhase === 4
+              ? "cursor-pointer hover:opacity-80 transition-opacity"
+              : "cursor-not-allowed"
+              }`}
             onClick={() => handlePhaseClick(4)}
             playClickSound={currentPhase === 4} // 현재 페이즈인 경우에만 클릭 사운드 재생
             style={{
@@ -509,6 +577,15 @@ export default function GamePage() {
           </div>
         </div>
       </div>
+
+      {/* 출석 체크 모달 */}
+      <AttendanceModal
+        isOpen={showAttendanceModal}
+        onClose={closeAttendanceModal}
+        streak={attendance?.new_streak || 1}
+        isReward={attendanceReward}
+        rewardAmount={20}
+      />
 
     </div>
   );

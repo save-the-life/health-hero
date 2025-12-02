@@ -22,6 +22,7 @@ export interface UserProfile {
   current_streak: number
   current_stage: number
   current_phase: number
+  last_login_at?: string | null
   
   created_at: string
   updated_at: string

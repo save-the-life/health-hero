@@ -36,7 +36,7 @@ export default function TossLoginButton({ autoLogin = false }: TossLoginButtonPr
 
   const handleLogin = async () => {
     console.log("🚀 [TossLogin] 로그인 시작");
-    
+
     // 배경음악 재생 시작 (사용자 클릭이므로 브라우저 자동 재생 정책 통과)
     console.log("🎵 [TossLogin] 배경음악 재생 시작");
     try {
@@ -45,7 +45,7 @@ export default function TossLoginButton({ autoLogin = false }: TossLoginButtonPr
     } catch (error) {
       console.log("⚠️ [TossLogin] 배경음악 재생 실패 (무시):", error);
     }
-    
+
     setLocalError(null);
     setError(null);
     setLoading(true);
@@ -79,21 +79,21 @@ export default function TossLoginButton({ autoLogin = false }: TossLoginButtonPr
         console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
         console.log("👤 [TossLogin] 대상 사용자 ID:", supabaseResult.userId);
         console.log("🔧 [TossLogin] GameAuthService.getGameUserKey() 호출...");
-        
+
         const gameKeyResult = await GameAuthService.getGameUserKey();
-        
+
         if (gameKeyResult.success) {
           console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
           console.log("✅ [TossLogin] 게임 유저 키 획득 성공!");
           console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
           console.log("🔑 [TossLogin] 게임 해시 획득 완료");
           console.log("💾 [TossLogin] Supabase 저장 시도...");
-          
+
           const saved = await GameAuthService.saveGameUserKey(
             supabaseResult.userId,
             gameKeyResult.hash
           );
-          
+
           if (saved) {
             console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
             console.log("🎉 [TossLogin] 게임 로그인 완전 성공!");
@@ -106,16 +106,16 @@ export default function TossLoginButton({ autoLogin = false }: TossLoginButtonPr
 
             // 프로모션 플래그 확인 (혜택 탭에서 진입한 경우에만)
             const shouldGrantPromotion = localStorage.getItem('shouldGrantPromotion') === 'true';
-            
+
             if (shouldGrantPromotion) {
               console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
               console.log("🎁 [TossLogin] 혜택 탭 진입 감지!");
               console.log("🎁 [TossLogin] 첫 퀴즈 프로모션 자동 지급 시작");
               console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-              
+
               // 플래그 제거 (재사용 방지)
               localStorage.removeItem('shouldGrantPromotion');
-              
+
               try {
                 const promotionResult = await promotionService.grantReward(
                   supabaseResult.userId,
@@ -131,7 +131,7 @@ export default function TossLoginButton({ autoLogin = false }: TossLoginButtonPr
                   success: promotionResult.success,
                   amount: config.amount,
                   condition: config.description,
-                  message: promotionResult.success 
+                  message: promotionResult.success
                     ? `${config.description} 완료! 리워드 키: ${promotionResult.rewardKey?.substring(0, 15)}...`
                     : promotionService.getErrorMessage(promotionResult.errorCode || ''),
                   timestamp: Date.now(),
@@ -162,7 +162,7 @@ export default function TossLoginButton({ autoLogin = false }: TossLoginButtonPr
                 console.error("🔥 [TossLogin] 에러:", promotionError);
                 console.error("💡 [TossLogin] 로그인은 정상 완료, 프로모션만 실패");
                 console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-                
+
                 // 실패해도 로컬 스토리지에 저장
                 const errorResult = {
                   success: false,
@@ -214,6 +214,12 @@ export default function TossLoginButton({ autoLogin = false }: TossLoginButtonPr
         setTimeout(() => {
           setUser(supabaseResult.profile); // 다시 한 번 설정하여 확실히 업데이트
         }, 100);
+
+        // 출석 체크 결과 저장
+        if (supabaseResult.attendance) {
+          console.log("📅 [TossLogin] 출석 체크 결과 저장:", supabaseResult.attendance);
+          useAuthStore.getState().setAttendance(supabaseResult.attendance);
+        }
       }
 
       // 5. 게임 페이지로 이동 (로딩 상태 유지)
@@ -244,16 +250,16 @@ export default function TossLoginButton({ autoLogin = false }: TossLoginButtonPr
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log('🎁 [TossLogin] 자동 로그인 시작 (혜택 탭)');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      
+
       // 프로모션 플래그가 설정되어 있는지 확인
       const shouldGrant = localStorage.getItem('shouldGrantPromotion');
       console.log('🎯 [TossLogin] 프로모션 플래그:', shouldGrant);
-      
+
       // 약간의 지연 후 자동 로그인 (UI 로딩 완료 대기)
       const timer = setTimeout(() => {
         handleLogin();
       }, 500);
-      
+
       return () => clearTimeout(timer);
     }
   }, [autoLogin]);
