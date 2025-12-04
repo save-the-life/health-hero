@@ -48,7 +48,7 @@ export const PROMOTION_CONFIGS: Record<PromotionCondition, PromotionConfig> = {
     description: '친구 초대',
   },
   ATTENDANCE_3DAY: {
-    code: PROMOTION_CODES.FIRST_QUIZ, // 실제로는 ATTENDANCE_3DAY 프로모션 코드 필요
+    code: PROMOTION_CODES.ATTENDANCE_3DAY,
     condition: 'ATTENDANCE_3DAY',
     amount: 20,
     description: '3일 연속 출석',
@@ -167,10 +167,8 @@ class PromotionService {
       };
     }
 
-    // 3. 테스트 모드인 경우 테스트 프로모션 코드 사용
-    const promotionCode = isTest
-      ? PROMOTION_CODES.TEST_FIRST_QUIZ
-      : config.code;
+    // 3. 프로모션 코드 설정
+    const promotionCode = config.code;
 
     console.log('[PromotionService] 프로모션 지급 요청:', {
       promotionCode,

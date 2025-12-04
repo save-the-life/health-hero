@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { SafeImage } from "./SafeImage";
 import { useTossAuth } from "@/hooks/useTossAuth";
@@ -34,7 +34,7 @@ export default function TossLoginButton({ autoLogin = false }: TossLoginButtonPr
   const [localError, setLocalError] = useState<string | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
 
-  const handleLogin = async () => {
+  const handleLogin = useCallback(async () => {
     console.log("🚀 [TossLogin] 로그인 시작");
 
     // 배경음악 재생 시작 (사용자 클릭이므로 브라우저 자동 재생 정책 통과)
@@ -110,67 +110,9 @@ export default function TossLoginButton({ autoLogin = false }: TossLoginButtonPr
             if (shouldGrantPromotion) {
               console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
               console.log("🎁 [TossLogin] 혜택 탭 진입 감지!");
-              console.log("🎁 [TossLogin] 첫 퀴즈 프로모션 자동 지급 시작");
+              console.log("🎁 [TossLogin] 퀴즈 풀이 시 프로모션이 지급됩니다.");
               console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-
-              // 플래그 제거 (재사용 방지)
-              localStorage.removeItem('shouldGrantPromotion');
-
-              try {
-                const promotionResult = await promotionService.grantReward(
-                  supabaseResult.userId,
-                  gameKeyResult.hash,
-                  'FIRST_QUIZ',
-                  false // 운영 모드 (실제 프로모션 지급)
-                );
-
-                const config = PROMOTION_CONFIGS['FIRST_QUIZ'];
-
-                // 프로모션 결과를 로컬 스토리지에 저장
-                const resultData = {
-                  success: promotionResult.success,
-                  amount: config.amount,
-                  condition: config.description,
-                  message: promotionResult.success
-                    ? `${config.description} 완료! 리워드 키: ${promotionResult.rewardKey?.substring(0, 15)}...`
-                    : promotionService.getErrorMessage(promotionResult.errorCode || ''),
-                  timestamp: Date.now(),
-                };
-
-                localStorage.setItem('promotionResult', JSON.stringify(resultData));
-
-                if (promotionResult.success) {
-                  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-                  console.log("🎉 [TossLogin] 프로모션 지급 성공!");
-                  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-                  console.log("💰 [TossLogin] 지급 금액:", config.amount, "원");
-                  console.log("🔑 [TossLogin] 리워드 키:", promotionResult.rewardKey?.substring(0, 20) + "...");
-                  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-                } else {
-                  console.warn("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-                  console.warn("⚠️ [TossLogin] 프로모션 지급 실패");
-                  console.warn("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-                  console.warn("❌ [TossLogin] 에러 코드:", promotionResult.errorCode);
-                  console.warn("📝 [TossLogin] 메시지:", resultData.message);
-                  console.warn("💡 [TossLogin] 로그인은 정상 완료, 프로모션만 실패");
-                  console.warn("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-                }
-              } catch (promotionError) {
-                console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-                console.error("❌ [TossLogin] 프로모션 지급 예외 발생");
-                console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-                console.error("🔥 [TossLogin] 에러:", promotionError);
-                console.error("💡 [TossLogin] 로그인은 정상 완료, 프로모션만 실패");
-                console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-
-                // 실패해도 로컬 스토리지에 저장
-                const errorResult = {
-                  success: false,
-                  message: promotionError instanceof Error ? promotionError.message : '프로모션 지급 중 오류',
-                  timestamp: Date.now(),
-                };
-                localStorage.setItem('promotionResult', JSON.stringify(errorResult));
-              }
+              // 여기서는 플래그를 유지하고, 실제 지급은 퀴즈 페이지에서 수행
             } else {
               console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
               console.log("ℹ️ [TossLogin] 일반 진입 (프로모션 없음)");
@@ -242,7 +184,7 @@ export default function TossLoginButton({ autoLogin = false }: TossLoginButtonPr
       console.log("🏁 [TossLogin] 로그인 플로우 종료");
     }
     // finally 블록 제거하여 에러가 아닌 경우 로딩 상태 유지
-  };
+  }, [login, router, setError, setLoading, setUser]);
 
   // 자동 로그인 처리 (혜택 탭 진입 시)
   useEffect(() => {
@@ -262,7 +204,7 @@ export default function TossLoginButton({ autoLogin = false }: TossLoginButtonPr
 
       return () => clearTimeout(timer);
     }
-  }, [autoLogin]);
+  }, [autoLogin, handleLogin]);
 
   const displayError = tossError || localError;
 

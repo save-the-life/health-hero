@@ -10,11 +10,19 @@ interface AuthState {
   isLoading: boolean
   error: string | null
 
-  attendance: any | null
+  attendance: {
+    is_first_login_today: boolean;
+    new_streak: number;
+    last_login_at: string;
+  } | null
 
   // Actions
   setUser: (user: UserProfile | null) => void
-  setAttendance: (attendance: any | null) => void
+  setAttendance: (attendance: {
+    is_first_login_today: boolean;
+    new_streak: number;
+    last_login_at: string;
+  } | null) => void
   setLoading: (isLoading: boolean) => void
   setError: (error: string | null) => void
   logout: () => Promise<void>

@@ -11,6 +11,7 @@ interface SettingsDropdownProps {
   onClose: () => void;
   onShowExitModal: () => void;
   onShowItemInfoModal: () => void;
+  onShowAttendance?: () => void; // 출석 체크 모달 표시 콜백
   pageType?: "main" | "quiz"; // 페이지 타입 추가
 }
 
@@ -19,6 +20,7 @@ export default function SettingsDropdown({
   onClose,
   onShowExitModal,
   onShowItemInfoModal,
+  onShowAttendance,
   pageType = "quiz", // 기본값은 quiz
 }: SettingsDropdownProps) {
   const [isClosing, setIsClosing] = useState(false);
@@ -104,6 +106,13 @@ export default function SettingsDropdown({
     }, 500); // 애니메이션 지속 시간과 동일
   };
 
+  const handleAttendanceClick = () => {
+    handleClose();
+    setTimeout(() => {
+      onShowAttendance?.();
+    }, 500);
+  };
+
   return (
     <>
       {/* 배경 블러 오버레이 */}
@@ -116,9 +125,8 @@ export default function SettingsDropdown({
           <SoundButton
             onClick={handleClose}
             data-setting-button
-            className={`w-9 h-9 flex items-center justify-center hover:opacity-80 transition-all duration-300 ease-out ${
-              isClosing ? "animate-button-shrink" : "animate-button-expand"
-            }`}
+            className={`w-9 h-9 flex items-center justify-center hover:opacity-80 transition-all duration-300 ease-out ${isClosing ? "animate-button-shrink" : "animate-button-expand"
+              }`}
           >
             <SafeImage
               src="/images/items/button-setting.png"
@@ -132,19 +140,17 @@ export default function SettingsDropdown({
 
         {/* 드롭다운 메뉴 */}
         <div
-          className={`flex flex-col gap-2 ${
-            isClosing
-              ? "animate-slide-up-delayed"
-              : "animate-slide-down-delayed"
-          }`}
+          className={`flex flex-col gap-2 ${isClosing
+            ? "animate-slide-up-delayed"
+            : "animate-slide-down-delayed"
+            }`}
         >
           {/* 음소거 버튼 - 모든 페이지에서 표시 */}
           <SoundButton
             onClick={handleMuteClick}
             playClickSound={false} // 음소거 버튼은 클릭 사운드 재생 안함
-            className={`w-9 h-9 flex items-center justify-center hover:opacity-80 transition-opacity ${
-              isClosing ? "animate-fade-out" : "animate-fade-in"
-            }`}
+            className={`w-9 h-9 flex items-center justify-center hover:opacity-80 transition-opacity ${isClosing ? "animate-fade-out" : "animate-fade-in"
+              }`}
             style={{ animationDelay: isClosing ? "0.2s" : "0.1s" }}
           >
             <SafeImage
@@ -160,13 +166,35 @@ export default function SettingsDropdown({
             />
           </SoundButton>
 
+          {/* 출석 체크 버튼 - 메인 페이지에서만 표시 */}
+          {pageType === "main" && onShowAttendance && (
+            <SoundButton
+              onClick={handleAttendanceClick}
+              className={`w-9 h-9 flex items-center justify-center hover:opacity-80 transition-opacity ${isClosing ? "animate-fade-out" : "animate-fade-in"
+                }`}
+              style={{
+                animationDelay: isClosing ? "0.15s" : "0.15s",
+                backgroundColor: "#FFFFFF", // 아이콘이 투명할 경우를 대비해 흰색 배경 추가
+                borderRadius: "50%",
+                border: "2px solid #E5E7EB"
+              }}
+            >
+              <SafeImage
+                src="/images/items/icon-check.png"
+                alt="출석 체크"
+                width={24}
+                height={24}
+                className="object-contain"
+              />
+            </SoundButton>
+          )}
+
           {/* 아이템 정보 버튼 - 퀴즈 페이지에서만 표시 */}
           {pageType === "quiz" && (
             <SoundButton
               onClick={handleItemInfoClick}
-              className={`w-9 h-9 flex items-center justify-center hover:opacity-80 transition-opacity ${
-                isClosing ? "animate-fade-out" : "animate-fade-in"
-              }`}
+              className={`w-9 h-9 flex items-center justify-center hover:opacity-80 transition-opacity ${isClosing ? "animate-fade-out" : "animate-fade-in"
+                }`}
               style={{ animationDelay: isClosing ? "0.1s" : "0.2s" }}
             >
               <SafeImage
@@ -183,9 +211,8 @@ export default function SettingsDropdown({
           {pageType === "quiz" && (
             <SoundButton
               onClick={handleExitClick}
-              className={`w-9 h-9 flex items-center justify-center hover:opacity-80 transition-opacity ${
-                isClosing ? "animate-fade-out" : "animate-fade-in"
-              }`}
+              className={`w-9 h-9 flex items-center justify-center hover:opacity-80 transition-opacity ${isClosing ? "animate-fade-out" : "animate-fade-in"
+                }`}
               style={{ animationDelay: isClosing ? "0s" : "0.3s" }}
             >
               <SafeImage

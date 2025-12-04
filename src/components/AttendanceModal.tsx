@@ -70,8 +70,8 @@ export default function AttendanceModal({
                                     <div key={day} className="relative flex flex-col items-center">
                                         <div
                                             className={`w-16 h-16 rounded-2xl flex items-center justify-center border-2 transition-all duration-500 ${day <= streak
-                                                    ? 'bg-blue-50 border-blue-200 shadow-inner'
-                                                    : 'bg-gray-50 border-gray-100'
+                                                ? 'bg-blue-50 border-blue-200 shadow-inner'
+                                                : 'bg-gray-50 border-gray-100'
                                                 }`}
                                         >
                                             {day <= streak ? (
@@ -140,7 +140,7 @@ export default function AttendanceModal({
                                 onClick={onClose}
                                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-colors shadow-lg shadow-blue-200 active:scale-95 transform duration-100"
                             >
-                                {isReward ? '받기' : '확인'}
+                                확인
                             </button>
                         </div>
                     </motion.div>

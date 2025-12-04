@@ -10,6 +10,8 @@ import { QuizService, QuizQuestion } from "@/services/quizService";
 import QuizChoiceButton from "@/components/QuizChoiceButton";
 import { SoundButton } from "@/components/SoundButton";
 import { useAudio } from "@/hooks/useAudio";
+import { GameAuthService } from "@/services/gameAuthService";
+import { promotionService, PROMOTION_CONFIGS } from "@/services/promotionService";
 
 // 지연 로딩으로 모달 컴포넌트들 최적화
 const StageResultModal = lazy(() => import("@/components/StageResultModal"));
@@ -255,7 +257,7 @@ function QuizPageContent() {
       };
     }
 
-    
+
 
     // 중간 화면 (725-780px)
     if (screenHeight <= 780) {
@@ -416,8 +418,7 @@ function QuizPageContent() {
               const updatedHearts = useGameStore.getState().hearts;
 
               console.log(
-                `하트 차감 성공: ${hearts.current_hearts} → ${
-                  updatedHearts?.current_hearts || 0
+                `하트 차감 성공: ${hearts.current_hearts} → ${updatedHearts?.current_hearts || 0
                 }`
               );
 
@@ -462,6 +463,79 @@ function QuizPageContent() {
 
       // 결과 표시
       setShowResult(true);
+
+      // 혜택 탭 진입 유저 프로모션 지급 (첫 퀴즈 풀이 시)
+      const shouldGrantPromotion = localStorage.getItem('shouldGrantPromotion') === 'true';
+      if (shouldGrantPromotion && user?.id) {
+        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        console.log("🎁 [Quiz] 혜택 탭 진입 유저 - 퀴즈 풀이 감지!");
+        console.log("🎁 [Quiz] 프로모션 지급 시도...");
+        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+        // 플래그 제거 (재사용 방지)
+        localStorage.removeItem('shouldGrantPromotion');
+
+        // 비동기로 처리하여 게임 흐름 방해하지 않음
+        GameAuthService.getGameUserKey().then(async (gameKeyResult) => {
+          if (gameKeyResult.success) {
+            try {
+              const promotionResult = await promotionService.grantReward(
+                user.id,
+                gameKeyResult.hash,
+                'FIRST_QUIZ',
+                false // 운영 모드 (실제 프로모션 지급 O)
+              );
+
+              const config = PROMOTION_CONFIGS['FIRST_QUIZ'];
+
+              // 프로모션 결과를 로컬 스토리지에 저장
+              const resultData = {
+                success: promotionResult.success,
+                amount: config.amount,
+                condition: config.description,
+                message: promotionResult.success
+                  ? `${config.description} 완료! 리워드 키: ${promotionResult.rewardKey?.substring(0, 15)}...`
+                  : promotionService.getErrorMessage(promotionResult.errorCode || ''),
+                timestamp: Date.now(),
+              };
+
+              localStorage.setItem('promotionResult', JSON.stringify(resultData));
+
+              if (promotionResult.success) {
+                console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                console.log("🎉 [Quiz] 프로모션 지급 성공!");
+                console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                console.log("💰 [Quiz] 지급 금액:", config.amount, "원");
+                console.log("🔑 [Quiz] 리워드 키:", promotionResult.rewardKey?.substring(0, 20) + "...");
+                console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+              } else {
+                console.warn("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                console.warn("⚠️ [Quiz] 프로모션 지급 실패");
+                console.warn("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                console.warn("❌ [Quiz] 에러 코드:", promotionResult.errorCode);
+                console.warn("📝 [Quiz] 메시지:", resultData.message);
+                console.warn("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+              }
+            } catch (promotionError) {
+              console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+              console.error("❌ [Quiz] 프로모션 지급 예외 발생");
+              console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+              console.error("🔥 [Quiz] 에러:", promotionError);
+              console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+              // 실패해도 로컬 스토리지에 저장
+              const errorResult = {
+                success: false,
+                message: promotionError instanceof Error ? promotionError.message : '프로모션 지급 중 오류',
+                timestamp: Date.now(),
+              };
+              localStorage.setItem('promotionResult', JSON.stringify(errorResult));
+            }
+          } else {
+            console.warn("⚠️ [Quiz] 게임 유저 키를 찾을 수 없어 프로모션을 지급할 수 없습니다.");
+          }
+        });
+      }
     }
   };
 
@@ -812,8 +886,7 @@ function QuizPageContent() {
         const success = await consumeHeart(1);
         if (success) {
           console.log(
-            `스테이지 진입 하트 차감 성공: ${hearts.current_hearts} → ${
-              hearts.current_hearts - 1
+            `스테이지 진입 하트 차감 성공: ${hearts.current_hearts} → ${hearts.current_hearts - 1
             }`
           );
         } else {
@@ -978,9 +1051,8 @@ function QuizPageContent() {
             <div
               className="absolute top-0 left-0 h-4 rounded-lg"
               style={{
-                width: `${
-                  ((currentQuestionIndex + 1) / stageQuestions.length) * 300
-                }px`,
+                width: `${((currentQuestionIndex + 1) / stageQuestions.length) * 300
+                  }px`,
                 background: "linear-gradient(to bottom, #9DF544, #63D42A)",
                 border: "1px solid rgba(47, 153, 21, 0.8)",
                 boxShadow:
@@ -1133,16 +1205,14 @@ function QuizPageContent() {
                   className={`text-white text-stroke text-center font-normal leading-relaxed w-[245px] mb-4 ${getDynamicFontSize(
                     isCorrect
                       ? currentQuestion.explanation
-                      : `${
-                          currentQuestion.choices[currentQuestion.answer_index]
-                        }. ${currentQuestion.explanation}`
+                      : `${currentQuestion.choices[currentQuestion.answer_index]
+                      }. ${currentQuestion.explanation}`
                   )}`}
                 >
                   {isCorrect
                     ? currentQuestion.explanation
-                    : `${
-                        currentQuestion.choices[currentQuestion.answer_index]
-                      }. ${currentQuestion.explanation}`}
+                    : `${currentQuestion.choices[currentQuestion.answer_index]
+                    }. ${currentQuestion.explanation}`}
                 </p>
 
                 {/* 다음 문제 버튼 */}
@@ -1296,9 +1366,8 @@ function QuizPageContent() {
             {/* 오답 삭제 아이템 */}
             <SoundButton
               onClick={() => handleItemClick("remove-wrong")}
-              className={`w-[60px] h-[60px] flex items-center justify-center ${
-                usedItem && usedItem !== "remove-wrong" ? "opacity-50" : ""
-              }`}
+              className={`w-[60px] h-[60px] flex items-center justify-center ${usedItem && usedItem !== "remove-wrong" ? "opacity-50" : ""
+                }`}
               disabled={
                 !totalScore ||
                 totalScore < 50 ||
@@ -1315,8 +1384,8 @@ function QuizPageContent() {
               <SafeImage
                 src={
                   totalScore &&
-                  totalScore >= 50 &&
-                  (!usedItem || usedItem === "remove-wrong")
+                    totalScore >= 50 &&
+                    (!usedItem || usedItem === "remove-wrong")
                     ? "/images/items/item-remove-wrong-able.png"
                     : "/images/items/item-remove-wrong-disable.png"
                 }
@@ -1330,9 +1399,8 @@ function QuizPageContent() {
             {/* 힌트 아이템 */}
             <SoundButton
               onClick={() => handleItemClick("hint")}
-              className={`w-[60px] h-[60px] flex items-center justify-center ${
-                usedItem && usedItem !== "hint" ? "opacity-50" : ""
-              }`}
+              className={`w-[60px] h-[60px] flex items-center justify-center ${usedItem && usedItem !== "hint" ? "opacity-50" : ""
+                }`}
               disabled={
                 !totalScore ||
                 totalScore < 80 ||
@@ -1349,8 +1417,8 @@ function QuizPageContent() {
               <SafeImage
                 src={
                   totalScore &&
-                  totalScore >= 80 &&
-                  (!usedItem || usedItem === "hint")
+                    totalScore >= 80 &&
+                    (!usedItem || usedItem === "hint")
                     ? "/images/items/item-hint-able.png"
                     : "/images/items/item-hint-disable.png"
                 }
@@ -1364,9 +1432,8 @@ function QuizPageContent() {
             {/* 점수 2배 아이템 */}
             <SoundButton
               onClick={() => handleItemClick("double-score")}
-              className={`w-[60px] h-[60px] flex items-center justify-center ${
-                usedItem && usedItem !== "double-score" ? "opacity-50" : ""
-              } ${usedItem === "double-score" ? "animate-pulse" : ""}`}
+              className={`w-[60px] h-[60px] flex items-center justify-center ${usedItem && usedItem !== "double-score" ? "opacity-50" : ""
+                } ${usedItem === "double-score" ? "animate-pulse" : ""}`}
               disabled={
                 !totalScore ||
                 totalScore < 100 ||
@@ -1383,8 +1450,8 @@ function QuizPageContent() {
               <SafeImage
                 src={
                   totalScore &&
-                  totalScore >= 100 &&
-                  (!usedItem || usedItem === "double-score")
+                    totalScore >= 100 &&
+                    (!usedItem || usedItem === "double-score")
                     ? "/images/items/item-double-able.png"
                     : "/images/items/item-double-disable.png"
                 }
@@ -1398,9 +1465,8 @@ function QuizPageContent() {
             {/* 자동 정답 아이템 */}
             <SoundButton
               onClick={() => handleItemClick("auto-answer")}
-              className={`w-[60px] h-[60px] flex items-center justify-center ${
-                usedItem && usedItem !== "auto-answer" ? "opacity-50" : ""
-              }`}
+              className={`w-[60px] h-[60px] flex items-center justify-center ${usedItem && usedItem !== "auto-answer" ? "opacity-50" : ""
+                }`}
               disabled={
                 !totalScore ||
                 totalScore < 200 ||
@@ -1417,8 +1483,8 @@ function QuizPageContent() {
               <SafeImage
                 src={
                   totalScore &&
-                  totalScore >= 200 &&
-                  (!usedItem || usedItem === "auto-answer")
+                    totalScore >= 200 &&
+                    (!usedItem || usedItem === "auto-answer")
                     ? "/images/items/item-auto-answer-able.png"
                     : "/images/items/item-auto-answer-disable.png"
                 }

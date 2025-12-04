@@ -60,8 +60,14 @@ export default function StageResultModal({
       console.log(`🎊 [StageResult] 페이즈 ${currentPhase} 클리어! 다음 페이즈로 이동`);
     }
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    
-    router.push(`/game/phase${targetPhase}`);
+
+    // 페이즈 6을 초과하면 메인 페이지로 이동 (Phase 7은 없음)
+    if (targetPhase > 6) {
+      console.log("🚫 [StageResult] 마지막 페이즈 클리어! 메인 페이지로 이동");
+      router.push("/game");
+    } else {
+      router.push(`/game/phase${targetPhase}`);
+    }
   };
 
   return (

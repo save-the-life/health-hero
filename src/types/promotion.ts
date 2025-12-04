@@ -6,11 +6,11 @@
  * 프로모션 코드 상수
  */
 export const PROMOTION_CODES = {
-  // 테스트 프로모션
-  TEST_FIRST_QUIZ: 'TEST_01K98ST5FF47JE9WMASGHF45D0',
-
   // 실제 프로모션 (검토 승인 후 사용)
   FIRST_QUIZ: '01K98ST5FF47JE9WMASGHF45D0',
+
+  // 3일 연속 출석 프로모션
+  ATTENDANCE_3DAY: '01KBF207WQX8XZSKE3Y7G33KB8',
 } as const;
 
 /**

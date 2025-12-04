@@ -13,12 +13,14 @@ interface GameHeaderProps {
   pageType?: "main" | "quiz"; // 페이지 타입 추가
   onItemUse?: (itemId: string) => void; // 아이템 사용 콜백 추가
   onShowItemUseModal?: (showModal: (itemId: string) => void) => void; // 아이템 사용 모달 표시 콜백 추가
+  onShowAttendance?: () => void; // 출석 체크 모달 표시 콜백 추가
 }
 
 export default function GameHeader({
   pageType = "quiz",
   onItemUse,
   onShowItemUseModal,
+  onShowAttendance,
 }: GameHeaderProps) {
   const router = useRouter();
   const {
@@ -36,7 +38,7 @@ export default function GameHeader({
   const [showItemInfoModal, setShowItemInfoModal] = useState(false);
   const [showItemUseModal, setShowItemUseModal] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string>("");
-  
+
   // 화면 너비 감지
   const [screenWidth, setScreenWidth] = useState(0);
 
@@ -300,7 +302,7 @@ export default function GameHeader({
               priority
             />
             {/* 레벨 텍스트 */}
-            <span 
+            <span
               className={`no-text-stroke absolute top-1/2 ${responsiveStyle.character.levelText.left} transform -translate-y-1/2 z-10 ${responsiveStyle.character.levelText.fontSize} font-bold whitespace-nowrap flex items-center justify-center ${responsiveStyle.character.levelText.width} ml-1`}
               style={{ color: '#683A11' }}
             >
@@ -326,7 +328,7 @@ export default function GameHeader({
               priority
             />
             {/* 하트 내부 숫자 */}
-            <span 
+            <span
               className={`no-text-stroke absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 ${responsiveStyle.heart.number.fontSize} font-normal`}
               style={{ color: '#ffffff' }}
             >
@@ -356,7 +358,7 @@ export default function GameHeader({
               priority
             />
             {/* 타이머 텍스트 */}
-            <span 
+            <span
               className={`no-text-stroke absolute top-1/2 ${responsiveStyle.heart.timerText.left} transform -translate-y-1/2 z-10 ${responsiveStyle.heart.timerText.fontSize} font-bold whitespace-nowrap flex items-center justify-center ${responsiveStyle.heart.timerText.width} ml-1`}
               style={{ color: '#683A11' }}
             >
@@ -397,7 +399,7 @@ export default function GameHeader({
               priority
             />
             {/* 점수 텍스트 */}
-            <span 
+            <span
               className={`no-text-stroke absolute top-1/2 ${responsiveStyle.score.text.left} transform -translate-y-1/2 z-10 ${responsiveStyle.score.text.fontSize} font-bold whitespace-nowrap flex items-center justify-center ${responsiveStyle.score.text.width} ml-1`}
               style={{ color: '#683A11' }}
             >
@@ -435,6 +437,7 @@ export default function GameHeader({
         onClose={() => setShowSettingsMenu(false)}
         onShowExitModal={() => setShowExitModal(true)}
         onShowItemInfoModal={() => setShowItemInfoModal(true)}
+        onShowAttendance={onShowAttendance}
         pageType={pageType}
       />
 

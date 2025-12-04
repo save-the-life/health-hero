@@ -10,8 +10,14 @@ DECLARE
   v_current_streak INTEGER;
   v_new_streak INTEGER;
   v_now TIMESTAMPTZ := NOW();
-  v_yesterday DATE := (NOW() - INTERVAL '1 day')::DATE;
-  v_last_login_date DATE;
+  
+  -- KST variables for date calculation
+  v_now_kst TIMESTAMP;
+  v_today_kst DATE;
+  v_yesterday_kst DATE;
+  v_last_login_kst TIMESTAMP;
+  v_last_login_date_kst DATE;
+  
   v_is_first_login_today BOOLEAN;
 BEGIN
   -- Get current user state
@@ -25,23 +31,30 @@ BEGIN
     v_current_streak := 0;
   END IF;
 
-  -- Check if first login today
+  -- Calculate KST dates (UTC+9)
+  -- AT TIME ZONE 'Asia/Seoul' converts TIMESTAMPTZ to TIMESTAMP (wall clock time in Seoul)
+  v_now_kst := v_now AT TIME ZONE 'Asia/Seoul';
+  v_today_kst := v_now_kst::DATE;
+  v_yesterday_kst := (v_now_kst - INTERVAL '1 day')::DATE;
+
+  -- Check if first login today (KST)
   IF v_last_login IS NULL THEN
-    v_last_login_date := NULL;
+    v_last_login_date_kst := NULL;
   ELSE
-    v_last_login_date := v_last_login::DATE;
+    v_last_login_kst := v_last_login AT TIME ZONE 'Asia/Seoul';
+    v_last_login_date_kst := v_last_login_kst::DATE;
   END IF;
 
-  IF v_last_login_date = v_now::DATE THEN
-    -- Already logged in today
+  IF v_last_login_date_kst = v_today_kst THEN
+    -- Already logged in today (KST)
     v_is_first_login_today := FALSE;
     v_new_streak := v_current_streak;
   ELSE
-    -- First login today
+    -- First login today (KST)
     v_is_first_login_today := TRUE;
     
-    IF v_last_login_date = v_yesterday THEN
-      -- Consecutive day
+    IF v_last_login_date_kst = v_yesterday_kst THEN
+      -- Consecutive day (KST)
       v_new_streak := v_current_streak + 1;
     ELSE
       -- Streak broken (or first time)
@@ -51,7 +64,7 @@ BEGIN
     -- Update user profile
     UPDATE user_profiles
     SET 
-      last_login_at = v_now,
+      last_login_at = v_now, -- Store actual timestamp (UTC)
       current_streak = v_new_streak,
       updated_at = v_now
     WHERE id = p_user_id;
