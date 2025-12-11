@@ -110,6 +110,22 @@ export const useAuthStore = create<AuthState>()(
               set({ isAuthenticated: false, user: null })
             } else {
               set({ user: profile, isAuthenticated: true })
+
+              // 세션 복구 시 출석 체크 수행
+              try {
+                const { data: attendanceData, error: attendanceError } = await supabase.rpc('check_daily_attendance', {
+                  p_user_id: session.user.id
+                })
+
+                if (attendanceError) {
+                  console.error('❌ [authStore] 자동 출석 체크 실패:', attendanceError)
+                } else {
+                  console.log('✅ [authStore] 자동 출석 체크 완료:', attendanceData)
+                  set({ attendance: attendanceData })
+                }
+              } catch (err) {
+                console.error('❌ [authStore] 자동 출석 체크 호출 중 예외:', err)
+              }
             }
           } else {
             // 세션이 없어도 로컬 스토리지에 사용자 정보가 있으면 인증 상태 유지

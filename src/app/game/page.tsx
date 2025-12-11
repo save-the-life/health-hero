@@ -142,10 +142,7 @@ export default function GamePage() {
 
   // 컴포넌트 마운트 시 인증 상태 초기화 및 데이터 로드
   useEffect(() => {
-    const initData = async () => {
-      await initialize();
-    };
-    initData();
+    initialize();
   }, [initialize]);
 
   // 사용자 데이터 로드
