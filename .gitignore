@@ -47,3 +47,5 @@ next-env.d.ts
 .granite
 health-hero.ait
 lucky-dice.ait
+
+.claude/settings.local.json
