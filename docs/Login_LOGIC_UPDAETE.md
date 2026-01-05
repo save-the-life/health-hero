@@ -338,22 +338,23 @@ serve(async (req) => {
 ## 3. 체크리스트
 
 ### DB 스키마
-- [ ] `user_profiles` 테이블에 `toss_user_key` 컬럼이 존재하는가? ✅ (이미 존재)
-- [ ] `user_profiles` 테이블에 `status` 컬럼이 추가되었는가?
-- [ ] `user_profiles` 테이블에 `unlinked_at` 컬럼이 추가되었는가?
+- [x] `user_profiles` 테이블에 `toss_user_key` 컬럼이 존재하는가? ✅ (이미 존재)
+- [x] `user_profiles` 테이블에 `status` 컬럼이 추가되었는가? ✅ (2026-01-05 완료)
+- [x] `user_profiles` 테이블에 `unlinked_at` 컬럼이 추가되었는가? ✅ (2026-01-05 완료)
 
 ### Edge Function
-- [ ] `supabase/functions/toss-unlink/index.ts` 파일이 생성되었는가?
-- [ ] Edge Function이 Supabase에 배포되었는가?
+- [x] `supabase/functions/toss-unlink/index.ts` 파일이 생성되었는가? ✅ (2026-01-05 완료)
+- [x] Edge Function이 Supabase에 배포되었는가? ✅ (2026-01-05 완료)
 
 ### 환경 변수
-- [ ] Supabase Function Secrets에 `TOSS_CALLBACK_SECRET`이 등록되었는가?
+- [x] Supabase Function Secrets에 `TOSS_CALLBACK_SECRET`이 등록되었는가? ✅ (2026-01-05 완료)
 
 ### 토스 콘솔
-- [ ] 토스 개발자 센터에 콜백 URL이 정확히 입력되었는가?
-- [ ] Basic Auth 값이 `TOSS_CALLBACK_SECRET`과 일치하는가?
+- [x] 토스 개발자 센터에 콜백 URL이 정확히 입력되었는가? ✅ (2026-01-05 완료)
+- [x] Basic Auth 값이 `TOSS_CALLBACK_SECRET`과 일치하는가? ✅ (2026-01-05 완료)
 
 ### 테스트
+- [x] 토스 콘솔 테스트 버튼으로 연결 확인 ✅ (2026-01-05 완료)
 - [ ] 실제 앱에서 토스 로그인 수행 후, 토스 앱 설정에서 연결 끊기 시 Supabase 로그에 정상 기록되는가?
 - [ ] 연결 끊기 후 `user_profiles.status`가 `unlinked`로 변경되는가?
 - [ ] 연결 끊기 후 `toss_user_key`, `toss_access_token` 등이 `null`로 변경되는가?
@@ -388,7 +389,7 @@ serve(async (req) => {
 
 | 항목 | 상태 | 우선순위 |
 |------|------|----------|
-| 연결 끊기 콜백 | ❌ 미구현 | 🔴 높음 |
+| 연결 끊기 콜백 | ✅ 구현 완료 (2026-01-05) | - |
 | AccessToken 재발급 (refresh) | ❌ 미구현 | 🟡 중간 |
 | 사용자 정보 복호화 | ❌ 미구현 | 🟡 중간 (필요 시) |
 | 로그인 끊기 API 호출 | ❌ 미구현 | 🟢 낮음 |

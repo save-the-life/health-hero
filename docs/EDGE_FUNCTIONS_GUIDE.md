@@ -130,22 +130,51 @@ const response = await fetch(
 // }
 ```
 
-### 2.3 toss-unlink (연결 끊기 콜백) [예정]
+### 2.3 toss-unlink (연결 끊기 콜백) ✅ 구현 완료
 
 **목적:** 토스 앱에서 연결 끊기 시 DB 동기화
 
 | 항목 | 내용 |
 |------|------|
-| **경로** | `supabase/functions/toss-unlink/index.ts` (미생성) |
+| **경로** | `supabase/functions/toss-unlink/index.ts` |
 | **엔드포인트** | `https://uasphzqbluxctnukoazy.supabase.co/functions/v1/toss-unlink` |
 | **Method** | POST |
 | **호출자** | 토스 서버 (Webhook) |
+| **구현일** | 2026-01-05 |
 
 **주요 기능:**
-1. Basic Auth 헤더 검증
+1. Basic Auth 헤더 검증 (TOSS_CALLBACK_SECRET)
 2. toss_user_key로 사용자 검색
-3. DB 업데이트 (status, unlinked_at)
-4. 로그 기록
+3. DB 업데이트 (toss_user_key, toss_access_token 등 null 처리)
+4. status를 "unlinked"로 변경, unlinked_at 기록
+5. toss_login_logs에 로그 기록
+
+**요청 형식:**
+```json
+{
+  "userKey": 443731103,
+  "referrer": "UNLINK"
+}
+```
+
+**referrer 종류:**
+| referrer | 설명 |
+|----------|------|
+| `UNLINK` | 사용자가 앱에서 직접 연결을 끊었을 때 |
+| `WITHDRAWAL_TERMS` | 사용자가 로그인 서비스 약관을 철회할 때 |
+| `WITHDRAWAL_TOSS` | 사용자가 토스 회원을 탈퇴할 때 |
+
+**응답:**
+```json
+// 성공
+{ "result": "Success" }
+
+// 테스트 요청 (userKey 없음)
+{ "result": "Test OK" }
+
+// 사용자 없음 (정상 처리)
+{ "result": "User not found but handled" }
+```
 
 ---
 
@@ -161,7 +190,7 @@ supabase/functions/
 │   └── index.ts              # 토스 OAuth mTLS 프록시
 ├── quiz-submit/
 │   └── index.ts              # 퀴즈 제출 검증
-├── toss-unlink/              # 연결 끊기 콜백 (예정)
+├── toss-unlink/              # 연결 끊기 콜백 ✅
 │   └── index.ts
 └── deno.d.ts                 # Deno 타입 정의
 ```
@@ -739,5 +768,12 @@ const corsHeaders = {
 ## 문서 버전
 
 - **최초 작성:** 2026-01-04
-- **최종 수정:** 2026-01-04
+- **최종 수정:** 2026-01-05
 - **작성자:** Health Hero Dev Team
+
+### 변경 이력
+
+| 날짜 | 변경 내용 |
+|------|-----------|
+| 2026-01-05 | toss-unlink 함수 구현 완료, 문서 업데이트 |
+| 2026-01-04 | 최초 작성 |
