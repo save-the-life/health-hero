@@ -11,8 +11,15 @@ import { SoundButton } from "@/components/SoundButton";
 export default function Phase8Page() {
     const router = useRouter();
     const { user, isAuthenticated, initialize } = useAuthStore();
-    const { hearts, isLoading, error, currentStage, loadUserData, updateHearts } =
-        useGameStore();
+    const {
+        hearts,
+        isLoading,
+        error,
+        currentStage,
+        currentPhase,
+        loadUserData,
+        updateHearts,
+    } = useGameStore();
 
     const [isSmallScreen, setIsSmallScreen] = useState(false);
 
@@ -76,11 +83,16 @@ export default function Phase8Page() {
     }, [isAuthenticated, user?.id, hearts, updateHearts]);
 
     const isStageLocked = (stageNumber: number) => {
-        const locked = stageNumber > currentStage;
-        console.log(
-            `스테이지 ${stageNumber} 잠금 상태 확인: currentStage=${currentStage}, locked=${locked}`
-        );
-        return locked;
+        // 현재 페이즈가 8보다 낮으면 모든 스테이지 잠금
+        if (currentPhase < 8) {
+            return true;
+        }
+        // 현재 페이즈가 8이고, 현재 스테이지보다 높은 스테이지는 잠금
+        if (currentPhase === 8) {
+            return stageNumber > currentStage;
+        }
+        // 현재 페이즈가 8보다 높으면 모든 스테이지 열림
+        return false;
     };
 
     const handleStageClick = async (stageNumber: number) => {
@@ -109,7 +121,7 @@ export default function Phase8Page() {
             <div className="relative h-screen overflow-hidden" style={{ height: '100vh', overflow: 'hidden' }}>
                 <div className="absolute inset-0 z-0">
                     <SafeImage
-                        src="/images/backgrounds/background-phase8.png"
+                        src="/images/backgrounds/background-phase4.png"
                         alt="페이즈 8 배경"
                         fill
                         className="object-cover"
@@ -128,7 +140,7 @@ export default function Phase8Page() {
             <div className="relative h-screen overflow-hidden" style={{ height: '100vh', overflow: 'hidden' }}>
                 <div className="absolute inset-0 z-0">
                     <SafeImage
-                        src="/images/backgrounds/background-phase8.png"
+                        src="/images/backgrounds/background-phase4.png"
                         alt="페이즈 8 배경"
                         fill
                         className="object-cover"
@@ -154,7 +166,7 @@ export default function Phase8Page() {
         <div className="relative h-screen overflow-hidden" style={{ height: '100vh', overflow: 'hidden' }}>
             <div className="absolute inset-0 z-0">
                 <SafeImage
-                    src="/images/backgrounds/background-phase8.png"
+                    src="/images/backgrounds/background-phase4.png"
                     alt="페이즈 8 배경"
                     fill
                     className="object-cover"

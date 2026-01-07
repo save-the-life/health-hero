@@ -57,8 +57,8 @@ BEGIN
       v_new_stage := 1;
       v_new_phase := p_phase + 1;
       
-      -- 페이즈 4 완료 시 모든 페이즈 클리어
-      IF p_phase >= 4 THEN
+      -- 페이즈 10 완료 시 모든 페이즈 클리어
+      IF p_phase >= 10 THEN
         v_phase_cleared := TRUE;
       END IF;
     END IF;

@@ -27,11 +27,12 @@ export class QuizService {
   }
 
   // 특정 페이즈와 스테이지의 랜덤 퀴즈 문제 5개 가져오기 (중복 방지)
-  static async getStageQuestions(phase: number, stage: number, userId?: string): Promise<QuizQuestion[]> {
+  // sessionExcludeIds: 현재 세션에서 이미 출제된 문제 ID들 (클라이언트에서 관리)
+  static async getStageQuestions(phase: number, stage: number, userId?: string, sessionExcludeIds?: string[]): Promise<QuizQuestion[]> {
     try {
       const difficulty = this.getDifficultyByStage(stage);
       console.log(`스테이지 ${stage} (${difficulty}) 문제 로드 시작 - 사용자: ${userId}`);
-      
+
       // 먼저 해당 난이도의 모든 문제를 가져온 후 클라이언트에서 랜덤 선택
       const query = supabase
         .from('quizzes')
@@ -72,9 +73,25 @@ export class QuizService {
         }
       }
 
+      // 세션 내 이미 출제된 문제 제외
+      if (sessionExcludeIds && sessionExcludeIds.length > 0) {
+        const beforeCount = availableQuestions.length;
+        availableQuestions = availableQuestions.filter(question => !sessionExcludeIds.includes(question.id));
+        console.log(`세션 내 출제된 문제 ${sessionExcludeIds.length}개 제외, ${beforeCount} → ${availableQuestions.length}개`);
+      }
+
       if (availableQuestions.length === 0) {
-        console.warn(`모든 문제를 이미 풀었습니다. 기본 문제 사용.`);
-        availableQuestions = data; // 모든 문제를 다시 사용
+        console.warn(`모든 문제를 이미 풀었습니다. 세션 제외 목록만 적용.`);
+        // DB 기록은 무시하고 세션 제외만 적용
+        availableQuestions = data.filter(question =>
+          !sessionExcludeIds || !sessionExcludeIds.includes(question.id)
+        );
+
+        // 그래도 없으면 전체 문제 사용
+        if (availableQuestions.length === 0) {
+          console.warn(`세션 내 모든 문제 소진. 전체 문제 사용.`);
+          availableQuestions = data;
+        }
       }
 
       // 클라이언트에서 랜덤 셔플링하여 5개 선택

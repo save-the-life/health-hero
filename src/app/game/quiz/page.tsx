@@ -97,6 +97,9 @@ function QuizPageContent() {
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
 
+  // 세션 내 출제된 문제 ID 추적 (중복 방지)
+  const [sessionQuizIds, setSessionQuizIds] = useState<string[]>([]);
+
   // 사용자 답안 추적 및 점수/경험치 계산
   const [userAnswers, setUserAnswers] = useState<(number | null)[]>([]);
   const [userItemsUsed, setUserItemsUsed] = useState<(string | null)[]>([]);
@@ -823,10 +826,18 @@ function QuizPageContent() {
           heartDeductedRef.current = false;
 
           try {
+            // 세션 스토리지에서 이전에 출제된 문제 ID 로드
+            const storedSessionIds = sessionStorage.getItem('sessionQuizIds');
+            const currentSessionIds: string[] = storedSessionIds ? JSON.parse(storedSessionIds) : [];
+            setSessionQuizIds(currentSessionIds);
+
+            console.log(`세션 내 기존 출제 문제: ${currentSessionIds.length}개`);
+
             const questions = await QuizService.getStageQuestions(
               quizPhase,
               quizStage,
-              user.id
+              user.id,
+              currentSessionIds // 세션 내 출제된 문제 ID 전달
             );
             if (questions && questions.length > 0) {
               setStageQuestions(questions);
@@ -835,6 +846,13 @@ function QuizPageContent() {
               setStageScore(0);
               setStageExp(0);
               setQuizError(null);
+
+              // 새로 출제된 문제 ID를 세션 스토리지에 추가
+              const newQuestionIds = questions.map(q => q.id);
+              const updatedSessionIds = [...currentSessionIds, ...newQuestionIds];
+              sessionStorage.setItem('sessionQuizIds', JSON.stringify(updatedSessionIds));
+              setSessionQuizIds(updatedSessionIds);
+              console.log(`세션 내 출제 문제 업데이트: ${updatedSessionIds.length}개`);
             } else {
               setQuizError("퀴즈 문제를 찾을 수 없습니다.");
             }

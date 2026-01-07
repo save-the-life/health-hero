@@ -212,6 +212,10 @@ export default function GamePage() {
         phase4: getPhaseStyle(4, false),
         phase5: getPhaseStyle(5, false),
         phase6: getPhaseStyle(6, false),
+        phase7: getPhaseStyle(7, false),
+        phase8: getPhaseStyle(8, false),
+        phase9: getPhaseStyle(9, false),
+        phase10: getPhaseStyle(10, false),
         scale: 1,
         spacing: 1,
         blockSize: 1,
@@ -230,6 +234,10 @@ export default function GamePage() {
       phase4: getPhaseStyle(4, true, spacing, blockSize),
       phase5: getPhaseStyle(5, true, spacing, blockSize),
       phase6: getPhaseStyle(6, true, spacing, blockSize),
+      phase7: getPhaseStyle(7, true, spacing, blockSize),
+      phase8: getPhaseStyle(8, true, spacing, blockSize),
+      phase9: getPhaseStyle(9, true, spacing, blockSize),
+      phase10: getPhaseStyle(10, true, spacing, blockSize),
       scale,
       spacing,
       blockSize,
@@ -248,6 +256,10 @@ export default function GamePage() {
     // 사용자의 현재 페이즈를 기반으로 활성화 상태 결정
     // 현재 페이즈보다 낮은 페이즈는 모두 클리어된 것으로 간주
     if (phaseNumber <= currentPhase) {
+      // 페이즈 7-10은 페이즈 4 아이콘 사용
+      if (phaseNumber >= 7) {
+        return "/images/items/icon-phase4.png";
+      }
       return `/images/items/icon-phase${phaseNumber}.png`;
     }
 
@@ -353,7 +365,7 @@ export default function GamePage() {
         <div
           className="relative w-full flex items-center justify-center"
           style={{
-            height: "1100px",
+            height: "1750px",
           }}
         >
           {/* 페이즈 1 - 우측 하단 */}
@@ -602,6 +614,170 @@ export default function GamePage() {
             </div>
           </Clickable>
 
+          {/* 페이즈 7 - 우측 */}
+          <Clickable
+            as="div"
+            className={`absolute rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${currentPhase === 7
+              ? "cursor-pointer hover:opacity-80 transition-opacity"
+              : "cursor-not-allowed"
+              }`}
+            onClick={() => handlePhaseClick(7)}
+            playClickSound={currentPhase === 7}
+            style={{
+              bottom: `${responsiveStyle.phase7.bottom}px`,
+              right: `${responsiveStyle.phase7.right}px`,
+              width: `${responsiveStyle.phase7.size.width}px`,
+              height: `${responsiveStyle.phase7.size.height}px`,
+            }}
+          >
+            <div className="w-full h-full flex flex-col items-center justify-center relative">
+              <SafeImage
+                src={getPhaseImage(7)}
+                alt="페이즈 7"
+                width={120}
+                height={120}
+                className={`${currentPhase > 7 ? "blur-sm" : ""}`}
+                style={{
+                  transform: `scale(${responsiveStyle.blockSize})`,
+                }}
+              />
+              {/* 클리어 체크 아이콘 */}
+              {currentPhase > 7 && (
+                <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                  <SafeImage
+                    src="/images/items/icon-check.png"
+                    alt="클리어"
+                    width={40}
+                    height={40}
+                  />
+                </div>
+              )}
+            </div>
+          </Clickable>
+
+          {/* 페이즈 8 - 좌측 */}
+          <Clickable
+            as="div"
+            className={`absolute rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${currentPhase === 8
+              ? "cursor-pointer hover:opacity-80 transition-opacity"
+              : "cursor-not-allowed"
+              }`}
+            onClick={() => handlePhaseClick(8)}
+            playClickSound={currentPhase === 8}
+            style={{
+              bottom: `${responsiveStyle.phase8.bottom}px`,
+              left: `${responsiveStyle.phase8.left}px`,
+              width: `${responsiveStyle.phase8.size.width}px`,
+              height: `${responsiveStyle.phase8.size.height}px`,
+            }}
+          >
+            <div className="w-full h-full flex flex-col items-center justify-center relative">
+              <SafeImage
+                src={getPhaseImage(8)}
+                alt="페이즈 8"
+                width={120}
+                height={120}
+                className={`${currentPhase > 8 ? "blur-sm" : ""}`}
+                style={{
+                  transform: `scale(${responsiveStyle.blockSize})`,
+                }}
+              />
+              {/* 클리어 체크 아이콘 */}
+              {currentPhase > 8 && (
+                <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                  <SafeImage
+                    src="/images/items/icon-check.png"
+                    alt="클리어"
+                    width={40}
+                    height={40}
+                  />
+                </div>
+              )}
+            </div>
+          </Clickable>
+
+          {/* 페이즈 9 - 우측 */}
+          <Clickable
+            as="div"
+            className={`absolute rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${currentPhase === 9
+              ? "cursor-pointer hover:opacity-80 transition-opacity"
+              : "cursor-not-allowed"
+              }`}
+            onClick={() => handlePhaseClick(9)}
+            playClickSound={currentPhase === 9}
+            style={{
+              bottom: `${responsiveStyle.phase9.bottom}px`,
+              right: `${responsiveStyle.phase9.right}px`,
+              width: `${responsiveStyle.phase9.size.width}px`,
+              height: `${responsiveStyle.phase9.size.height}px`,
+            }}
+          >
+            <div className="w-full h-full flex flex-col items-center justify-center relative">
+              <SafeImage
+                src={getPhaseImage(9)}
+                alt="페이즈 9"
+                width={120}
+                height={120}
+                className={`${currentPhase > 9 ? "blur-sm" : ""}`}
+                style={{
+                  transform: `scale(${responsiveStyle.blockSize})`,
+                }}
+              />
+              {/* 클리어 체크 아이콘 */}
+              {currentPhase > 9 && (
+                <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                  <SafeImage
+                    src="/images/items/icon-check.png"
+                    alt="클리어"
+                    width={40}
+                    height={40}
+                  />
+                </div>
+              )}
+            </div>
+          </Clickable>
+
+          {/* 페이즈 10 - 좌측 */}
+          <Clickable
+            as="div"
+            className={`absolute rounded-[20px] bg-white/50 backdrop-blur-[10px] shadow-[0_2px_2px_0_rgba(0,0,0,0.4)] z-10 ${currentPhase === 10
+              ? "cursor-pointer hover:opacity-80 transition-opacity"
+              : "cursor-not-allowed"
+              }`}
+            onClick={() => handlePhaseClick(10)}
+            playClickSound={currentPhase === 10}
+            style={{
+              bottom: `${responsiveStyle.phase10.bottom}px`,
+              left: `${responsiveStyle.phase10.left}px`,
+              width: `${responsiveStyle.phase10.size.width}px`,
+              height: `${responsiveStyle.phase10.size.height}px`,
+            }}
+          >
+            <div className="w-full h-full flex flex-col items-center justify-center relative">
+              <SafeImage
+                src={getPhaseImage(10)}
+                alt="페이즈 10"
+                width={120}
+                height={120}
+                className={`${currentPhase > 10 ? "blur-sm" : ""}`}
+                style={{
+                  transform: `scale(${responsiveStyle.blockSize})`,
+                }}
+              />
+              {/* 클리어 체크 아이콘 */}
+              {currentPhase > 10 && (
+                <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                  <SafeImage
+                    src="/images/items/icon-check.png"
+                    alt="클리어"
+                    width={40}
+                    height={40}
+                  />
+                </div>
+              )}
+            </div>
+          </Clickable>
+
           {/* 페이즈 간 연결선 */}
           {/* 페이즈 1 → 페이즈 2 */}
           <div
@@ -684,6 +860,82 @@ export default function GamePage() {
             className="absolute left-1/2 transform -translate-x-1/2 z-0"
             style={{
               bottom: `${760 * responsiveStyle.spacing}px`,
+            }}
+          >
+            <SafeImage
+              src="/images/ui/vector1.png"
+              alt="페이즈 연결선"
+              width={170}
+              height={60}
+              className="opacity-80"
+              style={{
+                transform: `scale(${responsiveStyle.blockSize})`,
+              }}
+            />
+          </div>
+
+          {/* 페이즈 6 → 페이즈 7 */}
+          <div
+            className="absolute left-1/2 transform -translate-x-1/2 z-0"
+            style={{
+              bottom: `${920 * responsiveStyle.spacing}px`,
+            }}
+          >
+            <SafeImage
+              src="/images/ui/vector2.png"
+              alt="페이즈 연결선"
+              width={170}
+              height={60}
+              className="opacity-80"
+              style={{
+                transform: `scale(${responsiveStyle.blockSize})`,
+              }}
+            />
+          </div>
+
+          {/* 페이즈 7 → 페이즈 8 */}
+          <div
+            className="absolute left-1/2 transform -translate-x-1/2 z-0"
+            style={{
+              bottom: `${1080 * responsiveStyle.spacing}px`,
+            }}
+          >
+            <SafeImage
+              src="/images/ui/vector1.png"
+              alt="페이즈 연결선"
+              width={170}
+              height={60}
+              className="opacity-80"
+              style={{
+                transform: `scale(${responsiveStyle.blockSize})`,
+              }}
+            />
+          </div>
+
+          {/* 페이즈 8 → 페이즈 9 */}
+          <div
+            className="absolute left-1/2 transform -translate-x-1/2 z-0"
+            style={{
+              bottom: `${1240 * responsiveStyle.spacing}px`,
+            }}
+          >
+            <SafeImage
+              src="/images/ui/vector2.png"
+              alt="페이즈 연결선"
+              width={170}
+              height={60}
+              className="opacity-80"
+              style={{
+                transform: `scale(${responsiveStyle.blockSize})`,
+              }}
+            />
+          </div>
+
+          {/* 페이즈 9 → 페이즈 10 */}
+          <div
+            className="absolute left-1/2 transform -translate-x-1/2 z-0"
+            style={{
+              bottom: `${1400 * responsiveStyle.spacing}px`,
             }}
           >
             <SafeImage
