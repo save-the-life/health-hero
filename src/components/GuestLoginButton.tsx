@@ -43,7 +43,6 @@ export default function GuestLoginButton() {
             level: 1,
             current_exp: 0,
             total_score: 500, // 최초 회원가입 시 500포인트 지급
-            current_streak: 0,
             current_stage: 1,
             current_phase: 1,
           });

@@ -11,7 +11,6 @@ interface SettingsDropdownProps {
   onClose: () => void;
   onShowExitModal: () => void;
   onShowItemInfoModal: () => void;
-  onShowAttendance?: () => void; // 출석 체크 모달 표시 콜백
   pageType?: "main" | "quiz"; // 페이지 타입 추가
 }
 
@@ -20,7 +19,6 @@ export default function SettingsDropdown({
   onClose,
   onShowExitModal,
   onShowItemInfoModal,
-  onShowAttendance,
   pageType = "quiz", // 기본값은 quiz
 }: SettingsDropdownProps) {
   const [isClosing, setIsClosing] = useState(false);
@@ -106,13 +104,6 @@ export default function SettingsDropdown({
     }, 500); // 애니메이션 지속 시간과 동일
   };
 
-  const handleAttendanceClick = () => {
-    handleClose();
-    setTimeout(() => {
-      onShowAttendance?.();
-    }, 500);
-  };
-
   return (
     <>
       {/* 배경 블러 오버레이 */}
@@ -165,29 +156,6 @@ export default function SettingsDropdown({
               className="object-cover"
             />
           </SoundButton>
-
-          {/* 출석 체크 버튼 - 메인 페이지에서만 표시 */}
-          {pageType === "main" && onShowAttendance && (
-            <SoundButton
-              onClick={handleAttendanceClick}
-              className={`w-9 h-9 flex items-center justify-center hover:opacity-80 transition-opacity ${isClosing ? "animate-fade-out" : "animate-fade-in"
-                }`}
-              style={{
-                animationDelay: isClosing ? "0.15s" : "0.15s",
-                backgroundColor: "#FFFFFF", // 아이콘이 투명할 경우를 대비해 흰색 배경 추가
-                borderRadius: "50%",
-                border: "2px solid #E5E7EB"
-              }}
-            >
-              <SafeImage
-                src="/images/items/icon-check.png"
-                alt="출석 체크"
-                width={24}
-                height={24}
-                className="object-contain"
-              />
-            </SoundButton>
-          )}
 
           {/* 아이템 정보 버튼 - 퀴즈 페이지에서만 표시 */}
           {pageType === "quiz" && (

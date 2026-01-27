@@ -6,7 +6,6 @@ import { SafeImage } from "./SafeImage";
 import { useTossAuth } from "@/hooks/useTossAuth";
 import { TossAuthService } from "@/services/tossAuthService";
 import { GameAuthService } from "@/services/gameAuthService";
-import { promotionService, PROMOTION_CONFIGS } from "@/services/promotionService";
 import { useAuthStore } from "@/store/authStore";
 import { SoundButton } from "./SoundButton";
 import { audioService } from "@/services/audioService";
@@ -156,12 +155,6 @@ export default function TossLoginButton({ autoLogin = false }: TossLoginButtonPr
         setTimeout(() => {
           setUser(supabaseResult.profile); // 다시 한 번 설정하여 확실히 업데이트
         }, 100);
-
-        // 출석 체크 결과 저장
-        if (supabaseResult.attendance) {
-          console.log("📅 [TossLogin] 출석 체크 결과 저장:", supabaseResult.attendance);
-          useAuthStore.getState().setAttendance(supabaseResult.attendance);
-        }
       }
 
       // 5. 게임 페이지로 이동 (로딩 상태 유지)

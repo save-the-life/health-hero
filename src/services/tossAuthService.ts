@@ -145,7 +145,6 @@ export class TossAuthService {
         level: existingProfile?.level || 1,
         current_exp: existingProfile?.current_exp || 0,
         total_score: existingProfile?.total_score || 500, // 신규 사용자에게 500포인트 지급
-        current_streak: existingProfile?.current_streak || 0,
         current_stage: existingProfile?.current_stage || 1,
         current_phase: existingProfile?.current_phase || 1
       }
@@ -173,30 +172,12 @@ export class TossAuthService {
           user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null
         })
 
-      // 4. 출석 체크 (RPC 호출)
-      let attendanceResult = null
-      try {
-        const { data: attendanceData, error: attendanceError } = await supabase.rpc('check_daily_attendance', {
-          p_user_id: userId
-        })
-
-        if (attendanceError) {
-          console.error('출석 체크 실패:', attendanceError)
-        } else {
-          attendanceResult = attendanceData
-          console.log('✅ 출석 체크 완료:', attendanceResult)
-        }
-      } catch (rpcError) {
-        console.error('출석 체크 예외:', rpcError)
-      }
-
-      // 5. 토스 로그인 완료 로그
+      // 4. 토스 로그인 완료 로그
       console.log('✅ 토스 로그인 및 사용자 프로필 생성 완료')
 
       return {
         userId,
-        profile,
-        attendance: attendanceResult
+        profile
       }
     } catch (error) {
       console.error('Supabase 사용자 생성/업데이트 실패:', error)

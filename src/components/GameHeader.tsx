@@ -13,14 +13,12 @@ interface GameHeaderProps {
   pageType?: "main" | "quiz"; // 페이지 타입 추가
   onItemUse?: (itemId: string) => void; // 아이템 사용 콜백 추가
   onShowItemUseModal?: (showModal: (itemId: string) => void) => void; // 아이템 사용 모달 표시 콜백 추가
-  onShowAttendance?: () => void; // 출석 체크 모달 표시 콜백 추가
 }
 
 export default function GameHeader({
   pageType = "quiz",
   onItemUse,
   onShowItemUseModal,
-  onShowAttendance,
 }: GameHeaderProps) {
   const router = useRouter();
   const {
@@ -437,7 +435,6 @@ export default function GameHeader({
         onClose={() => setShowSettingsMenu(false)}
         onShowExitModal={() => setShowExitModal(true)}
         onShowItemInfoModal={() => setShowItemInfoModal(true)}
-        onShowAttendance={onShowAttendance}
         pageType={pageType}
       />
 

@@ -3,15 +3,12 @@
 import { SafeImage } from "@/components/SafeImage";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { useGameStore } from "@/store/gameStore";
 import GameHeader from "@/components/GameHeader";
 import { Clickable } from "@/components/SoundButton";
 import { useAudio } from "@/hooks/useAudio";
-import AttendanceModal from "@/components/AttendanceModal";
-import { promotionService } from "@/services/promotionService";
-import { GameAuthService } from "@/services/gameAuthService";
 
 export default function GamePage() {
   const router = useRouter();
@@ -19,103 +16,6 @@ export default function GamePage() {
   const { currentPhase, hearts, isLoading, error, loadUserData, updateHearts } =
     useGameStore();
   const { playBackgroundMusic } = useAudio();
-
-  // 출석 모달 상태
-  const { attendance, setAttendance } = useAuthStore();
-  const [showAttendanceModal, setShowAttendanceModal] = useState(false);
-  const [attendanceReward] = useState(false);
-
-  const handleAttendanceReward = useCallback(async () => {
-    if (!user?.id) return;
-
-    // 3일 연속 출석 보상 지급 (20원)
-    try {
-      console.log("🎉 3일 연속 출석 보상 지급 시도");
-
-      // 1. 게임 유저 해시 가져오기
-      const gameUserHash = GameAuthService.getGameUserHashFromStorage();
-
-      if (!gameUserHash) {
-        console.warn("⚠️ 게임 유저 해시가 로컬 스토리지에 없습니다. DB에서 조회 시도...");
-        // DB에서 조회
-        // const profile = await GameAuthService.findUserByGameHash(user.id); 
-        // 대신 user_profiles에서 직접 조회해야 함. 하지만 여기서는 간단히 로컬 스토리지 의존.
-        // 만약 없다면 지급 불가
-        console.error("❌ 게임 유저 해시를 찾을 수 없어 보상을 지급할 수 없습니다.");
-        return;
-      }
-
-      // 2. 프로모션 지급 요청
-      // 테스트를 위해 isTest=true로 설정하거나, 설정된 코드를 사용
-      // 사용자가 "아직 코드를 발급받지 않았다"고 했으므로, 기존 FIRST_QUIZ 코드를 사용하는 현재 설정(ATTENDANCE_3DAY -> FIRST_QUIZ)을 그대로 이용.
-      // 실제 지급이 실패하더라도 로직 흐름은 확인 가능.
-      const result = await promotionService.grantReward(
-        user.id,
-        gameUserHash,
-        'ATTENDANCE_3DAY',
-        false // 운영 모드 (실제 코드 사용)
-      );
-
-      if (result.success) {
-        console.log("✅ 보상 지급 성공:", result.rewardKey);
-        // 성공 처리 (예: 토스트 메시지 등)
-      } else {
-        console.warn("⚠️ 보상 지급 실패:", result.message);
-        // 실패 처리
-      }
-    } catch (error) {
-      console.error("보상 지급 실패:", error);
-    }
-  }, [user?.id]);
-
-  // 출석 체크 확인
-  useEffect(() => {
-    const checkAttendance = async () => {
-      if (attendance) {
-        // 3일 연속 출석인 경우
-        if (attendance.new_streak === 3) {
-          if (!user?.id) return;
-
-          // 이미 보상을 받았는지 확인
-          const gameUserHash = GameAuthService.getGameUserHashFromStorage();
-          if (gameUserHash) {
-            const isGranted = await promotionService.checkAlreadyGranted(
-              user.id,
-              gameUserHash,
-              'ATTENDANCE_3DAY'
-            );
-
-            if (isGranted) {
-              console.log("📅 [GamePage] 이미 3일 출석 보상을 받았습니다. 모달 표시 안함.");
-              return;
-            }
-          }
-
-          // 보상을 아직 안 받았다면 모달 표시 및 보상 지급 시도
-          console.log("📅 [GamePage] 3일 출석 달성! 모달 표시 및 보상 지급 시도");
-          setShowAttendanceModal(true);
-          handleAttendanceReward();
-        } else {
-          // 3일차가 아니면 그냥 모달 표시
-          console.log("📅 [GamePage] 출석 체크 모달 표시:", attendance);
-          setShowAttendanceModal(true);
-        }
-      }
-    };
-
-    checkAttendance();
-  }, [attendance, handleAttendanceReward, user?.id]);
-
-  const closeAttendanceModal = () => {
-    setShowAttendanceModal(false);
-    // setAttendance(null); // 모달 닫으면 상태 초기화하여 다시 안 뜨게 함 -> 버그 수정: null로 초기화하면 설정 메뉴에서도 사라짐
-
-    // 대신 is_first_login_today만 false로 변경하여 오늘 다시 안 뜨게 함
-    // setAttendance({
-    //   ...attendance,
-    //   is_first_login_today: false
-    // });
-  };
 
   // 화면 높이 감지
   const [screenHeight, setScreenHeight] = useState(0);
@@ -353,7 +253,6 @@ export default function GamePage() {
       {/* 고정 헤더 */}
       <GameHeader
         pageType="main"
-        onShowAttendance={() => setShowAttendanceModal(true)}
       />
 
       {/* 메인 콘텐츠 */}
@@ -952,16 +851,6 @@ export default function GamePage() {
 
         </div>
       </div>
-
-      {/* 출석 체크 모달 */}
-      <AttendanceModal
-        isOpen={showAttendanceModal}
-        onClose={closeAttendanceModal}
-        streak={attendance?.new_streak || 1}
-        isReward={attendanceReward}
-        rewardAmount={20}
-      />
-
     </div>
   );
 }

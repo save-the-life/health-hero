@@ -47,12 +47,6 @@ export const PROMOTION_CONFIGS: Record<PromotionCondition, PromotionConfig> = {
     amount: 500,
     description: '친구 초대',
   },
-  ATTENDANCE_3DAY: {
-    code: PROMOTION_CODES.ATTENDANCE_3DAY,
-    condition: 'ATTENDANCE_3DAY',
-    amount: 20,
-    description: '3일 연속 출석',
-  },
 };
 
 class PromotionService {
