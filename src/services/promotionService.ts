@@ -26,7 +26,7 @@ export const PROMOTION_CONFIGS: Record<PromotionCondition, PromotionConfig> = {
   FIRST_QUIZ: {
     code: PROMOTION_CODES.FIRST_QUIZ,
     condition: 'FIRST_QUIZ',
-    amount: 10,
+    amount: 30,
     description: '첫 퀴즈 풀리기',
   },
   TUTORIAL_COMPLETE: {
