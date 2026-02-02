@@ -13,12 +13,7 @@ export const PROMOTION_CODES = {
 /**
  * 프로모션 지급 조건 타입
  */
-export type PromotionCondition =
-  | 'FIRST_LOGIN'      // 첫 로그인
-  | 'FIRST_QUIZ'       // 첫 퀴즈 완료
-  | 'TUTORIAL_COMPLETE' // 튜토리얼 완료
-  | 'DAILY_MISSION'    // 일일 미션
-  | 'FRIEND_INVITE';   // 친구 초대
+export type PromotionCondition = 'FIRST_QUIZ'; // 첫 퀴즈 완료
 
 /**
  * 프로모션 지급 결과 타입

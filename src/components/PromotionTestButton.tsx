@@ -14,7 +14,7 @@ import { Clickable } from './SoundButton';
 import { PROMOTION_CONFIGS } from '@/services/promotionService';
 
 interface PromotionTestButtonProps {
-  condition?: 'FIRST_LOGIN' | 'FIRST_QUIZ' | 'TUTORIAL_COMPLETE' | 'DAILY_MISSION' | 'FRIEND_INVITE';
+  condition?: 'FIRST_QUIZ';
 }
 
 export default function PromotionTestButton({ 

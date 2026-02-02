@@ -17,35 +17,11 @@ import {
  * 프로모션 설정 맵
  */
 export const PROMOTION_CONFIGS: Record<PromotionCondition, PromotionConfig> = {
-  FIRST_LOGIN: {
-    code: PROMOTION_CODES.FIRST_QUIZ, // 실제로는 FIRST_LOGIN 프로모션 코드 필요
-    condition: 'FIRST_LOGIN',
-    amount: 1000,
-    description: '첫 로그인 완료',
-  },
   FIRST_QUIZ: {
     code: PROMOTION_CODES.FIRST_QUIZ,
     condition: 'FIRST_QUIZ',
     amount: 30,
     description: '첫 퀴즈 풀리기',
-  },
-  TUTORIAL_COMPLETE: {
-    code: PROMOTION_CODES.FIRST_QUIZ, // 실제로는 TUTORIAL 프로모션 코드 필요
-    condition: 'TUTORIAL_COMPLETE',
-    amount: 500,
-    description: '튜토리얼 완료',
-  },
-  DAILY_MISSION: {
-    code: PROMOTION_CODES.FIRST_QUIZ, // 실제로는 DAILY_MISSION 프로모션 코드 필요
-    condition: 'DAILY_MISSION',
-    amount: 100,
-    description: '일일 미션 완료',
-  },
-  FRIEND_INVITE: {
-    code: PROMOTION_CODES.FIRST_QUIZ, // 실제로는 FRIEND_INVITE 프로모션 코드 필요
-    condition: 'FRIEND_INVITE',
-    amount: 500,
-    description: '친구 초대',
   },
 };
 

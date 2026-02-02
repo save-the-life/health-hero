@@ -810,10 +810,10 @@ function QuizPageContent() {
       // 인증 초기화와 사용자 데이터 로드를 병렬로 처리
       const initPromise = initialize();
 
-      // 인증이 완료되면 사용자 데이터도 병렬로 로드
+      // 인증이 완료되면 사용자 데이터도 병렬로 로드 (스테이지 진입 시 강제 새로고침)
       const userDataPromise = initPromise.then(() => {
         if (user?.id) {
-          return loadUserData(user.id);
+          return loadUserData(user.id, true); // forceRefresh: true - 최신 하트 정보 보장
         }
         return Promise.resolve();
       });

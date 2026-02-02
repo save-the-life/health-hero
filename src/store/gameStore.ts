@@ -41,7 +41,7 @@ interface GameState {
   cacheTimestamp: number | null
   
   // Actions
-  loadUserData: (userId: string) => Promise<void>
+  loadUserData: (userId: string, forceRefresh?: boolean) => Promise<void>
   updateHearts: () => Promise<void>
   consumeHeart: (amount?: number) => Promise<boolean>
   addHeartByAd: () => Promise<boolean>
@@ -74,23 +74,28 @@ export const useGameStore = create<GameState>()(
       cacheTimestamp: null,
 
       // 사용자 데이터 로드 (캐싱 적용)
-      loadUserData: async (userId: string) => {
+      loadUserData: async (userId: string, forceRefresh: boolean = false) => {
         const state = get()
-        
+
         // 이미 로딩 중이면 중복 호출 방지
         if (state.isLoading) {
           console.log('이미 로딩 중입니다. 중복 호출 방지')
           return
         }
-        
-        // 캐시 확인 (더 짧은 시간으로 변경)
-        const lastLoadTime = localStorage.getItem(`userData_${userId}_lastLoad`)
-        if (lastLoadTime && state.level > 1) {
-          const timeDiff = Date.now() - parseInt(lastLoadTime)
-          if (timeDiff < 30 * 1000) { // 30초로 단축
-            console.log('캐시된 데이터 사용. 서버 호출 스킵')
-            return
+
+        // 강제 새로고침이 아닌 경우에만 캐시 확인
+        if (!forceRefresh) {
+          // 캐시 확인 (더 짧은 시간으로 변경)
+          const lastLoadTime = localStorage.getItem(`userData_${userId}_lastLoad`)
+          if (lastLoadTime && state.level > 1) {
+            const timeDiff = Date.now() - parseInt(lastLoadTime)
+            if (timeDiff < 30 * 1000) { // 30초로 단축
+              console.log('캐시된 데이터 사용. 서버 호출 스킵')
+              return
+            }
           }
+        } else {
+          console.log('강제 새로고침 요청 - 캐시 무시하고 서버에서 데이터 로드')
         }
         
         set({ isLoading: true, error: null })
