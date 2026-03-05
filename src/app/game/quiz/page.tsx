@@ -486,7 +486,7 @@ function QuizPageContent() {
                 user.id,
                 gameKeyResult.hash,
                 'FIRST_QUIZ',
-                false // 운영 모드 (실제 프로모션 지급 O)
+                false // 운영 모드 (실제 프로모션 지급)
               );
 
               const config = PROMOTION_CONFIGS['FIRST_QUIZ'];

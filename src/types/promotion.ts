@@ -7,7 +7,7 @@
  */
 export const PROMOTION_CODES = {
   // 실제 프로모션 (검토 승인 후 사용)
-  FIRST_QUIZ: '01KFYWEGGB3HHJWW50HJF2GTKF',
+  FIRST_QUIZ: '01KJVPMCFSXGT9Q7SAT3WQ217Q',
 } as const;
 
 /**

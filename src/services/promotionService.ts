@@ -20,7 +20,7 @@ export const PROMOTION_CONFIGS: Record<PromotionCondition, PromotionConfig> = {
   FIRST_QUIZ: {
     code: PROMOTION_CODES.FIRST_QUIZ,
     condition: 'FIRST_QUIZ',
-    amount: 30,
+    amount: 100,
     description: '첫 퀴즈 풀리기',
   },
 };
@@ -35,12 +35,14 @@ class PromotionService {
     condition: PromotionCondition
   ): Promise<boolean> {
     try {
+      const config = PROMOTION_CONFIGS[condition];
       const { data, error } = await supabase
         .from('promotion_records')
         .select('id')
         .eq('user_id', userId)
         .eq('game_user_hash', gameUserHash)
         .eq('condition_type', condition)
+        .eq('promotion_code', config.code)
         .eq('status', 'SUCCESS')
         .limit(1);
 
@@ -137,8 +139,8 @@ class PromotionService {
       };
     }
 
-    // 3. 프로모션 코드 설정
-    const promotionCode = config.code;
+    // 3. 프로모션 코드 설정 (테스트 모드 시 TEST_ prefix 추가)
+    const promotionCode = isTest ? `TEST_${config.code}` : config.code;
 
     console.log('[PromotionService] 프로모션 지급 요청:', {
       promotionCode,
