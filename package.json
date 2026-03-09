@@ -3,14 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "granite dev",
-    "build": "granite build",
+    "dev": "ait dev",
+    "build": "ait build",
     "start": "next start",
     "lint": "eslint",
     "deploy": "ait deploy"
   },
   "dependencies": {
-    "@apps-in-toss/web-framework": "^1.14.1",
+    "@apps-in-toss/web-framework": "2.0.1",
     "@emotion/react": "^11.14.0",
     "@granite-js/cli": "^0.1.33",
     "@supabase/supabase-js": "^2.89.0",
@@ -24,8 +24,8 @@
     "next-pwa": "^5.6.0",
     "papaparse": "^5.5.3",
     "phaser": "^3.90.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
     "tailwind-merge": "^3.3.1",
     "use-local-storage-state": "^19.5.0",
     "uuid": "^13.0.0",
